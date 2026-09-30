@@ -1,0 +1,47 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: check-yaml
+        args: [--safe-load]
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.41.0
+    hooks:
+      - id: markdownlint
+        args: [--disable, --config, .markdownlint.yaml]
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        name: yamllint
+        entry: yamllint
+        language: system
+        types: [yaml]
+
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.16.1
+    hooks:
+      - id: gitleaks
+
+  - repo: https://github.com/ansible/ansible-lint
+    rev: v24.3.0
+    hooks:
+      - id: ansible-lint
+        name: ansible-lint
+        entry: ansible-lint
+        language: system
+        types: [yaml]
+        exclude: ^_templates/
+
+  - repo: https://github.com/robotframework-in-action/pre-commit-kubeconform
+    rev: v0.4.0
+    hooks:
+      - id: kubeconform
+        # We'll need to provide the schema location; we can use the default from the hook
+        # or specify a custom one. For now, we leave it to the hook's default.
+        # We can add args to specify the directory to scan, but the hook will be called
+        # by pre-commit on staged files. We'll adjust later if needed.

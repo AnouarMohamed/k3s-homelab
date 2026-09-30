@@ -1,0 +1,80 @@
+stages:
+  - lint
+  - validate
+  - security
+
+# Variables
+variables:
+  # Directory to scan for Kubernetes manifests
+  KUBE_MANIFESTS_DIR: "clusters/ platform/ apps/"
+  # For markdownlint, we can specify config file
+  MARKDOWNLINT_CONFIG: ".markdownlint.yaml"
+
+# Lint stage
+yamllint:
+  stage: lint
+  image: cytopia/yamllint:1.35.1
+  script:
+    - yamllint .
+  allow_failure: false
+
+markdownlint:
+  stage: lint
+  image: igorshubovych/markdownlint-cli:v0.41.0
+  script:
+    - markdownlint "**/*.md" --config "$MARKDOWNLINT_CONFIG"
+  allow_failure: false
+
+# Validate stage
+gitleaks:
+  stage: validate
+  image: gitleaks/gitleaks:v8.16.1
+  script:
+    - gitleaks detect --source . --verbose --exit-code 0 --no-git --report-format json --report-path gl-gitleaks-report.json
+    # If the report exists and has findings, we can fail the job
+    - |
+      if [ -f gl-gitleaks-report.json ] && [ $(jq '. | length' gl-gitleaks-report.json) -gt 0 ]; then
+        echo "Gitleaks found secrets!";
+        cat gl-gitleaks-report.json;
+        exit 1;
+      fi
+  allow_failure: false
+
+kubeconform:
+  stage: validate
+  image: instrumenta/kubeconform:v0.4.0
+  script:
+    # Find all yaml files in the specified directories and run kubeconform
+    - |
+      find $KUBE_MANIFESTS_DIR -type f -name "*.yaml" -o -name "*.yml" | while read manifest; do
+        echo "Validating $manifest";
+        kubeconform -strict "$manifest" || exit 1;
+      done
+  allow_failure: false
+
+kube-linter:
+  stage: validate
+  image: instrumenta/kube-linter:0.3.2
+  script:
+    # kube-linter expects a directory or file; we'll run it on the manifest directories
+    - |
+      find $KUBE_MANIFESTS_DIR -type f -name "*.yaml" -o -name "*.yml" | while read manifest; do
+        echo "Running kube-linter on $manifest";
+        kube-linter lint "$manifest" || exit 1;
+      done
+  allow_failure: false
+
+# Security stage
+# We can add security scanning jobs here, e.g., Trivy for container images, or Bandit for Python.
+# For now, we'll leave it as a placeholder or add a simple security check.
+# Since the requirement is to have a security stage, we'll add a job that runs a security scan if applicable.
+# However, in Phase 0, we don't have container images or Python code to scan.
+# We'll create a job that always passes but indicates that security scanning is not implemented yet.
+security-scan:
+  stage: security
+  image: alpine:latest
+  script:
+    - echo "Security scanning not implemented yet for Phase 0."
+    - echo "In future phases, we will add Trivy, Bandit, or other security scanners here."
+  allow_failure: false
+...

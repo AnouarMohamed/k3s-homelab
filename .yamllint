@@ -1,0 +1,24 @@
+extends: default
+
+ignore:
+  - .git/
+  - .tofu/
+  - .terraform/
+  - _templates/
+
+rules:
+  line-length:
+    max: 130
+    level: warning
+  empty-lines:
+    level: warning
+  trailing-spaces: off
+  indentation:
+    level: warning
+  key-duplicates: off
+  document-start:
+    level: warning
+  document-end:
+    level: warning
+  comments-indentation:
+    level: warning

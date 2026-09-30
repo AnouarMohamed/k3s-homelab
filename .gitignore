@@ -1,0 +1,170 @@
+# Age encryption keys
+*.age
+
+# Environment variables
+.env
+.env.*
+
+# Kubernetes configuration
+.kube/
+kubeconfig*
+*/kubeconfig*
+
+# Terraform/OpenTofu
+.terraform/
+*.tfstate
+*.tfstate.backup
+.tofu/
+.tofustate/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*~
+*.sublime-workspace
+*.sublime-project
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Cache directories
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# celery beat schedule file
+celerybeat-schedule
+
+# SageMath parsed files
+*.sage.py
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Pype type checker
+.pype_
+
+# Kubernetes
+*.kubeconfig
+.kube/config
+
+# Helm
+*/.helm/**
+
+# Kustomize
+*/.kustomize/**
+
+# Argo CD
+*/.argocd/**
+
+# OpenBao
+*/.bao/**
+
+# SOPS
+*.sops.yaml
+*.sops.yml
+*.sops.json
+*.sops.env
+
+# Age recipients
+age-recipients.txt
+
+# Private keys and secrets
+*.pem
+*.key
+*.secret
+*.csv
+
+# Docker
+docker-compose.override.yml
+docker-compose.*.yml
+
+# Misc
+*.bak
+*.backup
+*.orig
+*.rej
+*.tmp
+*.temp
+*.swp
+*~
