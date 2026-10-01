@@ -1,0 +1,7 @@
+---
+resources:
+  - default-deny-ingress.yaml
+  - default-deny-egress.yaml
+  - allow-dns-egress.yaml
+  - allow-intra-namespace.yaml
+...

@@ -6,3 +6,5 @@ control_vip: 192.168.1.200  # Example, change to match your network
 interface: eth0
 # K3s version (overrides the role default if set)
 # k3s_version: v1.27.3+k3s1
+# IP range for LoadBalancer services (for Cilium L2LoadBalancerIPPool)
+lb_ip_range: "192.168.1.240/28"

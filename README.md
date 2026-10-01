@@ -73,7 +73,7 @@ graph TD
 |-------|-------------|--------|
 | 0 | Repository skeleton and tooling | ✅ done |
 | 1 | Bootstrap clusters with k3s | ⬜ not started |
-| 2 | Install platform components (Cilium, cert-manager, etc.) | ⬜ not started |
+| 2 | Install platform components (Cilium, cert-manager, etc.) | 🟡 preparation completed |
 | 3 | Deploy Argo CD and app-of-apps | ⬜ not started |
 | 4 | Add observability stack | ⬜ not started |
 | 5 | Add policy engine | ⬜ not started |

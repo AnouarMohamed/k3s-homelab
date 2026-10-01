@@ -1,0 +1,16 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: lb-ippool
+spec:
+  # CIDR block for LoadBalancer IPs
+  # This range must be free in your LAN and not used by any other device.
+  cidr: 192.168.1.240/28
+  # The namespace where this IPPool is created. It can be in any namespace,
+  # but we put it in the kube-system namespace for cluster-wide visibility.
+  # However, the IPPool is cluster-scoped, so the namespace does not matter for functionality.
+  # We'll put it in kube-system to keep it with other system components.
+  # Note: The IPPool resource is namespace-scoped but the IPs are cluster-wide.
+  # We can also create it in the default namespace, but let's use kube-system.
+...

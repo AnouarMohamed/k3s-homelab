@@ -1,0 +1,117 @@
+---
+# Helm values for Cilium installation
+# Refer to https://helm.cilium.io/ for the full list of options
+
+# Replace kube-proxy with Cilium for better performance and features
+kubeProxyReplacement: true
+
+# The control plane VIP address used by kube-vip
+# This is the address that the API server is reachable at
+k8sServiceHost: 192.168.1.200
+k8sServicePort: 6443
+
+# Enable L2 announcements for LoadBalancer services
+l2announcements:
+  enabled: true
+
+# Enable Gateway API support
+gatewayAPI:
+  enabled: true
+
+# Hubble observability components
+hubble:
+  # Enable Hubble relay (for Hubble UI and CLI)
+  relay:
+    enabled: true
+  # Enable Hubble UI (served via the relay)
+  ui:
+    enabled: true
+  # Enable Hubble metrics for Prometheus
+  metrics:
+    enabled: true
+    # List of metrics to enable, see https://docs.cilium.io/en/stable/observability/metrics/#hubble-service-metrics
+    # We enable the default set
+    # metricLists:
+    #   - dns:query;drop;forward
+    #   - tcp;drop;http;httpV2;port-distribution;service-hash
+
+# Operator replicas for high availability
+operator:
+  replicas: 2
+
+# Enable WireGuard transparent encryption between nodes
+ipsec:
+  enabled: true
+  # WireGuard is used for encryption when ipsec.enabled is true
+  # We use the default WireGuard configuration
+
+# Resource requests and limits for all Cilium components
+# These values are set to ensure the control plane nodes are not overwhelmed
+# and that critical components have guaranteed resources.
+# Adjust based on your node capacity.
+
+# For the Cilium agent (running on every node)
+cilium_agent:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# For the Cilium operator (operator-replicas copies)
+operator:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+# For Hubble relay
+hubble:
+  relay:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+# For Hubble UI (if enabled)
+hubble:
+  ui:
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 200m
+        memory: 256Mi
+
+# Note: The above resource settings are examples and should be tuned to your environment.
+# We recommend starting with these values and adjusting based on monitoring data.
+
+# Additional settings for L2 announcements and LoadBalancer IP pool
+# We will define the IP pool via a CiliumLoadBalancerIPPool resource, not via Helm values.
+# Similarly, the L2AnnouncementPolicy is defined via a CR.
+
+# Enable hosting of the default service loadbalancer pattern (for services with type LoadBalancer)
+# This is enabled by default when l2announcements.enabled is true, but we can be explicit.
+# loadBalancer:
+#   mode: hybrid  # or dsr, routing, etc. We use the default which is hybrid.
+
+# Enable host firewall (if desired, but we are using WireGuard encryption so host firewall might conflict)
+# hostFirewall:
+#   enabled: false
+
+# Enable monitoring via Prometheus (if desired, we are already enabling Hubble metrics)
+# prometheus:
+#   enabled: true
+#   # Enable metrics for the Cilium operator, agent, etc.
+#   serviceMonitor:
+#     enabled: true
+...

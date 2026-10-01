@@ -1,0 +1,28 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: l2-announcement-policy
+spec:
+  # The interface to use for announcements. We'll use the same interface as defined in group_vars/all.yml.
+  # Note: The interface name might vary per node. We use the value from the variable.
+  # Since we cannot use variables in the manifest, we set it to the value we know: eth0.
+  # In a real deployment, we would use a DaemonSet or a node selector to set the interface per node,
+  # but Cilium's L2AnnouncementPolicy uses the node's interface by default if not specified.
+  # However, we can explicitly set it. We'll leave it empty to let Cilium choose the interface
+  # that has the IP address of the node (which is set by kube-vip for the control plane and the node's IP for workers).
+  # Alternatively, we can set it to the value from our variable.
+  # Let's set it to eth0 as per the inventory.
+  interface: eth0
+  # We can also specify a list of node selectors to apply the policy to specific nodes.
+  # We want it to apply to all nodes, so we leave nodeSelector empty.
+  # The policy will announce the LoadBalancer IPs from the IPPool on the selected interface.
+  # We don't need to specify the IPPool here; the policy will announce all IPs from all IPPools
+  # that are in the same namespace as the policy? Actually, the policy references the IPPool by name.
+  # Let's correct: the CiliumL2AnnouncementPolicy has a field `ipPools` that references the CiliumLoadBalancerIPPool.
+  # We need to reference the IPPool we created above.
+  ipPools:
+  - name: lb-ippool
+    # namespace: kube-system  # if the IPPool is in a different namespace
+  # We can also set the allocation mode, but we leave it to default.
+...

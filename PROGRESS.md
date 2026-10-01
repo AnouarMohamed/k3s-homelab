@@ -47,7 +47,29 @@
 **Status**: ⬜ Not started
 
 ## Phase 2: Install platform components (Cilium, cert-manager, longhorn, openbao, etc.)
-**Status**: ⬜ Not started
+**Status**: 🟡 Preparation completed
+
+**What was done**:
+- Created platform/cilium/ with Helm values (platform/cilium/values.yml), README, and manifests:
+  - CiliumLoadBalancerIPPool (platform/cilium/cilium-lb-ippool.yaml)
+  - CiliumL2AnnouncementPolicy (platform/cilium/cilium-l2-policy.yaml)
+- Created platform/network-policies/ with a baseline network policy component (default-deny + allow DNS + allow intra-namespace) as a reusable Kustomize component, plus an example.
+- Created docs/runbooks/cilium-troubleshooting.md.
+- Created ADR 0006 for WireGuard encryption (docs/adr/0006-wireguard-encryption.md).
+- Added Make target `bootstrap-cni` that installs Gateway API CRDs (version v1.2.0) and Cilium (chart version 1.15.0) via Helm, applies the IP pool and L2 announcement policies, and waits for rollouts.
+- All values in platform/cilium/values.yml are documented with comments explaining why.
+
+**Preparation notes**:
+- The actual installation requires the cluster to be bootstrapped (Phase 1) and the kube-vip VIP (192.168.1.200) to be available.
+- The LoadBalancer IP range (192.168.1.240/28) must be free in the LAN.
+- The interface for L2 announcements is set to eth0 (as per inventory); adjust if your nodes use a different interface.
+- The Gateway API and Cilium versions are specified in the Makefile and should be verified for compatibility with the k3s version.
+
+**Next steps**:
+- Once Phase 1 is complete and the cluster is up (with nodes NotReady due to missing CNI), run `make bootstrap-cni` to install Cilium and Gateway API.
+- After installation, verify with `cilium status --wait` and `kubectl get nodes`.
+- Run `cilium connectivity test` to verify network connectivity and record the summary in this file.
+- Test a LoadBalancer service to ensure it receives an IP from the pool and is reachable from another LAN machine.
 
 ## Phase 3: Deploy Argo CD and app-of-apps
 **Status**: ⬜ Not started
