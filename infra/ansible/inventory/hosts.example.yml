@@ -1,0 +1,24 @@
+# Example inventory for k3s HA cluster with kube-vip
+# Replace the IP addresses with the static IPs of your three Ubuntu servers.
+# The real inventory should be named hosts.yml and placed in this directory.
+# It is gitignored to avoid exposing private IPs.
+
+all:
+  hosts:
+    pc-1:
+      ansible_host: 192.168.1.101   # Replace with actual IP
+      ansible_user: ansible         # Or your admin user
+    pc-2:
+      ansible_host: 192.168.1.102
+      ansible_user: ansible
+    pc-3:
+      ansible_host: 192.168.1.103
+      ansible_user: ansible
+
+  children:
+    servers:
+      hosts:
+        pc-1:
+        pc-2:
+        pc-3:
+    # We'll define variables for the servers group in group_vars/servers.yml

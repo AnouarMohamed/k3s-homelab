@@ -1,6 +1,12 @@
 # Age encryption keys
 *.age
 
+# Ansible inventory (real inventory, not example)
+infra/ansible/inventory/hosts.yml
+
+# Ansible vault files
+group_vars/all.yml.vault
+
 # Environment variables
 .env
 .env.*

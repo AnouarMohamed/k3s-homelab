@@ -1,0 +1,115 @@
+---
+# Base role tasks
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - chrony
+      - apt-utils
+      - curl
+      - gnupg2
+      - software-properties-common
+      - apt-transport-https
+      - ca-certificates
+      - vim
+      - net-tools
+      - lsb-release
+    state: present
+  become: true
+
+- name: Configure unattended-upgrades
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    content: |
+      APT::Periodic::Update-Package-Lists "1";
+      APT::Periodic::Download-Upgradeable-Packages "1";
+      APT::Periodic::AutocleanInterval "7";
+      APT::Periodic::Unattended-Upgrade "1";
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+
+- name: Configure chrony for time sync
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: /etc/chrony/chrony.conf
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  notify: Restart chrony
+
+- name: Enable and start chrony
+  ansible.builtin.service:
+    name: chrony
+    enabled: true
+    state: started
+  become: true
+
+- name: Apply sysctl parameters for Kubernetes
+  ansible.posix.sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: true
+    sysctl_set: true
+  become: true
+  loop:
+    - {name: 'net.bridge.bridge-nf-call-iptables', value: '1'}
+    - {name: 'net.bridge.bridge-nf-call-ip6tables', value: '1'}
+    - {name: 'net.ipv4.ip_forward', value: '1'}
+    - {name: 'net.ipv6.conf.all.disable_ipv6', value: '0'}  # Set to 0 to enable IPv6 forwarding
+    # We'll add more as needed
+
+- name: Ensure swap is disabled
+  ansible.posix.mount:
+    name: "{{ item }}"
+    src: "{{ item }}"
+    fstype: swap
+    state: absent
+  become: true
+  loop:
+    - swap
+    - none
+  failed_when: false
+
+- name: Disable swap in fstab
+  ansible.builtin.lineinfile:
+    path: /etc/fstab
+    regexp: '^[^#].*swap'
+    line: '#&'
+    state: present
+  become: true
+
+- name: Load kernel modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+  become: true
+  loop:
+    - br_netfilter
+    - overlay
+
+- name: Ensure k3s service is enabled and started
+  ansible.builtin.service:
+    name: k3s
+    enabled: true
+    state: started
+  become: true
+
+- name: Wait for k3s to be ready
+  ansible.builtin.command: k3s kubectl get nodes
+  become: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: k3s_ready
+  retries: 10
+  delay: 10
+  until: k3s_ready.stdout contains "Ready"
+...

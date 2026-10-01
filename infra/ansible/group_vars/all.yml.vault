@@ -1,0 +1,4 @@
+---
+# Vault file for sensitive variables
+# Encrypt this file with: ansible-vault encrypt group_vars/all.yml.vault
+k3s_token: CHANGE-ME-TO-A-REAL-TOKEN

@@ -1,0 +1,61 @@
+---
+# k3s role tasks
+- name: Ensure required directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+  loop:
+    - /etc/rancher/k3s
+    - /var/lib/rancher/k3s
+
+- name: Download k3s install script
+  ansible.builtin.get_url:
+    url: https://get.k3s.io
+    dest: /tmp/install_k3s.sh
+    mode: '0755'
+  become: true
+
+- name: Install k3s (first server)
+  become: true
+  environment:
+    INSTALL_K3S_EXEC: |-
+      server --cluster-init --flannel-backend=none --disable-network-policy --disable=traefik --disable=servicelb --disable-kube-proxy --tls-san {{ control_vip }} --write-kubeconfig-mode 644
+    K3S_TOKEN: "{{ k3s_token }}"
+    K3S_CLUSTER_INIT: "true"
+  ansible.builtin.command: /tmp/install_k3s.sh
+  changed_when: false
+  when: inventory_hostname == groups['servers'][0]
+
+- name: Join k3s cluster (additional servers)
+  become: true
+  environment:
+    INSTALL_K3S_EXEC: |-
+      server --server https://{{ control_vip }}:6443 --flannel-backend=none --disable-network-policy --disable=traefik --disable=servicelb --disable-kube-proxy --tls-san {{ control_vip }}
+    K3S_TOKEN: "{{ k3s_token }}"
+  ansible.builtin.command: /tmp/install_k3s.sh
+  changed_when: false
+  when: inventory_hostname != groups['servers'][0]
+
+- name: Ensure k3s service is enabled and started
+  ansible.builtin.service:
+    name: k3s
+    enabled: true
+    state: started
+  become: true
+
+- name: Wait for k3s to be ready
+  ansible.builtin.command: k3s kubectl get nodes
+  changed_when: false
+  become: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: k3s_ready
+  retries: 10
+  delay: 10
+  until: k3s_ready.stdout contains "Ready"
+...
+

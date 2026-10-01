@@ -1,0 +1,32 @@
+---
+# Rolling upgrade of k3s cluster
+- name: Upgrade k3s servers one at a time
+  hosts: servers
+  become: true
+  serial: 1  # one node at a time
+  pre_tasks:
+    - name: Drain the node
+      ansible.builtin.command: >
+        kubectl drain {{ inventory_hostname }} --ignore-daemonsets --delete-emptydir-data
+      become: true
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      ignore_errors: true  # in case the node is already drained
+      register: drain_result
+    - name: Record drain result
+      ansible.builtin.debug:
+        msg: "Drain result: {{ drain_result.stdout }}"
+  roles:
+    - k3s
+  post_tasks:
+    - name: Uncordon the node
+      ansible.builtin.command: >
+        kubectl uncordon {{ inventory_hostname }}
+      become: true
+      environment:
+        KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+      ignore_errors: true
+      register: uncordon_result
+    - name: Record uncordon result
+      ansible.builtin.debug:
+        msg: "Uncordon result: {{ uncordon_result.stdout }}"

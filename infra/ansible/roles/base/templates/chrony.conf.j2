@@ -1,0 +1,14 @@
+# chrony configuration for time synchronization
+# Use Ubuntu's ntp servers as default, but can be overridden
+pool ntp.ubuntu.com        iburst maxsources 4
+pool 0.ubuntu.pool.ntp.org iburst maxsources 2
+pool 1.ubuntu.pool.ntp.org iburst maxsources 2
+
+# Allow NTP client access from local network.
+allow 192.168.0.0/16
+# Serve time even if not synchronized to a time source.
+local stratum 10
+# Enable kernel synchronization sync every 11 minutes.
+# This helps with virtualization.
+# logchange 0.5
+logdir /var/log/chrony

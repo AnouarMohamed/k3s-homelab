@@ -1,0 +1,7 @@
+---
+# Default variables for k3s role
+k3s_version: v1.27.3+k3s1  # example version, adjust as needed
+k3s_interface: eth0
+# control_vip and k3s_token must be set in group_vars or via external vault
+...
+

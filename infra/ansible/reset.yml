@@ -1,0 +1,11 @@
+---
+# Reset: remove k3s and kube-vip cluster
+- name: Remove k3s and kube-vip
+  hosts: servers
+  become: true
+  vars:
+    k3s_state: absent
+    kube_vip_state: absent
+  roles:
+    - kube_vip
+    - k3s

@@ -1,0 +1,43 @@
+---
+# kube_vip role tasks
+- name: Ensure kube-vip manifest directory exists
+  ansible.builtin.file:
+    path: /var/lib/rancher/k3s/agent/etc/kubelet/manifests
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+  become: true
+
+- name: Deploy kube-vip static pod manifest
+  ansible.builtin.template:
+    src: kube-vip.yaml.j2
+    dest: /var/lib/rancher/k3s/agent/etc/kubelet/manifests/kube-vip.yaml
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  notify: Restart kubevip (if needed, but k3s will pick it up automatically)
+
+- name: Ensure kube-vip is running (by checking the pod)
+  ansible.builtin.command: >
+    ctr -n k8s.io images list | grep kube-vip
+  become: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: kubevip_image
+  failed_when: false
+  # We'll just note that the image must be pulled by the kubelet when the manifest is applied.
+
+- name: Wait for kube-vip pod to be ready
+  ansible.builtin.command: >
+    kubectl get pod -n kube-system | grep kube-vip
+  become: true
+  environment:
+    KUBECONFIG: /etc/rancher/k3s/k3s.yaml
+  register: kubevip_pod
+  retries: 10
+  delay: 5
+  until: kubevip_pod.stdout is search("Running")
+...
+

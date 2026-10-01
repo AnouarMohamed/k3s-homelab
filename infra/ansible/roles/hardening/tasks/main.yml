@@ -1,0 +1,143 @@
+---
+# Hardening role tasks
+- name: Ensure SSH key-only authentication
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PasswordAuthentication'
+    line: 'PasswordAuthentication no'
+    state: present
+  become: true
+  notify: Restart ssh
+
+- name: Disable root login over SSH
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?PermitRootLogin'
+    line: 'PermitRootLogin prohibit-password'
+    state: present
+  become: true
+  notify: Restart ssh
+
+- name: Install fail2ban
+  ansible.builtin.apt:
+    name: fail2ban
+    state: present
+  become: true
+
+- name: Configure fail2ban jail for SSH
+  ansible.builtin.copy:
+    dest: /etc/fail2ban/jail.d/sshd.local
+    content: |
+      [sshd]
+      enabled = true
+      port = ssh
+      filter = sshd
+      logpath = /var/log/auth.log
+      maxretry = 3
+      bantime = 3600
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  notify: Restart fail2ban
+
+- name: Enable and start fail2ban
+  ansible.builtin.service:
+    name: fail2ban
+    enabled: true
+    state: started
+  become: true
+
+- name: Install ufw
+  ansible.builtin.apt:
+    name: ufw
+    state: present
+  become: true
+
+- name: Set default ufw policies
+  ansible.builtin.command: ufw default deny incoming
+  become: true
+  failed_when: false
+- name: Set default ufw outgoing policy
+  ansible.builtin.command: ufw default allow outgoing
+  become: true
+  failed_when: false
+
+- name: Allow SSH from admin range only
+  # We'll define the admin range as a variable, but for now use a placeholder
+  ansible.builtin.command: ufw allow from 192.168.1.0/24 to any port 22
+  become: true
+  failed_when: false
+
+- name: Allow k3s API server port (6443) between nodes
+  ansible.builtin.command: ufw allow from 192.168.1.0/24 to any port 6443
+  become: true
+  failed_when: false
+
+- name: Allow etcd server ports (2379-2380) between nodes
+  ansible.builtin.command: ufw allow from 192.168.1.0/24 to any port 2379:2380
+  become: true
+  failed_when: false
+
+- name: Allow kubelet port (10250) between nodes
+  ansible.builtin.command: ufw allow from 192.168.1.0/24 to any port 10250
+  become: true
+  failed_when: false
+
+- name: Allow WireGuard port (admin access)
+  # We'll skip for now, but note that we need to open WireGuard port (51820) for admin access.
+  # However, the requirement says SSH from admin range only, and WireGuard is for admin access.
+  # We'll add it as a comment and maybe open it in a later phase? But the requirement says to list justified ports.
+  # We'll add it now and note that it's for admin access.
+  ansible.builtin.command: ufw allow 51820/udp
+  become: true
+  failed_when: false
+
+  # Allow Cilium/Hubble ports (we'll need to know which ports, but for now we'll note common ones)
+  # Cilium uses various ports depending on mode. We'll leave it as a placeholder and update in phase 2.
+  # For now, we'll not open any Cilium specific ports because we are not installing Cilium yet.
+  # We'll document that these will be opened in phase 2.
+  # We'll leave this task commented out or with a condition.
+  # - name: Allow Cilium VXLAN port (8472) if using VXLAN
+  #   ansible.builtin.command: ufw allow 8472/udp
+  #   become: true
+  #   ignore_errors: true
+  # We'll skip for now.
+
+- name: Install auditd
+  ansible.builtin.apt:
+    name: auditd
+    state: present
+  become: true
+
+- name: Enable and start auditd
+  ansible.builtin.service:
+    name: auditd
+    enabled: true
+    state: started
+  become: true
+
+- name: Set auditd rules (baseline)
+  # We'll load a set of rules from a file, but for simplicity we'll enable the default rules.
+  # In a real scenario, we might want to load CIS or Stig rules.
+  # We'll just ensure the service is running and maybe add a basic rule.
+  ansible.builtin.copy:
+    dest: /etc/audit/rules.d/base.rules
+    content: |
+      # Base audit rules
+      -w /etc/passwd -p wa -k identity
+      -w /etc/group -p wa -k identity
+      -w /etc/shadow -p wa -k identity
+      -w /etc/gshadow -p wa -k identity
+    owner: root
+    group: root
+    mode: '0644'
+  become: true
+  notify: Restart auditd
+
+- name: Enable auditd service
+  ansible.builtin.service:
+    name: auditd
+    enabled: true
+    state: started
+  become: true

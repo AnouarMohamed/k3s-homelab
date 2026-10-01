@@ -1,0 +1,8 @@
+---
+# Group variables for all hosts
+# Control plane VIP for k3s HA cluster
+control_vip: 192.168.1.200  # Example, change to match your network
+# Network interface for kube-vip and k3s (if needed)
+interface: eth0
+# K3s version (overrides the role default if set)
+# k3s_version: v1.27.3+k3s1

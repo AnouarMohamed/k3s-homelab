@@ -1,0 +1,17 @@
+---
+# Site playbook for hardening and deploying k3s HA cluster
+- name: Apply base configuration and hardening
+  hosts: servers
+  become: true
+  roles:
+    - base
+    - hardening
+
+- name: Deploy k3s HA cluster with kube-vip
+  hosts: servers
+  become: true
+  roles:
+    - kube_vip
+    - k3s
+...
+

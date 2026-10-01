@@ -1,12 +1,13 @@
-.PHONY: help lint validate bootstrap teardown
+.PHONY: help lint validate bootstrap-nodes upgrade-k3s reset
 
 help:
 	@echo "Available targets:"
 	@echo "  help        Show this help message"
 	@echo "  lint        Run linters"
 	@echo "  validate    Run validation scripts"
-	@echo "  bootstrap   Bootstrap the cluster (not implemented until phase 1)"
-	@echo "  teardown    Teardown the cluster (not implemented until phase 5)"
+	@echo "  bootstrap-nodes   Bootstrap the cluster (harden nodes and deploy k3s HA)"
+	@echo "  upgrade-k3s       Upgrade k3s cluster (rolling update)"
+	@echo "  reset             Teardown the cluster (remove k3s and kube-vip)"
 
 lint:
 	@echo "Running linters..."
@@ -18,8 +19,14 @@ validate:
 	# This will be implemented with kubeconform, kube-linter, etc. in later phases
 	@echo "Validation not fully implemented yet."
 
-bootstrap:
-	@echo "not implemented until phase 1"
+bootstrap-nodes:
+	@echo "Bootstrapping nodes (hardening and k3s HA cluster)..."
+	ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/site.yml
 
-teardown:
-	@echo "not implemented until phase 5"
+upgrade-k3s:
+	@echo "Upgrading k3s cluster (rolling update)..."
+	ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/upgrade.yml
+
+reset:
+	@echo "Tearing down the cluster..."
+	ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/reset.yml
