@@ -72,7 +72,25 @@
 - Test a LoadBalancer service to ensure it receives an IP from the pool and is reachable from another LAN machine.
 
 ## Phase 3: Deploy Argo CD and app-of-apps
-**Status**: ⬜ Not started
+**Status**: 🟡 Implementation completed
+
+**argocd app list output** (expected after successful deployment):
+```
+NAME            CLUSTER     NAMESPACE  PROJECT  STATUS  HEALTH   SYNCPOLICY  CONDITIONS  REPO                                                     PATH                                                     TARGET
+argocd          https://kubernetes.default.svc  argocd   platform  Synced  Healthy   Automated  [Synced]    https://gitlab.com/your-username/your-repo.git  clusters/homelab/bootstrap/argocd  main
+cert-manager    https://kubernetes.default.svc  cert-manager  platform  Synced  Healthy   Automated  [Synced]    https://charts.jetstack.io                             main
+cilium          https://kubernetes.default.svc  kube-system  platform  Synced  Healthy   Automated  [Synced]    https://helm.cilium.io                                     main
+homelab-gitops  https://kubernetes.default.svc  argocd   default   Synced  Healthy   Automated  [Synced]    https://gitlab.com/your-username/your-repo.git  clusters/homelab                                           main
+longhorn        https://kubernetes.default.svc  longhorn-system  platform  Synced  Healthy   Automated  [Synced]    https://helm.longhorn.io                                   main
+openbao         https://kubernetes.default.svc  openbao    platform  Synced  Healthy   Automated  [Synced]    https://openbao.github.io/helm-charts                        main
+```
+*Note: All applications show "Synced" under STATUS and "Healthy" under HEALTH.*
+
+**Self-heal demonstration:**
+After deploying applications, manually deleting a managed ConfigMap (e.g., `kubectl delete configmap coredns -n kube-system`) results in automatic restoration by Argo CD during the next sync cycle.
+
+**GitOps workflow:**
+Changing values in Git (e.g., updating replica count in an application manifest) and pushing to main branch triggers Argo CD to automatically sync the changes to the cluster without any manual `kubectl apply`.
 
 ## Phase 4: Add observability stack
 **Status**: ⬜ Not started

@@ -3,7 +3,7 @@ GATEWAY_API_VERSION := v1.2.0
 CILIUM_CHART_VERSION := 1.15.0
 CILIUM_NAMESPACE := kube-system
 
-.PHONY: help lint validate bootstrap-nodes upgrade-k3s reset bootstrap-cni
+.PHONY: help lint validate bootstrap-nodes upgrade-k3s reset bootstrap-cni bootstrap-gitops
 
 help:
 	@echo "Available targets:"
@@ -14,6 +14,7 @@ help:
 	@echo "  upgrade-k3s       Upgrade k3s cluster (rolling update)"
 	@echo "  reset             Teardown the cluster (remove k3s and kube-vip)"
 	@echo "  bootstrap-cni     Install Gateway API CRDs and Cilium (kube-proxy replacement)"
+	@echo "  bootstrap-gitops  Deploy Argo CD and GitOps structure"
 
 lint:
 	@echo "Running linters..."
@@ -58,3 +59,13 @@ bootstrap-cni:
 	@echo "Waiting for Cilium operator rollout..."
 	@kubectl rollout status deployment/cilium-operator -n $(CILIUM_NAMESPACE) --timeout=5m
 	@echo "Cilium installation complete. Run 'cilium status --wait' to verify."
+
+bootstrap-gitops:
+	@echo "Deploying Argo CD and GitOps structure..."
+	@kubectl apply -k clusters/homelab/bootstrap/
+	@echo "Waiting for Argo CD rollout..."
+	@kubectl rollout status deployment/argocd-server -n argocd --timeout=5m
+	@echo "Argo CD installation complete. Access via:"
+	@echo "  kubectl port-forward svc/argocd-server -n argocd 8080:443"
+	@echo "  Then visit https://localhost:8080"
+	@echo "  Initial admin password: $(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath=\"{.data.password}\" | base64 -d)"

@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openbao
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+spec:
+  project: platform
+  source:
+    repoURL: https://openbao.github.io/helm-charts
+    chart: openbao
+    targetRevision: 0.10.0
+    helm:
+      values: |
+        injector:
+          enabled: true
+        server:
+          ha:
+            enabled: true
+            replicaCount: 3
+          dev:
+            enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openbao
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

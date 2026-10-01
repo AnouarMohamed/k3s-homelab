@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: argocd-notifications-cm
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-notifications-cm
+    app.kubernetes.io/part-of: argocd
+data:
+  # Notifications configuration - disabled until Phase 7
+  # Enable by setting `enabled: true` in Phase 7
+  service.generic: |
+    # Generic webhook notification service (disabled)
+    # Disable all notifications by not enabling any triggers
+  # Disable all triggers
+  triggers: |
+    # No triggers enabled - notifications are disabled until Phase 7

@@ -1,0 +1,10 @@
+resources:
+  - install.yaml
+  - rbac/rbac.yaml
+  - breakglass-account.yaml
+  - patches/admin-disabled.yaml
+  - notifications.yaml
+
+# Apply patches to customize Argo CD installation
+patchesStrategicMerge:
+  - patches/admin-disabled.yaml

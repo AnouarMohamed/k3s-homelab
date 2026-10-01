@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: apps
+  namespace: argocd
+spec:
+  description: User applications and demo apps
+  # Source repositories allowed for this project
+  sourceRepos:
+    - 'https://gitlab.com/your-username/your-repo.git'
+  # Destinations allowed for this project
+  destinations:
+    - namespace: '*'
+      server: https://kubernetes.default.svc
+  # Cluster resource whitelist - allowed resources for this project
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  # Namespace resource whitelist - allowed resources for namespaced resources
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  # Deny deleting protected namespace resources
+  orphanedResources:
+    warn: true

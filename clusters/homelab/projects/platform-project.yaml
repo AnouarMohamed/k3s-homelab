@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+spec:
+  description: Platform components (Cilium, cert-manager, storage, etc.)
+  # Source repositories allowed for this project
+  sourceRepos:
+    - 'https://gitlab.com/your-username/your-repo.git'
+    - 'https://helm.cilium.io/'
+    - 'https://charts.jetstack.io'
+    - 'https://helm.longhorn.io'
+    - 'https://openbao.github.io/helm-charts'
+  # Destinations allowed for this project
+  destinations:
+    - namespace: '*'
+      server: https://kubernetes.default.svc
+  # Cluster resource whitelist - allowed resources for this project
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  # Namespace resource whitelist - allowed resources for namespaced resources
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  # Deny deleting protected namespace resources
+  orphanedResources:
+    warn: true

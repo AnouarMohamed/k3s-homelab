@@ -1,0 +1,13 @@
+resources:
+  - argocd/
+  - argocd/gitlab-credentials.yaml.sops
+  - ../projects/
+  - ../apps/
+
+# Common labels to add to all resources
+commonLabels:
+  argocd.argoproj.io/managed-by: argocd
+  cluster.x-k8s.io/cluster-name: homelab
+
+# Namespace for Argo CD
+namespace: argocd

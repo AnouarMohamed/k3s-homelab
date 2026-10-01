@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: observability
+  namespace: argocd
+spec:
+  description: Observability stack (Prometheus, Grafana, Loki, etc.)
+  # Source repositories allowed for this project
+  sourceRepos:
+    - 'https://gitlab.com/your-username/your-repo.git'
+    - 'https://prometheus-community.github.io/helm-charts'
+    - 'https://grafana.github.io/helm-charts'
+    - 'https://helm.lokistack.io'
+  # Destinations allowed for this project
+  destinations:
+    - namespace: '*'
+      server: https://kubernetes.default.svc
+  # Cluster resource whitelist - allowed resources for this project
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  # Namespace resource whitelist - allowed resources for namespaced resources
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  # Deny deleting protected namespace resources
+  orphanedResources:
+    warn: true
