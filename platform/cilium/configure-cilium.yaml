@@ -1,0 +1,148 @@
+---
+cluster:
+  name: homelab
+
+k8sServiceHost: ${CONFIG_CONTROL_PLANE_VIP}
+k8sServicePort: 6443
+kubeProxyReplacement: true
+
+devices: ${CONFIG_NODE_INTERFACES}
+routingMode: tunnel
+tunnelProtocol: vxlan
+ipam:
+  mode: kubernetes
+
+cni:
+  exclusive: true
+
+l2announcements:
+  enabled: true
+  leaseDuration: 15s
+  leaseRenewDeadline: 5s
+  leaseRetryPeriod: 2s
+k8sClientRateLimit:
+  qps: 30
+  burst: 60
+  operator:
+    qps: 30
+    burst: 60
+
+gatewayAPI:
+  enabled: true
+  enableAlpn: true
+  enableAppProtocol: true
+  gatewayClass:
+    create: true
+
+encryption:
+  enabled: true
+  type: wireguard
+  nodeEncryption: false
+
+prometheus:
+  enabled: true
+  metricsService: true
+  serviceMonitor:
+    enabled: false
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: "2"
+    memory: 1Gi
+
+operator:
+  replicas: 2
+  rollOutPods: true
+  podDisruptionBudget:
+    enabled: true
+    maxUnavailable: 1
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+  prometheus:
+    enabled: true
+    metricsService: true
+    serviceMonitor:
+      enabled: false
+
+envoy:
+  enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: false
+
+hubble:
+  enabled: true
+  metrics:
+    enabled:
+      - dns:query;ignoreAAAA
+      - drop
+      - flow
+      - http
+      - icmp
+      - tcp
+    enableOpenMetrics: true
+    serviceMonitor:
+      enabled: false
+    dashboards:
+      enabled: true
+  tls:
+    enabled: true
+    auto:
+      enabled: true
+      method: cronJob
+  relay:
+    enabled: true
+    replicas: 2
+    podDisruptionBudget:
+      enabled: true
+      maxUnavailable: 1
+    resources:
+      requests:
+        cpu: 50m
+        memory: 64Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: false
+  ui:
+    enabled: true
+    replicas: 1
+    backend:
+      resources:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          cpu: 250m
+          memory: 128Mi
+    frontend:
+      resources:
+        requests:
+          cpu: 25m
+          memory: 32Mi
+        limits:
+          cpu: 250m
+          memory: 128Mi
+
+dashboards:
+  enabled: true
+...

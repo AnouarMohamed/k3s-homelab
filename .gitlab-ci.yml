@@ -49,16 +49,21 @@ validate:repository:
   stage: validate
   image: golang:1.26.8-bookworm@sha256:dc9ad6c05acc7a88e5b71bde60a5fe3bd4b9f0db209011711b464107438a8107
   before_script:
+    - source scripts/tool-versions.env
     - export GOBIN="${CI_PROJECT_DIR}/.tools/bin"
     - mkdir -p "${GOBIN}"
     - go install github.com/yannh/kubeconform/cmd/kubeconform@v0.8.0
     - go install golang.stackrox.io/kube-linter/cmd/kube-linter@v0.8.3
+    - go install sigs.k8s.io/kustomize/kustomize/v5@"${KUSTOMIZE_VERSION}"
+    - go install github.com/mikefarah/yq/v4@"${YQ_VERSION}"
+    - go install helm.sh/helm/v3/cmd/helm@"${HELM_VERSION}"
     - export PATH="${GOBIN}:${PATH}"
   script:
     - scripts/check-forbidden-files.sh
     - scripts/check-private-values.sh
     - scripts/check-pins.sh
     - scripts/validate-manifests.sh
+    - scripts/validate-cilium.sh
 
 security:gitleaks:
   stage: security

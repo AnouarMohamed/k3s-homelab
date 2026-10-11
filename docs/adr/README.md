@@ -1,4 +1,5 @@
 # Architecture Decision Records
 
-This directory contains ADRs documenting significant architectural decisions made during the project.
-Each ADR is a markdown file named with a sequential number and a short title, e.g., `0001-title.md`.
+This directory contains sequential architecture decisions. Current decisions cover
+k3s, Cilium, Argo CD, Cloudflare access, and Cilium WireGuard encryption. Phase 12 adds
+the final indexed decision map and verifies links.

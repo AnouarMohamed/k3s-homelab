@@ -88,6 +88,17 @@
         "/^scripts/tool-versions\\.env$/"
       ],
       "matchStrings": [
+        "HELM_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "helm/helm",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^scripts/tool-versions\\.env$/"
+      ],
+      "matchStrings": [
         "AGE_VERSION=(?<currentValue>[^\\s]+)"
       ],
       "depNameTemplate": "FiloSottile/age",

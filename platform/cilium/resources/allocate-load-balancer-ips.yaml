@@ -1,0 +1,10 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumLoadBalancerIPPool
+metadata:
+  name: homelab-lan
+spec:
+  blocks:
+    - start: ${CONFIG_LOAD_BALANCER_START}
+      stop: ${CONFIG_LOAD_BALANCER_STOP}
+...

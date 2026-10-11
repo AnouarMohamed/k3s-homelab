@@ -7,7 +7,7 @@ ANSIBLE_INVENTORY := $(REPOSITORY_ROOT)/infra/ansible/inventory/homelab.py
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools lint ansible-syntax ansible-templates validate security bootstrap bootstrap-nodes upgrade-k3s reset \
+.PHONY: help tools lint ansible-syntax ansible-templates phase2-deps validate-cni validate security bootstrap bootstrap-nodes upgrade-k3s reset \
 	bootstrap-cni bootstrap-gitops bootstrap-platform test tofu-plan teardown
 
 help: ## Show all supported targets
@@ -35,7 +35,13 @@ ansible-syntax: ## Parse the dynamic inventory and all Ansible playbooks
 ansible-templates: ## Render and parse Ansible-owned configuration templates
 	@ansible-playbook -i $(ANSIBLE_INVENTORY) infra/ansible/validate-templates.yaml
 
-validate: ansible-syntax ansible-templates ## Validate repository policy and Kubernetes manifests
+phase2-deps: ## Fetch checksum-verified Cilium and Gateway API artifacts
+	@scripts/fetch-phase2-dependencies.sh
+
+validate-cni: ## Render and validate Cilium and baseline network policies twice
+	@scripts/validate-cilium.sh
+
+validate: ansible-syntax ansible-templates validate-cni ## Validate repository policy and Kubernetes manifests
 	@scripts/check-forbidden-files.sh
 	@scripts/check-private-values.sh
 	@scripts/check-pins.sh
