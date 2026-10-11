@@ -7,7 +7,7 @@ checks against the three physical nodes are tracked separately as `PENDING HARDW
 
 - [x] Phase 0 — Skeleton and CI (offline validation complete)
 - [x] Phase 1 — Nodes and k3s (offline validation complete; pending hardware)
-- [ ] Phase 2 — Cilium (repair required)
+- [x] Phase 2 — Cilium (offline validation complete; pending hardware)
 - [ ] Phase 3 — Argo CD (repair required)
 - [ ] Phase 4 — Certificates, DNS, and public access
 - [ ] Phase 5 — Storage and backups
@@ -94,6 +94,33 @@ explicitly because that release has no checksum-list asset.
 - No playbook was run against a node. Convergence, second-run idempotence, hardening,
   VIP movement, etcd quorum, S3 snapshots, upgrade, and reset remain
   `PENDING HARDWARE`.
+
+## Phase 2 validation — 2026-10-11
+
+- The pinned Cilium `1.20.2` chart resolved to OCI digest
+  `sha256:a7c12d330dd96bfcda3bf057b24be8f36566c34868265f930f776dff6f42d838`.
+- SHA-256 verification returned `OK` for the Gateway API `v1.6.1` standard manifest
+  and the two Cilium CRDs used to validate LB IPAM and L2 announcement resources.
+- `helm lint` reported one chart linted and zero failures.
+- Two independently rendered Cilium value files, Helm outputs, and Cilium resource
+  outputs compared byte-for-byte equal.
+- Strict kubeconform validation reported 56 valid chart resources, zero invalid,
+  zero errors, and zero skipped. Validation against schemas extracted from the pinned
+  Cilium CRDs reported two valid custom resources with no invalid or skipped objects.
+- Kube-linter reported no lint errors for the reusable default-deny component.
+- `make lint` returned exit 0. Ansible-lint reported zero failures and warnings, and
+  markdownlint reported 45 files with zero issues.
+- `make validate` returned exit 0 with the Phase 1 and Phase 2 gates composed. The
+  generic manifest pass reported four valid built-in resources with no errors or
+  skipped objects.
+- A second `make validate-cni` run using the ignored kubeconform schema cache returned
+  exit 0 in approximately seven seconds with the same 56/56 and 2/2 results.
+- `make security` scanned the staged working tree and all nine commits, approximately
+  2.13 MB of history, and reported no leaks. The allowlist recognizes only explicit
+  uppercase `*_SHA256` assignments as public checksum material.
+- No manifest was applied to a cluster. Node readiness, Cilium health, GatewayClass
+  availability, connectivity, L2 address advertisement, and WireGuard encryption
+  remain `PENDING HARDWARE`.
 
 ## Unverified
 

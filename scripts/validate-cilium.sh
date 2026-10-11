@@ -4,6 +4,8 @@ set -euo pipefail
 repository_root="$(git rev-parse --show-toplevel)"
 export PATH="${repository_root}/.tools/bin:${PATH}"
 cache_dir="${repository_root}/.cache/phase2"
+schema_cache_dir="${repository_root}/.cache/kubeconform"
+mkdir -p "${schema_cache_dir}"
 
 # shellcheck disable=SC1091
 source "${repository_root}/platform/cilium/dependencies.env"
@@ -53,6 +55,7 @@ cmp "${validation_dir}/cilium-render-first.yaml" \
   "${validation_dir}/cilium-render-second.yaml"
 
 kubeconform -strict -summary \
+  -cache "${schema_cache_dir}" \
   -kubernetes-version 1.36.5 \
   -schema-location default \
   -schema-location "${schema_dir}/{{.ResourceKind}}-{{.ResourceAPIVersion}}.json" \

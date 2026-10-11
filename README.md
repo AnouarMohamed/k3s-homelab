@@ -57,7 +57,7 @@ Addresses, interfaces, domains, and external service identifiers live only in
 | --- | --- |
 | 0 — Skeleton and CI | Implemented; CI runner untested |
 | 1 — Nodes and k3s | Implemented; pending hardware |
-| 2 — Cilium | Planned |
+| 2 — Cilium | Implemented; pending hardware |
 | 3 — Argo CD | Planned |
 | 4 — Certificates, DNS, and access | Planned |
 | 5 — Storage and backups | Planned |

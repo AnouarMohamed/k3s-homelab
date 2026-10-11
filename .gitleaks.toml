@@ -7,3 +7,7 @@ paths = [
   '''^\.tools/''',
   '''^\.cache/''',
 ]
+regexTarget = "line"
+regexes = [
+  '''[A-Z0-9_]+_SHA256=[0-9a-f]{64}''',
+]

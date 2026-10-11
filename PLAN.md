@@ -79,7 +79,7 @@ before later phases begin.
 | --- | --- | --- |
 | k3s | `v1.36.5+k3s1` | Official release checksum for amd64 binary: `d73847bcd3c5fccef0115b372e2f9a91f3032dc84bbf71518a4617565294d313` |
 | kube-vip | `v1.2.4` | OCI index digest `sha256:dde4c0669d9058c74c69c0bc2f0122e26900e1e4b913c03577cb6e4e28083079` |
-| Gateway API | `v1.6.1` standard channel | Official Gateway API installation guide |
+| Gateway API | `v1.6.1` standard channel | Release manifest SHA-256 `24d931f22abd8e40c973264319ead7cfa09d0fb7716b7ab1ee2ff174cb063a73` |
 | Cilium chart | `1.20.2` | `helm show chart`; OCI digest `sha256:a7c12d330dd96bfcda3bf057b24be8f36566c34868265f930f776dff6f42d838` |
 | Argo CD chart | `10.10.2` | `helm show chart`; app `v3.5.4`, OCI digest `sha256:96ff0d2150557ceb51c309c3adedb63455226c2dd2c5323f5b1e894536e2901d` |
 | community.general | `13.4.0` | Galaxy artifact SHA-256 `efd1c0b5dc6f89b9667e4bd77f2426c30545861910dba188593871095ede1804` |

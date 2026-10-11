@@ -32,11 +32,17 @@ Status: **PENDING HARDWARE**
 make bootstrap-cni
 cilium status --wait
 cilium connectivity test
+kubectl get gatewayclass cilium
+kubectl -n kube-system get pods -l k8s-app=cilium -o wide
 kubectl get ciliuml2announcementpolicies,ciliumloadbalancerippools
+kubectl -n kube-system get leases | grep cilium-l2announce
+cilium encrypt status
 ```
 
 Expected: Cilium is healthy, all nodes become Ready, connectivity tests pass, and the
-pool reports available addresses without conflicts.
+`cilium` GatewayClass is accepted. The pool reports available addresses without
+conflicts, L2 announcement leases exist, and encryption status reports WireGuard on
+all three nodes.
 
 ## Phases 3–12
 
