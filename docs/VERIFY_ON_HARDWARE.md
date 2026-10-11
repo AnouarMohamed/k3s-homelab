@@ -44,7 +44,30 @@ Expected: Cilium is healthy, all nodes become Ready, connectivity tests pass, an
 conflicts, L2 announcement leases exist, and encryption status reports WireGuard on
 all three nodes.
 
-## Phases 3–12
+## Phase 3 — Argo CD
+
+Status: **PENDING HARDWARE**
+
+```bash
+export SOPS_AGE_KEY_FILE=/secure/path/to/keys.txt
+make bootstrap-gitops
+kubectl -n argocd get pods,applications,applicationsets,appprojects
+kubectl -n argocd get service argocd-server -o jsonpath='{.spec.type}{"\n"}'
+kubectl -n argocd get application homelab-root argocd bootstrap-secrets cilium
+kubectl -n argocd get deployment argocd-repo-server \
+  -o jsonpath='{.spec.template.spec.automountServiceAccountToken}{"\n"}'
+argocd app list
+argocd account list
+```
+
+Expected: every Argo CD pod is Ready; the server is `ClusterIP`; the root, Argo CD,
+bootstrap-secrets, and Cilium Applications are Healthy and Synced from GitLab `main`;
+the production ApplicationSet uses the `applications` project; the default project has
+no sources or destinations; repo-server token automount is `false`; and local `admin`
+plus `platform-reader` accounts exist. Test a drift correction only on a harmless
+ConfigMap and record the observed reconciliation before marking self-heal verified.
+
+## Phases 4–12
 
 Status: **PENDING HARDWARE**
 

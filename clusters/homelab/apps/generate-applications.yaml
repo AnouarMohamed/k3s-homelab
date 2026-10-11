@@ -1,0 +1,52 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: production-applications
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: production-applications
+    app.kubernetes.io/component: application-generator
+    app.kubernetes.io/part-of: homelab-platform
+  annotations:
+    argocd.argoproj.io/sync-wave: '10'
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=error
+  generators:
+    - git:
+        repoURL: ${CONFIG_GITLAB_REPOSITORY_URL}
+        revision: main
+        directories:
+          - path: apps/*/overlays/prod
+  template:
+    metadata:
+      name: '{{ index .path.segments 1 | normalize }}-production'
+      labels:
+        app.kubernetes.io/name: '{{ index .path.segments 1 | normalize }}'
+        app.kubernetes.io/component: application
+        app.kubernetes.io/part-of: homelab-applications
+      annotations:
+        argocd.argoproj.io/sync-wave: '20'
+    spec:
+      project: applications
+      source:
+        repoURL: ${CONFIG_GITLAB_REPOSITORY_URL}
+        targetRevision: main
+        path: '{{.path.path}}'
+        plugin:
+          name: homelab-renderer-v1
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: 'apps-{{ index .path.segments 1 | normalize }}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+          allowEmpty: false
+        syncOptions:
+          - CreateNamespace=true
+          - PruneLast=true
+          - ServerSideApply=true
+      revisionHistoryLimit: 10

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repository_root="$(git rev-parse --show-toplevel)"
+repository_root="${HOMELAB_REPOSITORY_ROOT:-$(git rev-parse --show-toplevel)}"
 export PATH="${repository_root}/.tools/bin:${PATH}"
 config_file="${repository_root}/config/homelab.yaml"
 input_file="${1:--}"
@@ -35,4 +35,17 @@ CONFIG_NODE_INTERFACE_PATTERN="$(
 CONFIG_S3_ENDPOINT="$(yq --unwrapScalar '.spec.storage.s3.endpoint' "${config_file}")"
 CONFIG_S3_BUCKET="$(yq --unwrapScalar '.spec.storage.s3.bucket' "${config_file}")"
 
-yq '(.. | select(tag == "!!str")) |= envsubst(nu,ff)' "${input_file}"
+yq '(
+  .. |
+  select(
+    tag == "!!str" and
+    test("\\$\\{(CONFIG_[A-Z0-9_]+|ARGOCD_IMAGE|KSOPS_IMAGE|YQ_IMAGE)\\}")
+  )
+) |= envsubst(nu,ff) |
+(
+  select(
+    .kind == "Secret" and
+    .metadata.name == "gitlab-repository-credentials" and
+    .metadata.namespace == "argocd"
+  ).stringData.url
+) = strenv(CONFIG_GITLAB_REPOSITORY_URL)' "${input_file}"

@@ -15,8 +15,9 @@ block repository implementation.
 - [ ] Generate an age identity with `age-keygen`; store the private identity offline and
   put only its public recipient in `.sops.yaml`.
 - [ ] Re-encrypt bootstrap placeholder secrets with that recipient.
-- [ ] Create a least-privilege GitLab deploy token and CI variables documented in the
-  Phase 3 and Phase 9 runbooks.
+- [ ] Create a GitLab deploy token with `read_repository` only, encrypt its username
+  and token into the tracked repository-credential SOPS document, and configure the
+  separate Phase 9 CI variables when that phase is implemented.
 - [ ] Create scoped Cloudflare API tokens for DNS and Tunnel management and configure
   WARP private-network access.
 - [ ] Create the S3 bucket/credentials or authorize OpenTofu to create them.

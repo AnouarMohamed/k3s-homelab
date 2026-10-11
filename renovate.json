@@ -169,6 +169,46 @@
       ],
       "depNameTemplate": "koalaman/shellcheck",
       "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/argocd/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "ARGOCD_CHART_VERSION=(?<currentValue>[^\\s]+)\\nARGOCD_CHART_REF=oci://(?<depName>ghcr\\.io/argoproj/argo-helm/argo-cd)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/argocd/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "ARGOCD_IMAGE=(?<depName>quay\\.io/argoproj/argocd):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/argocd/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "KSOPS_IMAGE=(?<depName>docker\\.io/viaductoss/ksops):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/argocd/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "YQ_IMAGE=(?<depName>docker\\.io/mikefarah/yq):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
     }
   ],
   "packageRules": [

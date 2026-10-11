@@ -82,6 +82,7 @@ before later phases begin.
 | Gateway API | `v1.6.1` standard channel | Release manifest SHA-256 `24d931f22abd8e40c973264319ead7cfa09d0fb7716b7ab1ee2ff174cb063a73` |
 | Cilium chart | `1.20.2` | `helm show chart`; OCI digest `sha256:a7c12d330dd96bfcda3bf057b24be8f36566c34868265f930f776dff6f42d838` |
 | Argo CD chart | `10.10.2` | `helm show chart`; app `v3.5.4`, OCI digest `sha256:96ff0d2150557ceb51c309c3adedb63455226c2dd2c5323f5b1e894536e2901d` |
+| KSOPS | `v4.5.1` | Official release and image digest `sha256:4def9fdd4e2f850265740ebe9592c5455d19b76891e88e602df8b52d74b95334` |
 | community.general | `13.4.0` | Galaxy artifact SHA-256 `efd1c0b5dc6f89b9667e4bd77f2426c30545861910dba188593871095ede1804` |
 
 All remaining chart, provider, collection, application image, and CI image versions are

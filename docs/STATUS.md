@@ -7,7 +7,7 @@ Only Anouar changes the hardware verification column to `Verified`.
 | Repository controls and CI | Implemented | Not applicable | [Phase 0 evidence](../PROGRESS.md#phase-0-validation--2026-10-11) |
 | Node preparation and k3s | Implemented | PENDING HARDWARE | [Phase 1 evidence](../PROGRESS.md#phase-1-validation--2026-10-11) |
 | Cilium and Gateway API | Implemented | PENDING HARDWARE | [Phase 2 evidence](../PROGRESS.md#phase-2-validation--2026-10-11) |
-| Argo CD GitOps | Planned | Untested | [Phase 3](BUILD_SPEC.md) |
+| Argo CD GitOps | Implemented | PENDING HARDWARE | [Phase 3 evidence](../PROGRESS.md#phase-3-validation--2026-10-11) |
 | Certificates, DNS, and access | Planned | Untested | [Phase 4](BUILD_SPEC.md) |
 | Storage and backups | Planned | Untested | [Phase 5](BUILD_SPEC.md) |
 | Runtime secrets | Planned | Untested | [Phase 6](BUILD_SPEC.md) |

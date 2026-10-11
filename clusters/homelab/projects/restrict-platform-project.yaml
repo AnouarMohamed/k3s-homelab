@@ -1,0 +1,68 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: platform
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: platform-project
+    app.kubernetes.io/component: authorization
+    app.kubernetes.io/part-of: argocd
+spec:
+  description: Cluster networking and platform controllers only.
+  sourceRepos:
+    - ${CONFIG_GITLAB_REPOSITORY_URL}
+  destinations:
+    - namespace: kube-system
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+      name: cilium-secrets
+    - group: admissionregistration.k8s.io
+      kind: ValidatingAdmissionPolicy
+      name: gateway.cilium.io
+    - group: cilium.io
+      kind: CiliumL2AnnouncementPolicy
+      name: homelab-lan
+    - group: cilium.io
+      kind: CiliumLoadBalancerIPPool
+      name: homelab-lan
+    - group: gateway.networking.k8s.io
+      kind: GatewayClass
+      name: cilium
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: cilium*
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: hubble-*
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+      name: cilium*
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+      name: hubble-*
+  namespaceResourceWhitelist:
+    - group: ''
+      kind: ConfigMap
+    - group: ''
+      kind: Service
+    - group: ''
+      kind: ServiceAccount
+    - group: apps
+      kind: DaemonSet
+    - group: apps
+      kind: Deployment
+    - group: batch
+      kind: CronJob
+    - group: batch
+      kind: Job
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: rbac.authorization.k8s.io
+      kind: Role
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+  orphanedResources:
+    warn: true

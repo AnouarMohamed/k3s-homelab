@@ -8,7 +8,7 @@ checks against the three physical nodes are tracked separately as `PENDING HARDW
 - [x] Phase 0 — Skeleton and CI (offline validation complete)
 - [x] Phase 1 — Nodes and k3s (offline validation complete; pending hardware)
 - [x] Phase 2 — Cilium (offline validation complete; pending hardware)
-- [ ] Phase 3 — Argo CD (repair required)
+- [x] Phase 3 — Argo CD (offline validation complete; pending hardware)
 - [ ] Phase 4 — Certificates, DNS, and public access
 - [ ] Phase 5 — Storage and backups
 - [ ] Phase 6 — Runtime secrets
@@ -121,6 +121,48 @@ explicitly because that release has no checksum-list asset.
 - No manifest was applied to a cluster. Node readiness, Cilium health, GatewayClass
   availability, connectivity, L2 address advertisement, and WireGuard encryption
   remain `PENDING HARDWARE`.
+
+## Phase 3 validation — 2026-10-11
+
+- `helm show chart` and `helm pull` resolved Argo CD chart `10.10.2`, application
+  `v3.5.4`, to OCI digest
+  `sha256:96ff0d2150557ceb51c309c3adedb63455226c2dd2c5323f5b1e894536e2901d`.
+- Registry inspection resolved the Argo CD `v3.5.4`, KSOPS `v4.5.1`, and yq `4.54.1`
+  sidecar artifacts to the immutable digests recorded in
+  `platform/argocd/dependencies.env`.
+- `helm lint` reported one chart linted and zero failures. Two independent value and
+  chart renders compared byte-for-byte equal.
+- Strict kubeconform reported 52 valid chart resources and no errors. It skipped the
+  three CRD objects because the Kubernetes schema set does not publish a CRD schema;
+  the validator separately confirmed their group, scope, served version, and embedded
+  OpenAPI schema.
+- The root Application, four child Applications/ApplicationSets, and four restricted
+  AppProjects rendered twice identically. Validation against schemas extracted from
+  the pinned Argo CD CRDs reported nine valid resources with zero errors or skips.
+- Boundary assertions confirmed GitLab-only sources, revision `main`, no Application
+  in the default project, a hard-coded ApplicationSet project, a deny-all default
+  project, an internal-only server, an isolated CMP temporary volume, disabled CMP Git
+  credential sharing, and no repo-server service-account token mount.
+- Kube-linter reported no findings for either the 55-object chart output or the GitOps
+  resource tree. The workload render also contained requests and limits for every
+  container and no `latest` image.
+- `make lint` returned exit 0. Markdownlint checked 49 files with no issues, and the
+  production Ansible profile again reported zero failures and warnings.
+- `make validate` returned exit 0 with the Phase 1, Cilium, GitOps, repository-policy,
+  and generic four-resource manifest gates composed.
+- A CMP-like render with `GIT_DIR` deliberately invalid succeeded by using the injected
+  repository root, proving the renderer does not require `.git` metadata in the sidecar
+  tar stream.
+- `sops filestatus` reported the repository credential document encrypted. The KSOPS
+  generator and recipient linkage passed structural checks; decryption was not attempted
+  because the disposable recipient's private identity is intentionally unavailable.
+- `make bootstrap-gitops` stopped before any Kubernetes command because the central
+  config still contains `CHANGE_ME_*` values. No cluster or remote repository was
+  modified.
+- `make security` scanned the staged working tree and all ten existing commits,
+  approximately 2.13 MB of history, and reported no leaks.
+- Argo controller health, repository authentication, root synchronization, RBAC login,
+  self-healing, and Cilium adoption remain `PENDING HARDWARE`.
 
 ## Unverified
 

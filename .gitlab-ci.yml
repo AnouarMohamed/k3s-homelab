@@ -57,6 +57,7 @@ validate:repository:
     - go install sigs.k8s.io/kustomize/kustomize/v5@"${KUSTOMIZE_VERSION}"
     - go install github.com/mikefarah/yq/v4@"${YQ_VERSION}"
     - go install helm.sh/helm/v3/cmd/helm@"${HELM_VERSION}"
+    - go install github.com/getsops/sops/v3/cmd/sops@"${SOPS_VERSION}"
     - export PATH="${GOBIN}:${PATH}"
   script:
     - scripts/check-forbidden-files.sh
@@ -64,6 +65,7 @@ validate:repository:
     - scripts/check-pins.sh
     - scripts/validate-manifests.sh
     - scripts/validate-cilium.sh
+    - scripts/validate-gitops.sh
 
 security:gitleaks:
   stage: security

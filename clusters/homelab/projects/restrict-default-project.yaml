@@ -1,0 +1,20 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: default
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: default-project
+    app.kubernetes.io/component: authorization
+    app.kubernetes.io/part-of: argocd
+spec:
+  description: Deny-by-default project; no Application may deploy through it.
+  sourceRepos: []
+  destinations: []
+  clusterResourceBlacklist:
+    - group: '*'
+      kind: '*'
+  namespaceResourceBlacklist:
+    - group: '*'
+      kind: '*'

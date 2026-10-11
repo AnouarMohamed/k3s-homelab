@@ -5,8 +5,8 @@ DevSecOps engineer: provisioning Linux, operating highly available Kubernetes, s
 through GitOps, securing the software supply chain, and proving recovery procedures.
 This repository describes my real environment. It is not a generic cluster template.
 
-> Current state: Phase 0 passes local validation; its GitLab pipeline has not run.
-> Platform components remain planned and unverified on hardware.
+> Current state: Phases 0–3 pass local validation; the GitLab pipeline has not run.
+> Node, Cilium, and Argo CD behavior remains unverified on hardware.
 > [See the evidence ledger](docs/STATUS.md).
 
 ```mermaid
@@ -58,7 +58,7 @@ Addresses, interfaces, domains, and external service identifiers live only in
 | 0 — Skeleton and CI | Implemented; CI runner untested |
 | 1 — Nodes and k3s | Implemented; pending hardware |
 | 2 — Cilium | Implemented; pending hardware |
-| 3 — Argo CD | Planned |
+| 3 — Argo CD | Implemented; pending hardware |
 | 4 — Certificates, DNS, and access | Planned |
 | 5 — Storage and backups | Planned |
 | 6 — Runtime secrets | Planned |

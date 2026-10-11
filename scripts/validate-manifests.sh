@@ -15,7 +15,7 @@ for root in "${manifest_roots[@]}"; do
     if ! grep -q '^apiVersion:' "${file}" || ! grep -q '^kind:' "${file}"; then
       continue
     fi
-    if grep -qE '^kind: (Kustomization|Component|Application|ApplicationSet|AppProject|ClusterPolicy|Policy|Cilium)' "${file}"; then
+    if grep -qE '^kind: (Kustomization|Component|Application|ApplicationSet|AppProject|ClusterPolicy|Policy|Cilium|ksops)' "${file}"; then
       continue
     fi
     manifest_files+=("${file}")
