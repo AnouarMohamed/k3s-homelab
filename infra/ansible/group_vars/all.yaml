@@ -1,0 +1,16 @@
+---
+homelab_config_path: "{{ inventory_dir }}/../../../config/homelab.yaml"
+homelab_config: "{{ lookup('ansible.builtin.file', homelab_config_path) | from_yaml }}"
+homelab_spec: "{{ homelab_config.spec }}"
+homelab_node_addresses: "{{ homelab_spec.network.nodes | map(attribute='address') | list }}"
+
+k3s_version: v1.36.5+k3s1
+k3s_binary_sha256: d73847bcd3c5fccef0115b372e2f9a91f3032dc84bbf71518a4617565294d313
+k3s_token: "{{ lookup('ansible.builtin.env', 'K3S_TOKEN') }}"
+k3s_s3_access_key: "{{ lookup('ansible.builtin.env', 'K3S_S3_ACCESS_KEY') }}"
+k3s_s3_secret_key: "{{ lookup('ansible.builtin.env', 'K3S_S3_SECRET_KEY') }}"
+
+kube_vip_version: v1.2.4
+kube_vip_image: >-
+  ghcr.io/kube-vip/kube-vip:v1.2.4@sha256:dde4c0669d9058c74c69c0bc2f0122e26900e1e4b913c03577cb6e4e28083079
+...

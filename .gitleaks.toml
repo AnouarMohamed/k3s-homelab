@@ -1,0 +1,9 @@
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Ignored local build and validation caches"
+paths = [
+  '''^\.tools/''',
+  '''^\.cache/''',
+]

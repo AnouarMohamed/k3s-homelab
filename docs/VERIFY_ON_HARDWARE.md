@@ -8,16 +8,21 @@ administration session after replacing the central configuration placeholders.
 Status: **PENDING HARDWARE**
 
 ```bash
-ansible-playbook -i infra/ansible/inventory/hosts.yaml infra/ansible/site.yaml --check
+ANSIBLE_CONFIG=infra/ansible/ansible.cfg \
+  ansible-inventory -i infra/ansible/inventory/homelab.py --graph
+ANSIBLE_CONFIG=infra/ansible/ansible.cfg \
+  ansible-playbook -i infra/ansible/inventory/homelab.py infra/ansible/site.yaml --check
 make bootstrap-nodes
 make bootstrap-nodes
 kubectl get nodes -o wide
 kubectl get --raw='/readyz?verbose'
 sudo k3s etcd-snapshot ls
+sudo journalctl -u k3s --since '30 minutes ago' --no-pager
 ```
 
 Expected: the second playbook run reports no changes; the VIP answers; all three server
-nodes exist. Before Phase 2, `NotReady` because no CNI is expected.
+nodes exist; auditd, fail2ban, UFW, chrony, and k3s are active; an S3 snapshot is
+listed. Before Phase 2, `NotReady` because no CNI is expected.
 
 ## Phase 2 — Cilium
 

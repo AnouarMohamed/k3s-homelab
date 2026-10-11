@@ -1,0 +1,59 @@
+---
+- name: Render Phase 1 templates with non-private test values
+  hosts: localhost
+  connection: local
+  become: false
+  gather_facts: false
+  vars:
+    ansible_host: 192.0.2.10
+    homelab_node_interface: eth0
+    homelab_spec:
+      network:
+        controlPlaneVip: 192.0.2.100
+      storage:
+        s3:
+          endpoint: https://s3.example.invalid
+          bucket: homelab-validation
+    k3s_token: validation-token-with-more-than-32-characters
+    k3s_s3_access_key: validation-access-key
+    k3s_s3_secret_key: validation-secret-key
+    kube_vip_image: >-
+      ghcr.io/kube-vip/kube-vip:v1.2.4@sha256:dde4c0669d9058c74c69c0bc2f0122e26900e1e4b913c03577cb6e4e28083079
+  tasks:
+    - name: Parse rendered k3s configuration
+      ansible.builtin.set_fact:
+        rendered_k3s_config: >-
+          {{ lookup('ansible.builtin.template',
+          playbook_dir + '/roles/k3s/templates/config.yaml.j2') | from_yaml }}
+      no_log: true
+
+    - name: Validate security-sensitive k3s settings
+      ansible.builtin.assert:
+        that:
+          - rendered_k3s_config['disable-kube-proxy']
+          - rendered_k3s_config['disable-network-policy']
+          - rendered_k3s_config['flannel-backend'] == 'none'
+          - rendered_k3s_config['secrets-encryption']
+          - rendered_k3s_config['etcd-s3']
+          - rendered_k3s_config.disable | sort == ['local-storage', 'metrics-server', 'servicelb', 'traefik']
+
+    - name: Parse rendered Kubernetes API audit policy
+      ansible.builtin.set_fact:
+        rendered_audit_policy: >-
+          {{ lookup('ansible.builtin.template',
+          playbook_dir + '/roles/k3s/templates/audit-policy.yaml.j2') | from_yaml }}
+
+    - name: Parse rendered kube-vip static pod
+      ansible.builtin.set_fact:
+        rendered_kube_vip: >-
+          {{ lookup('ansible.builtin.template',
+          playbook_dir + '/roles/kube_vip/templates/kube-vip.yaml.j2') | from_yaml }}
+
+    - name: Validate rendered object identities
+      ansible.builtin.assert:
+        that:
+          - rendered_audit_policy.kind == 'Policy'
+          - rendered_kube_vip.kind == 'Pod'
+          - rendered_kube_vip.spec.hostNetwork
+          - rendered_kube_vip.spec.containers[0].image == kube_vip_image
+...

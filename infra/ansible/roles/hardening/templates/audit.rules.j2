@@ -1,0 +1,5 @@
+-w /etc/rancher/k3s/ -p wa -k k3s-config
+-w /var/lib/rancher/k3s/server/cred/ -p wa -k k3s-credentials
+-w /usr/local/bin/k3s -p wa -k k3s-binary
+-w /etc/ssh/sshd_config -p wa -k ssh-config
+-w /etc/ssh/sshd_config.d/ -p wa -k ssh-config

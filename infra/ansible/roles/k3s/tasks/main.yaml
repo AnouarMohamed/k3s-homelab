@@ -1,0 +1,101 @@
+---
+- name: Require runtime secrets and central service values
+  ansible.builtin.assert:
+    that:
+      - k3s_token | length >= 32
+      - k3s_s3_access_key | length > 0
+      - k3s_s3_secret_key | length > 0
+      - homelab_spec.network.controlPlaneVip is not match('^CHANGE_ME_')
+      - homelab_spec.storage.s3.endpoint is not match('^CHANGE_ME_')
+      - homelab_spec.storage.s3.bucket is not match('^CHANGE_ME_')
+    fail_msg: Set central values and export K3S_TOKEN/K3S_S3_ACCESS_KEY/K3S_S3_SECRET_KEY.
+  no_log: true
+
+- name: Create k3s configuration directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: "{{ item.mode }}"
+    owner: root
+    group: root
+  loop:
+    - path: /etc/rancher/k3s
+      mode: "0700"
+    - path: /var/lib/rancher/k3s/server/logs
+      mode: "0700"
+
+- name: Download pinned k3s binary with checksum validation
+  ansible.builtin.get_url:
+    url: "https://github.com/k3s-io/k3s/releases/download/{{ k3s_version | urlencode }}/k3s"
+    dest: /usr/local/bin/k3s
+    mode: "0755"
+    owner: root
+    group: root
+    checksum: "sha256:{{ k3s_binary_sha256 }}"
+  notify: Restart k3s
+
+- name: Install Kubernetes API audit policy
+  ansible.builtin.template:
+    src: audit-policy.yaml.j2
+    dest: /etc/rancher/k3s/audit-policy.yaml
+    mode: "0600"
+    owner: root
+    group: root
+  notify: Restart k3s
+
+- name: Install k3s server configuration
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: /etc/rancher/k3s/config.yaml
+    mode: "0600"
+    owner: root
+    group: root
+  no_log: true
+  notify: Restart k3s
+
+- name: Install k3s systemd unit
+  ansible.builtin.template:
+    src: k3s.service.j2
+    dest: /etc/systemd/system/k3s.service
+    mode: "0644"
+    owner: root
+    group: root
+  notify: Restart k3s
+
+- name: Enable and start k3s
+  ansible.builtin.systemd_service:
+    name: k3s
+    daemon_reload: true
+    enabled: true
+    state: started
+
+- name: Flush k3s restart before health checks
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait for authenticated local Kubernetes API health
+  ansible.builtin.command:
+    argv:
+      - k3s
+      - kubectl
+      - get
+      - --raw=/readyz
+  register: k3s_readyz
+  changed_when: false
+  retries: 30
+  delay: 10
+  until: k3s_readyz.rc == 0 and k3s_readyz.stdout == 'ok'
+
+- name: Confirm node registration without requiring Ready condition
+  ansible.builtin.command:
+    argv:
+      - k3s
+      - kubectl
+      - get
+      - node
+      - "{{ inventory_hostname }}"
+      - --output=name
+  register: k3s_registered_node
+  changed_when: false
+  retries: 12
+  delay: 5
+  until: k3s_registered_node.rc == 0

@@ -1,0 +1,49 @@
+---
+- name: Read installed k3s version
+  ansible.builtin.command: k3s --version
+  register: installed_k3s_version
+  changed_when: false
+
+- name: Upgrade node when the pinned version differs
+  when: k3s_version not in installed_k3s_version.stdout
+  block:
+    - name: Drain node before replacing k3s
+      ansible.builtin.command:
+        argv:
+          - k3s
+          - kubectl
+          - drain
+          - "{{ inventory_hostname }}"
+          - --ignore-daemonsets
+          - --delete-emptydir-data
+          - --timeout=10m
+      delegate_to: "{{ groups.initial_server[0] }}"
+      register: drain_result
+      changed_when: drain_result.rc == 0
+
+    - name: Apply pinned k3s role
+      ansible.builtin.include_role:
+        name: k3s
+
+    - name: Flush k3s restart after binary replacement
+      ansible.builtin.meta: flush_handlers
+
+    - name: Verify upgraded k3s version
+      ansible.builtin.command: k3s --version
+      register: upgraded_k3s_version
+      changed_when: false
+      failed_when: k3s_version not in upgraded_k3s_version.stdout
+
+  always:
+    - name: Uncordon node after upgrade attempt
+      ansible.builtin.command:
+        argv:
+          - k3s
+          - kubectl
+          - uncordon
+          - "{{ inventory_hostname }}"
+      delegate_to: "{{ groups.initial_server[0] }}"
+      register: uncordon_result
+      changed_when: "'uncordoned' in uncordon_result.stdout"
+      when: drain_result is defined and drain_result.rc == 0
+...

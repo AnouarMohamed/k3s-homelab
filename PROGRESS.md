@@ -6,7 +6,7 @@ checks against the three physical nodes are tracked separately as `PENDING HARDW
 ## Phase checklist
 
 - [x] Phase 0 — Skeleton and CI (offline validation complete)
-- [ ] Phase 1 — Nodes and k3s (repair required)
+- [x] Phase 1 — Nodes and k3s (offline validation complete; pending hardware)
 - [ ] Phase 2 — Cilium (repair required)
 - [ ] Phase 3 — Argo CD (repair required)
 - [ ] Phase 4 — Certificates, DNS, and public access
@@ -67,6 +67,33 @@ explicitly because that release has no checksum-list asset.
   2.03 MB, and reported no leaks.
 - `git diff --check` returned exit 0.
 - The generated GitLab pipeline has not run; CI execution remains unverified.
+
+## Phase 1 validation — 2026-10-11
+
+- The official k3s `v1.36.5+k3s1` amd64 checksum list reported
+  `d73847bcd3c5fccef0115b372e2f9a91f3032dc84bbf71518a4617565294d313`
+  for `k3s`; that checksum is enforced by `get_url`.
+- OCI inspection of kube-vip `v1.2.4` reported index digest
+  `sha256:dde4c0669d9058c74c69c0bc2f0122e26900e1e4b913c03577cb6e4e28083079`;
+  the static-pod image uses that digest.
+- Ansible Galaxy returned community.general `13.4.0` with artifact SHA-256
+  `efd1c0b5dc6f89b9667e4bd77f2426c30545861910dba188593871095ede1804`.
+- `ansible-inventory --graph` returned `pc-1` in `initial_server` and `pc-2`/`pc-3`
+  in `joining_servers`, derived from `config/homelab.yaml`.
+- Syntax checks returned exit 0 for `site.yaml`, `upgrade.yaml`, and `reset.yaml`.
+- Production-profile `ansible-lint infra/ansible` processed 28 files with zero
+  failures and zero warnings.
+- `make ansible-templates` rendered and parsed k3s, audit-policy, and kube-vip
+  templates: five tasks passed, with `changed=0`.
+- `make validate` returned exit 0 with the Phase 1 syntax/template gates included.
+- `make security` scanned the staged working tree (approximately 106.55 KB) and all
+  seven existing commits (approximately 2.08 MB); both scans reported no leaks. Local
+  ignored tool/cache directories are explicitly excluded from the directory scan.
+- `make reset` without confirmation returned exit 2 and printed the expected refusal;
+  the destructive playbook was not started.
+- No playbook was run against a node. Convergence, second-run idempotence, hardening,
+  VIP movement, etcd quorum, S3 snapshots, upgrade, and reset remain
+  `PENDING HARDWARE`.
 
 ## Unverified
 

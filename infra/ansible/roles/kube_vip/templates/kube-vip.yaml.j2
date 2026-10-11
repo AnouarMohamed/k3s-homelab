@@ -1,0 +1,51 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kube-vip
+  namespace: kube-system
+spec:
+  containers:
+    - name: kube-vip
+      image: {{ kube_vip_image }}
+      imagePullPolicy: IfNotPresent
+      args:
+        - manager
+      env:
+        - name: cp_enable
+          value: "true"
+        - name: cp_namespace
+          value: kube-system
+        - name: svc_enable
+          value: "false"
+        - name: vip_address
+          value: {{ homelab_spec.network.controlPlaneVip | to_json }}
+        - name: vip_interface
+          value: {{ homelab_node_interface | to_json }}
+        - name: vip_arp
+          value: "true"
+        - name: vip_leaderelection
+          value: "true"
+        - name: vip_leaseduration
+          value: "5"
+        - name: vip_renewdeadline
+          value: "3"
+        - name: vip_retryperiod
+          value: "1"
+      securityContext:
+        capabilities:
+          add:
+            - NET_ADMIN
+            - NET_RAW
+      volumeMounts:
+        - name: kubeconfig
+          mountPath: /etc/kubernetes/admin.conf
+          readOnly: true
+  hostNetwork: true
+  priorityClassName: system-node-critical
+  volumes:
+    - name: kubeconfig
+      hostPath:
+        path: /etc/rancher/k3s/k3s.yaml
+        type: File
+...

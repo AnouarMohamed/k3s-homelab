@@ -2,10 +2,12 @@ SHELL := /usr/bin/env bash
 REPOSITORY_ROOT := $(CURDIR)
 TOOL_BIN := $(REPOSITORY_ROOT)/.tools/bin
 export PATH := $(TOOL_BIN):$(PATH)
+export ANSIBLE_CONFIG := $(REPOSITORY_ROOT)/infra/ansible/ansible.cfg
+ANSIBLE_INVENTORY := $(REPOSITORY_ROOT)/infra/ansible/inventory/homelab.py
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools lint validate security bootstrap bootstrap-nodes upgrade-k3s reset \
+.PHONY: help tools lint ansible-syntax ansible-templates validate security bootstrap bootstrap-nodes upgrade-k3s reset \
 	bootstrap-cni bootstrap-gitops bootstrap-platform test tofu-plan teardown
 
 help: ## Show all supported targets
@@ -24,27 +26,38 @@ lint: ## Lint YAML, Markdown, shell, and Ansible sources
 	@shellcheck scripts/*.sh
 	@ansible-lint infra/ansible
 
-validate: ## Validate repository policy and Kubernetes manifests
+ansible-syntax: ## Parse the dynamic inventory and all Ansible playbooks
+	@ansible-inventory -i $(ANSIBLE_INVENTORY) --graph >/dev/null
+	@ansible-playbook -i $(ANSIBLE_INVENTORY) infra/ansible/site.yaml --syntax-check
+	@ansible-playbook -i $(ANSIBLE_INVENTORY) infra/ansible/upgrade.yaml --syntax-check
+	@ansible-playbook -i $(ANSIBLE_INVENTORY) infra/ansible/reset.yaml --syntax-check
+
+ansible-templates: ## Render and parse Ansible-owned configuration templates
+	@ansible-playbook -i $(ANSIBLE_INVENTORY) infra/ansible/validate-templates.yaml
+
+validate: ansible-syntax ansible-templates ## Validate repository policy and Kubernetes manifests
 	@scripts/check-forbidden-files.sh
 	@scripts/check-private-values.sh
 	@scripts/check-pins.sh
 	@scripts/validate-manifests.sh
 
 security: ## Scan the complete Git history for secrets
+	@gitleaks dir --redact --verbose .
 	@gitleaks git --redact --verbose --log-opts=--all
 
 bootstrap: bootstrap-nodes bootstrap-cni bootstrap-gitops bootstrap-platform ## Run the documented bootstrap sequence
 
 bootstrap-nodes: ## Provision and harden the three k3s servers
-	@ansible-playbook -i infra/ansible/inventory/hosts.yaml infra/ansible/site.yaml
+	@ansible-playbook -i $(ANSIBLE_INVENTORY) infra/ansible/site.yaml
 
 upgrade-k3s: ## Perform a guarded rolling k3s upgrade
-	@ansible-playbook -i infra/ansible/inventory/hosts.yaml infra/ansible/upgrade.yaml
+	@ansible-playbook -i $(ANSIBLE_INVENTORY) infra/ansible/upgrade.yaml
 
 reset: ## Reset k3s only when CONFIRM_RESET=homelab is supplied
 	@test "$(CONFIRM_RESET)" = homelab || \
 		{ printf 'Refusing reset; use CONFIRM_RESET=homelab after reading the runbook.\n' >&2; exit 1; }
-	@ansible-playbook -i infra/ansible/inventory/hosts.yaml infra/ansible/reset.yaml
+	@ansible-playbook -i $(ANSIBLE_INVENTORY) infra/ansible/reset.yaml \
+		-e confirm_reset="$(CONFIRM_RESET)"
 
 bootstrap-cni: ## Install Gateway API CRDs and Cilium
 	@scripts/bootstrap-cni.sh

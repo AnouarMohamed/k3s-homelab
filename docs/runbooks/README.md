@@ -1,3 +1,10 @@
 # Runbooks
 
-Operational procedures for common tasks in the homelab.
+Implemented Phase 1 runbooks:
+
+- [Replace a node](node-replacement.md)
+- [Upgrade k3s](k3s-upgrade.md)
+- [Reset k3s](k3s-reset.md)
+
+Later component runbooks are added with the phase that creates each operational
+responsibility.

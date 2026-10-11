@@ -6,8 +6,9 @@ block repository implementation.
 ## Before bootstrap
 
 - [ ] Replace every `CHANGE_ME_*` value in `config/homelab.yaml` with the real domain,
-  LAN addresses and interfaces, control-plane VIP, non-DHCP load-balancer range,
-  Longhorn disk path, S3 endpoint/bucket, and GitLab project path.
+  administrator LAN/WARP CIDR, LAN addresses and interfaces, control-plane VIP,
+  non-DHCP load-balancer range, Longhorn disk path, S3 endpoint/bucket, and GitLab
+  project path.
 - [ ] Confirm the VIP and load-balancer range are excluded from DHCP.
 - [ ] Install Ubuntu Server LTS, set static node addresses, and add Anouar's SSH public
   key to the automation account on all three PCs.

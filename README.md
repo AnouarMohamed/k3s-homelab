@@ -56,7 +56,7 @@ Addresses, interfaces, domains, and external service identifiers live only in
 | Phase | Status |
 | --- | --- |
 | 0 — Skeleton and CI | Implemented; CI runner untested |
-| 1 — Nodes and k3s | Planned |
+| 1 — Nodes and k3s | Implemented; pending hardware |
 | 2 — Cilium | Planned |
 | 3 — Argo CD | Planned |
 | 4 — Certificates, DNS, and access | Planned |

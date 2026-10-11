@@ -1,0 +1,5 @@
+pool pool.ntp.org iburst maxsources 4
+driftfile /var/lib/chrony/chrony.drift
+makestep 1.0 3
+rtcsync
+logdir /var/log/chrony

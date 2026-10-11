@@ -9,6 +9,7 @@ spec:
   gitlab:
     projectPath: CHANGE_ME_GITLAB_PROJECT_PATH
   network:
+    adminCidr: CHANGE_ME_ADMIN_CIDR
     nodes:
       - name: pc-1
         address: CHANGE_ME_PC_1_LAN_IP

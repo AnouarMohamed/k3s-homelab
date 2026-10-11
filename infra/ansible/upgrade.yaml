@@ -1,0 +1,21 @@
+---
+- name: Upgrade joining k3s servers one at a time
+  hosts: joining_servers
+  serial: 1
+  any_errors_fatal: true
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Run guarded node upgrade
+      ansible.builtin.include_tasks: tasks/upgrade-node.yaml
+
+- name: Upgrade initial k3s server last
+  hosts: initial_server
+  serial: 1
+  any_errors_fatal: true
+  become: true
+  gather_facts: true
+  tasks:
+    - name: Run guarded node upgrade
+      ansible.builtin.include_tasks: tasks/upgrade-node.yaml
+...

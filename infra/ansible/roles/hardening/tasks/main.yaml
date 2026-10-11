@@ -1,0 +1,98 @@
+---
+- name: Require central network values before changing firewall rules
+  ansible.builtin.assert:
+    that:
+      - homelab_spec.network.adminCidr is not match('^CHANGE_ME_')
+      - homelab_node_addresses | reject('match', '^CHANGE_ME_') | list | length == 3
+    fail_msg: Replace the network placeholders in config/homelab.yaml first.
+
+- name: Configure fail2ban for SSH
+  ansible.builtin.template:
+    src: fail2ban-sshd.local.j2
+    dest: /etc/fail2ban/jail.d/homelab-sshd.local
+    mode: "0644"
+    owner: root
+    group: root
+  notify: Restart fail2ban
+
+- name: Install audit rules for platform-critical files
+  ansible.builtin.template:
+    src: audit.rules.j2
+    dest: /etc/audit/rules.d/60-homelab-k3s.rules
+    mode: "0600"
+    owner: root
+    group: root
+  notify: Restart auditd
+
+- name: Allow administrator TCP access
+  community.general.ufw:
+    rule: allow
+    direction: in
+    from_ip: "{{ homelab_spec.network.adminCidr }}"
+    port: "{{ item }}"
+    proto: tcp
+    comment: homelab administrator access
+  loop:
+    - "22"
+    - "80"
+    - "443"
+    - "6443"
+
+- name: Allow required TCP traffic between cluster nodes
+  community.general.ufw:
+    rule: allow
+    direction: in
+    from_ip: "{{ item.0 }}"
+    port: "{{ item.1 }}"
+    proto: tcp
+    comment: homelab cluster peer
+  loop: "{{ homelab_node_addresses | product(['2379', '2380', '4240', '4244', '6443', '10250']) | list }}"
+  loop_control:
+    label: "{{ item.0 }} -> tcp/{{ item.1 }}"
+
+- name: Allow required UDP traffic between cluster nodes
+  community.general.ufw:
+    rule: allow
+    direction: in
+    from_ip: "{{ item.0 }}"
+    port: "{{ item.1 }}"
+    proto: udp
+    comment: homelab cluster peer
+  loop: "{{ homelab_node_addresses | product(['8472', '51871']) | list }}"
+  loop_control:
+    label: "{{ item.0 }} -> udp/{{ item.1 }}"
+
+- name: Permit CNI forwarding while retaining host input policy
+  ansible.builtin.lineinfile:
+    path: /etc/default/ufw
+    regexp: '^DEFAULT_FORWARD_POLICY='
+    line: 'DEFAULT_FORWARD_POLICY="ACCEPT"'
+    mode: "0644"
+  notify: Reload UFW
+
+- name: Set UFW defaults
+  community.general.ufw:
+    direction: "{{ item.direction }}"
+    policy: "{{ item.policy }}"
+  loop:
+    - direction: incoming
+      policy: deny
+    - direction: outgoing
+      policy: allow
+
+- name: Enable UFW logging
+  community.general.ufw:
+    logging: low
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled
+
+- name: Ensure hardening services are enabled
+  ansible.builtin.service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - auditd
+    - fail2ban

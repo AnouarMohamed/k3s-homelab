@@ -1,0 +1,43 @@
+---
+- name: Reset k3s data only after explicit confirmation
+  hosts: k3s_cluster
+  serial: 1
+  become: true
+  gather_facts: true
+  vars:
+    reset_paths:
+      - /etc/cni/net.d
+      - /etc/rancher/k3s
+      - /etc/systemd/system/k3s.service
+      - /run/k3s
+      - /usr/local/bin/k3s
+      - /var/lib/cni
+      - /var/lib/kubelet
+      - /var/lib/rancher/k3s
+  tasks:
+    - name: Require exact destructive confirmation
+      ansible.builtin.assert:
+        that:
+          - confirm_reset | default('') == 'homelab'
+        fail_msg: Use make reset CONFIRM_RESET=homelab after reading the reset runbook.
+
+    - name: Collect service state
+      ansible.builtin.service_facts:
+
+    - name: Stop and disable k3s when installed
+      ansible.builtin.systemd_service:
+        name: k3s
+        enabled: false
+        state: stopped
+      when: "'k3s.service' in ansible_facts.services"
+
+    - name: Remove only explicit k3s and CNI paths
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop: "{{ reset_paths }}"
+
+    - name: Reload systemd after unit removal
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+...

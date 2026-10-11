@@ -1,0 +1,111 @@
+---
+- name: Verify supported operating system
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.distribution == 'Ubuntu'
+      - ansible_facts.service_mgr == 'systemd'
+    fail_msg: Phase 1 supports Ubuntu Server with systemd only.
+
+- name: Install node prerequisites
+  ansible.builtin.apt:
+    name:
+      - apparmor
+      - auditd
+      - ca-certificates
+      - chrony
+      - cryptsetup
+      - curl
+      - dmsetup
+      - fail2ban
+      - jq
+      - nfs-common
+      - open-iscsi
+      - unattended-upgrades
+      - ufw
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Apply available safe package upgrades
+  ansible.builtin.apt:
+    upgrade: safe
+    update_cache: false
+
+- name: Configure timezone from central configuration
+  community.general.timezone:
+    name: "{{ homelab_spec.timezone }}"
+
+- name: Persist required kernel modules
+  ansible.builtin.copy:
+    dest: /etc/modules-load.d/homelab-k3s.conf
+    mode: "0644"
+    owner: root
+    group: root
+    content: |
+      br_netfilter
+      overlay
+      wireguard
+
+- name: Load required kernel modules
+  community.general.modprobe:
+    name: "{{ item }}"
+    state: present
+    persistent: present
+  loop:
+    - br_netfilter
+    - overlay
+    - wireguard
+
+- name: Configure Kubernetes kernel parameters
+  ansible.builtin.copy:
+    dest: /etc/sysctl.d/99-homelab-k3s.conf
+    mode: "0644"
+    owner: root
+    group: root
+    content: |
+      fs.inotify.max_user_instances = 8192
+      fs.inotify.max_user_watches = 524288
+      net.bridge.bridge-nf-call-ip6tables = 1
+      net.bridge.bridge-nf-call-iptables = 1
+      net.ipv4.ip_forward = 1
+      vm.max_map_count = 262144
+  notify: Apply kernel parameters
+
+- name: Disable configured swap files at boot
+  ansible.builtin.replace:
+    path: /etc/fstab
+    regexp: '^(\s*[^#]\S+\s+\S+\s+swap\s+.*)$'
+    replace: '# disabled-by-homelab: \1'
+
+- name: Disable active swap
+  ansible.builtin.command: swapoff --all
+  when: ansible_facts.swaptotal_mb | int > 0
+  changed_when: true
+
+- name: Configure chrony
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: /etc/chrony/chrony.conf
+    mode: "0644"
+    owner: root
+    group: root
+  notify: Restart chrony
+
+- name: Configure SSH key-only access
+  ansible.builtin.template:
+    src: sshd-hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/60-homelab-hardening.conf
+    mode: "0644"
+    owner: root
+    group: root
+  notify: Restart SSH
+
+- name: Ensure base services are enabled
+  ansible.builtin.service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - auditd
+    - chrony
+    - iscsid

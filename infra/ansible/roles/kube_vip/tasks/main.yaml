@@ -1,0 +1,32 @@
+---
+- name: Create k3s static pod directory
+  ansible.builtin.file:
+    path: /var/lib/rancher/k3s/agent/pod-manifests
+    state: directory
+    mode: "0700"
+    owner: root
+    group: root
+
+- name: Install pinned kube-vip static pod
+  ansible.builtin.template:
+    src: kube-vip.yaml.j2
+    dest: /var/lib/rancher/k3s/agent/pod-manifests/kube-vip.yaml
+    mode: "0600"
+    owner: root
+    group: root
+
+- name: Wait for local kube-vip mirror pod
+  ansible.builtin.command:
+    argv:
+      - k3s
+      - kubectl
+      - --namespace=kube-system
+      - get
+      - pod
+      - kube-vip-{{ inventory_hostname }}
+      - --output=name
+  register: kube_vip_mirror_pod
+  changed_when: false
+  retries: 30
+  delay: 5
+  until: kube_vip_mirror_pod.rc == 0
