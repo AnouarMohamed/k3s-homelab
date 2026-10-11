@@ -1,0 +1,33 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cloudflared
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: cloudflared
+    app.kubernetes.io/component: tunnel
+    app.kubernetes.io/part-of: edge-access
+  annotations:
+    argocd.argoproj.io/sync-wave: '-27'
+spec:
+  project: edge
+  source:
+    repoURL: ${CONFIG_GITLAB_REPOSITORY_URL}
+    targetRevision: main
+    path: platform/cloudflared
+    plugin:
+      name: homelab-renderer-v1
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cloudflare
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=false
+      - PruneLast=true
+      - ServerSideApply=true
+  revisionHistoryLimit: 10

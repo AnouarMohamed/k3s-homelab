@@ -4,5 +4,6 @@ kind: Kustomization
 resources:
   - restrict-applications-project.yaml
   - restrict-default-project.yaml
+  - restrict-edge-project.yaml
   - restrict-gitops-project.yaml
   - restrict-platform-project.yaml

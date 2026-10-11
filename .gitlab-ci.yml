@@ -58,6 +58,19 @@ validate:repository:
     - go install github.com/mikefarah/yq/v4@"${YQ_VERSION}"
     - go install helm.sh/helm/v3/cmd/helm@"${HELM_VERSION}"
     - go install github.com/getsops/sops/v3/cmd/sops@"${SOPS_VERSION}"
+    - tofu_release="${TOFU_VERSION#v}"
+    - tofu_url="https://github.com/opentofu/opentofu/releases/download/${TOFU_VERSION}"
+    - |-
+      curl --fail --location --silent --show-error --output /tmp/tofu.tgz \
+      "${tofu_url}/tofu_${tofu_release}_linux_amd64.tar.gz"
+    - |-
+      curl --fail --location --silent --show-error --output /tmp/tofu-checksums.txt \
+      "${tofu_url}/tofu_${tofu_release}_SHA256SUMS"
+    - |-
+      grep "  tofu_${tofu_release}_linux_amd64.tar.gz$" /tmp/tofu-checksums.txt |
+      sed 's#tofu_.*_linux_amd64.tar.gz#/tmp/tofu.tgz#' |
+      sha256sum --check --strict
+    - tar --extract --gzip --file /tmp/tofu.tgz --directory "${GOBIN}" tofu
     - export PATH="${GOBIN}:${PATH}"
   script:
     - scripts/check-forbidden-files.sh
@@ -66,6 +79,7 @@ validate:repository:
     - scripts/validate-manifests.sh
     - scripts/validate-cilium.sh
     - scripts/validate-gitops.sh
+    - scripts/validate-edge.sh
 
 security:gitleaks:
   stage: security

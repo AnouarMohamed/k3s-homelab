@@ -48,7 +48,43 @@ case "${relative_path}" in
         --namespace kube-system \
         --include-crds \
         --values -
+    printf '%s\n' '---'
     kustomize build "${repository_root}/platform/cilium/resources" | \
+      bash "${repository_root}/scripts/render-config.sh" -
+    ;;
+  platform/cert-manager)
+    set -a
+    # shellcheck disable=SC1091
+    source "${repository_root}/platform/cert-manager/dependencies.env"
+    set +a
+    cert_manager_chart="${CERT_MANAGER_CHART_REF}"
+    if [[ -f "${repository_root}/.cache/phase4/cert-manager/Chart.yaml" ]]; then
+      cert_manager_chart="${repository_root}/.cache/phase4/cert-manager"
+    fi
+    bash "${repository_root}/scripts/render-config.sh" \
+      "${repository_root}/platform/cert-manager/configure-cert-manager.yaml" | \
+      helm template cert-manager "${cert_manager_chart}" \
+        --namespace cert-manager \
+        --include-crds \
+        --values -
+    printf '%s\n' '---'
+    kustomize build "${repository_root}/platform/cert-manager/resources" | \
+      bash "${repository_root}/scripts/render-config.sh" -
+    ;;
+  platform/external-dns)
+    set -a
+    # shellcheck disable=SC1091
+    source "${repository_root}/platform/external-dns/dependencies.env"
+    set +a
+    external_dns_chart="${repository_root}/.cache/phase4/external-dns"
+    test -f "${external_dns_chart}/Chart.yaml"
+    bash "${repository_root}/scripts/render-config.sh" \
+      "${repository_root}/platform/external-dns/configure-external-dns.yaml" | \
+      helm template external-dns "${external_dns_chart}" \
+        --namespace external-dns \
+        --values -
+    printf '%s\n' '---'
+    kustomize build "${repository_root}/platform/external-dns/resources" | \
       bash "${repository_root}/scripts/render-config.sh" -
     ;;
   clusters/homelab/bootstrap | clusters/homelab/bootstrap/* | apps/*/overlays/prod | platform/* | observability/* | policies/*)

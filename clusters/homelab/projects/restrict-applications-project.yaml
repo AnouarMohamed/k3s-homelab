@@ -36,6 +36,8 @@ spec:
       kind: CronJob
     - group: batch
       kind: Job
+    - group: cilium.io
+      kind: CiliumNetworkPolicy
     - group: external-secrets.io
       kind: ExternalSecret
     - group: gateway.networking.k8s.io

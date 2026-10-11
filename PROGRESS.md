@@ -9,7 +9,7 @@ checks against the three physical nodes are tracked separately as `PENDING HARDW
 - [x] Phase 1 — Nodes and k3s (offline validation complete; pending hardware)
 - [x] Phase 2 — Cilium (offline validation complete; pending hardware)
 - [x] Phase 3 — Argo CD (offline validation complete; pending hardware)
-- [ ] Phase 4 — Certificates, DNS, and public access
+- [x] Phase 4 — Certificates, DNS, and public access (offline validation complete; pending hardware)
 - [ ] Phase 5 — Storage and backups
 - [ ] Phase 6 — Runtime secrets
 - [ ] Phase 7 — Observability

@@ -6,9 +6,9 @@ block repository implementation.
 ## Before bootstrap
 
 - [ ] Replace every `CHANGE_ME_*` value in `config/homelab.yaml` with the real domain,
-  administrator LAN/WARP CIDR, LAN addresses and interfaces, control-plane VIP,
-  non-DHCP load-balancer range, Longhorn disk path, S3 endpoint/bucket, and GitLab
-  project path.
+  ACME email, administrator LAN/WARP CIDR, WARP private route CIDR, LAN addresses and
+  interfaces, control-plane VIP, non-DHCP load-balancer range, Longhorn disk path, S3
+  endpoint/bucket, and GitLab project path.
 - [ ] Confirm the VIP and load-balancer range are excluded from DHCP.
 - [ ] Install Ubuntu Server LTS, set static node addresses, and add Anouar's SSH public
   key to the automation account on all three PCs.
@@ -20,6 +20,11 @@ block repository implementation.
   separate Phase 9 CI variables when that phase is implemented.
 - [ ] Create scoped Cloudflare API tokens for DNS and Tunnel management and configure
   WARP private-network access.
+- [ ] Replace and re-encrypt all three Phase 4 SOPS token placeholders, then confirm
+  that the cert-manager, external-dns, and cloudflared namespaces contain only their
+  individually scoped credential.
+- [ ] Initialize the encrypted, versioned S3 OpenTofu backend with locking; review and
+  manually apply the Cloudflare plan. Never use local state for a real apply.
 - [ ] Create the S3 bucket/credentials or authorize OpenTofu to create them.
 
 ## During platform bring-up

@@ -7,7 +7,7 @@ ANSIBLE_INVENTORY := $(REPOSITORY_ROOT)/infra/ansible/inventory/homelab.py
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools lint ansible-syntax ansible-templates phase2-deps validate-cni phase3-deps validate-gitops validate security bootstrap bootstrap-nodes upgrade-k3s reset \
+.PHONY: help tools lint ansible-syntax ansible-templates phase2-deps validate-cni phase3-deps validate-gitops phase4-deps validate-edge validate security bootstrap bootstrap-nodes upgrade-k3s reset \
 	bootstrap-cni bootstrap-gitops bootstrap-platform test tofu-plan teardown
 
 help: ## Show all supported targets
@@ -47,7 +47,13 @@ phase3-deps: ## Fetch the digest-pinned Argo CD chart
 validate-gitops: ## Render and validate Argo CD and its restricted application tree twice
 	@scripts/validate-gitops.sh
 
-validate: ansible-syntax ansible-templates validate-cni validate-gitops ## Validate repository policy and Kubernetes manifests
+phase4-deps: ## Fetch checksum-verified edge platform dependencies
+	@scripts/fetch-phase4-dependencies.sh
+
+validate-edge: ## Validate certificates, DNS, gateways, tunnel, test route, and OpenTofu
+	@scripts/validate-edge.sh
+
+validate: ansible-syntax ansible-templates validate-cni validate-gitops validate-edge ## Validate repository policy and Kubernetes manifests
 	@scripts/check-forbidden-files.sh
 	@scripts/check-private-values.sh
 	@scripts/check-pins.sh
@@ -86,7 +92,7 @@ test: ## Run application unit and integration tests
 tofu-plan: ## Produce non-destructive OpenTofu plans
 	@tofu -chdir=infra/tofu init -backend=false
 	@tofu -chdir=infra/tofu validate
-	@tofu -chdir=infra/tofu plan -lock=false
+	@tofu -chdir=infra/tofu plan -lock=false -refresh=false
 
 teardown: ## Alias for the guarded reset target
 	@$(MAKE) reset CONFIRM_RESET="$(CONFIRM_RESET)"

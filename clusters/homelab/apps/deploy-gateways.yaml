@@ -1,0 +1,33 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gateways
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: gateways
+    app.kubernetes.io/component: edge-routing
+    app.kubernetes.io/part-of: edge-access
+  annotations:
+    argocd.argoproj.io/sync-wave: '-31'
+spec:
+  project: edge
+  source:
+    repoURL: ${CONFIG_GITLAB_REPOSITORY_URL}
+    targetRevision: main
+    path: platform/gateways
+    plugin:
+      name: homelab-renderer-v1
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gateways
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=false
+      - PruneLast=true
+      - ServerSideApply=true
+  revisionHistoryLimit: 10

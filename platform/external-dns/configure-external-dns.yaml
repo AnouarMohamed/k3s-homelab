@@ -1,0 +1,32 @@
+---
+replicaCount: 1
+provider:
+  name: cloudflare
+env:
+  - name: CF_API_TOKEN
+    valueFrom:
+      secretKeyRef:
+        name: cloudflare-api-token
+        key: api-token
+sources:
+  - gateway-httproute
+policy: upsert-only
+registry: txt
+txtOwnerId: homelab-external-dns
+domainFilters:
+  - ${CONFIG_DOMAIN}
+annotationFilter: external-dns.kubernetes.io/managed-by=homelab
+extraArgs:
+  cloudflare-proxied: true
+  events: true
+  gateway-name: public
+  gateway-namespace: gateways
+resources:
+  requests:
+    cpu: 20m
+    memory: 64Mi
+  limits:
+    cpu: 300m
+    memory: 192Mi
+serviceMonitor:
+  enabled: false

@@ -67,7 +67,31 @@ no sources or destinations; repo-server token automount is `false`; and local `a
 plus `platform-reader` accounts exist. Test a drift correction only on a harmless
 ConfigMap and record the observed reconciliation before marking self-heal verified.
 
-## Phases 4–12
+## Phase 4 — Certificates, DNS, Tunnel, and WARP
+
+Status: **PENDING HARDWARE**
+
+```bash
+tofu -chdir=infra/tofu plan -refresh=false
+kubectl -n cert-manager get pods
+kubectl get clusterissuer letsencrypt-staging letsencrypt-production
+kubectl -n gateways get certificate edge-wildcard
+kubectl -n gateways get gateway internal public
+kubectl -n external-dns logs deployment/external-dns --tail=100
+kubectl -n cloudflare get pods -l app.kubernetes.io/name=cloudflared -o wide
+kubectl -n apps-whoami get httproute whoami
+curl --fail --show-error "https://whoami.${DOMAIN}/health"
+```
+
+Expected: the reviewed OpenTofu plan contains only the Tunnel, private route, and
+whoami CNAME changes; both issuers become Ready; the wildcard certificate is issued;
+both Gateways are accepted; the two tunnel replicas occupy different nodes; the route
+is accepted; and the public health request succeeds without an inbound router port.
+From an enrolled WARP client, verify the private CIDR and split-DNS internal hostname;
+repeat from an unenrolled client and confirm administration endpoints are unreachable.
+Delete or disable the temporary whoami route after capturing redacted evidence.
+
+## Phases 5–12
 
 Status: **PENDING HARDWARE**
 

@@ -1,0 +1,89 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: edge
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: edge-project
+    app.kubernetes.io/component: authorization
+    app.kubernetes.io/part-of: argocd
+spec:
+  description: Certificates, DNS, Gateways, and outbound Cloudflare tunnel only.
+  sourceRepos:
+    - ${CONFIG_GITLAB_REPOSITORY_URL}
+  destinations:
+    - namespace: cert-manager
+      server: https://kubernetes.default.svc
+    - namespace: cloudflare
+      server: https://kubernetes.default.svc
+    - namespace: external-dns
+      server: https://kubernetes.default.svc
+    - namespace: gateways
+      server: https://kubernetes.default.svc
+    - namespace: kube-system
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+      name: cert-manager
+    - group: ''
+      kind: Namespace
+      name: cloudflare
+    - group: ''
+      kind: Namespace
+      name: external-dns
+    - group: ''
+      kind: Namespace
+      name: gateways
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      name: '*.cert-manager.io'
+    - group: cert-manager.io
+      kind: ClusterIssuer
+      name: letsencrypt-*
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      name: cert-manager-webhook
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      name: cert-manager-webhook
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: cert-manager-*
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: external-dns
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+      name: cert-manager-*
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+      name: external-dns-viewer
+  namespaceResourceWhitelist:
+    - group: ''
+      kind: ConfigMap
+    - group: ''
+      kind: Secret
+    - group: ''
+      kind: Service
+    - group: ''
+      kind: ServiceAccount
+    - group: apps
+      kind: Deployment
+    - group: batch
+      kind: Job
+    - group: cert-manager.io
+      kind: Certificate
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: rbac.authorization.k8s.io
+      kind: Role
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+  orphanedResources:
+    warn: true

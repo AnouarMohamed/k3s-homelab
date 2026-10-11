@@ -12,3 +12,8 @@ later internal route must remain reachable only through WARP private routing.
 
 Cloudflare Tunnel creates outbound connections from the cluster. Administration uses
 Cloudflare WARP private routing so the router exposes no inbound port.
+
+Phase 4 publishes exactly one DNS name, `whoami.<configured-domain>`, through a
+remotely managed Tunnel. OpenTofu owns that CNAME; external-dns is restricted to
+explicitly annotated public-Gateway routes and therefore owns no Phase 4 record. The
+public Gateway's LAN load-balancer address is not published to public DNS.

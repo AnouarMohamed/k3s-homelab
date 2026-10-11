@@ -1,0 +1,26 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cloudflare-api-token
+  namespace: cert-manager
+type: Opaque
+stringData:
+  # yamllint disable-line rule:line-length
+  api-token: ENC[AES256_GCM,data:kne91M0KNZ1X9nWo7CZ7uWYrv/5vyXyUuDbM/hNNTnc3AZwKEdWOSw==,iv:YEoqaNCyveb/WZsAq8VC/xsJC9DFanzVU3Ke2uggBhg=,tag:/XZzslHAqYWn9i5I9KC7oA==,type:str]
+sops:
+  age:
+    - enc: |
+        -----BEGIN AGE ENCRYPTED FILE-----
+        YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBRRWFOMmRXbXFoZzZsYWRr
+        T24rbE9nQTlid0JFNkdxTnZROVFPdVBJc3hZCk12dTQ5WHJ2bFR4V0wyMzkrZ3B6
+        QU55RGVDZXBMRzZJb0hsMWU2VERJK00KLS0tIDF4d3pzSzdZc2wvMVB2cktwcmNw
+        ZWczOEFLdWY2Tm5jUzJSd1QwaEtHN2MKbMGblDxMpjdH3aVcwctyB0eDtPsq4atq
+        n07LLLpi1zQK/0uKVe+sCVTL60je/R0dF4mARRWqoKS6+jMw7JUF2g==
+        -----END AGE ENCRYPTED FILE-----
+      recipient: age17mvgle6026gdpsflmnxtsmrflmwhe0h28kdwpp5jusqaha7f4ufsm2cle5
+  encrypted_regex: ^(data|stringData)$
+  lastmodified: '2026-10-11T20:05:47Z'
+  # yamllint disable-line rule:line-length
+  mac: ENC[AES256_GCM,data:YKl+zYxUKVPiDlK5Oz8OJc5CgwHqiAObfWAL3dYRG5yD+ko8zR0QwaGmVWvldU7ybnJM6B4UAChVnnKyvaUaXGd353PrJV1IjwnJXg1rG5kv8ItY3scsEIuokmDa9mh0Bv38F3UzT+1gVe0PKzI6e63lk+N/7iXauP+iJ8391YE=,iv:FAqCmkoJalu2HI4t0Wy2AOyr4NXhGABw3ees9d/Rutg=,tag:PI7pufqMhBzRas4ggYWgzQ==,type:str]
+  version: 3.13.3

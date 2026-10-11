@@ -1,0 +1,22 @@
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: edge-wildcard
+  namespace: gateways
+  annotations:
+    argocd.argoproj.io/sync-wave: '2'
+  labels:
+    app.kubernetes.io/name: edge-wildcard
+    app.kubernetes.io/component: certificate
+    app.kubernetes.io/part-of: edge-access
+spec:
+  secretName: edge-wildcard-tls
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: letsencrypt-production
+  dnsNames:
+    - ${CONFIG_DOMAIN}
+    - '*.${CONFIG_DOMAIN}'
+    - '*.internal.${CONFIG_DOMAIN}'

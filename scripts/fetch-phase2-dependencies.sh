@@ -40,5 +40,14 @@ if [[ ! -f "${l2_crd}" ]]; then
 fi
 printf '%s  %s\n' "${CILIUM_L2_CRD_SHA256}" "${l2_crd}" | sha256sum --check --strict
 
+network_policy_crd="${cache_dir}/cilium-network-policy-crd.yaml"
+if [[ ! -f "${network_policy_crd}" ]]; then
+  curl --fail --location --silent --show-error \
+    --output "${network_policy_crd}" \
+    "https://raw.githubusercontent.com/cilium/cilium/v${CILIUM_VERSION}/pkg/k8s/apis/cilium.io/client/crds/v2/ciliumnetworkpolicies.yaml"
+fi
+printf '%s  %s\n' "${CILIUM_NETWORK_POLICY_CRD_SHA256}" "${network_policy_crd}" | \
+  sha256sum --check --strict
+
 test "$(yq --unwrapScalar '.version' "${cache_dir}/cilium/Chart.yaml")" = "${CILIUM_VERSION}"
 printf 'Cached verified Phase 2 dependencies in %s\n' "${cache_dir}"

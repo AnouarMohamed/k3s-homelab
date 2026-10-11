@@ -8,6 +8,7 @@ Implemented Phase 1 runbooks:
 - [Troubleshoot Cilium](cilium-troubleshooting.md)
 - [Recover Argo CD](argocd-recovery.md)
 - [Understand GitOps sync waves](gitops-sync-waves.md)
+- [Use Cloudflare WARP private access](cloudflare-warp-access.md)
 
 Later component runbooks are added with the phase that creates each operational
 responsibility.

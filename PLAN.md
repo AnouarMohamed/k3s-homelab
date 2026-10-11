@@ -84,9 +84,14 @@ before later phases begin.
 | Argo CD chart | `10.10.2` | `helm show chart`; app `v3.5.4`, OCI digest `sha256:96ff0d2150557ceb51c309c3adedb63455226c2dd2c5323f5b1e894536e2901d` |
 | KSOPS | `v4.5.1` | Official release and image digest `sha256:4def9fdd4e2f850265740ebe9592c5455d19b76891e88e602df8b52d74b95334` |
 | community.general | `13.4.0` | Galaxy artifact SHA-256 `efd1c0b5dc6f89b9667e4bd77f2426c30545861910dba188593871095ede1804` |
+| cert-manager chart | `v1.21.1` | Official OCI digest `sha256:15c0b46d9006ce8eb9ff14d1bf54d1bbfcc587bb9e24cd9fe186fb8fec56af1f` |
+| external-dns chart | `1.22.0` | Official release archive SHA-256 `ec26bba67e02f46a55ac33790ad9d9ded724a163af6f6b4a63ce68f883201f4f`; app `0.22.0` |
+| Cloudflare provider | `5.27.0` | Exact official OpenTofu provider constraint and dependency lock |
+| cloudflared | `2026.10.0` | OCI digest `sha256:9b49eed8f62806d5d45ddf59ecefb5710429598ea6d3fcccd2af938f621b2b07` |
+| whoami | `v1.11.0` | OCI digest `sha256:200689790a0a0ea48ca45992e0450bc26ccab5307375b41c84dfc4f2475937ab` |
 
-All remaining chart, provider, collection, application image, and CI image versions are
-`VERIFY`. Before implementing their phase I will verify them against an official chart
+All remaining later-phase chart, provider, collection, application image, and CI image
+versions are `VERIFY`. Before implementing their phase I will verify them against an official chart
 index, release, registry, or `helm show chart/values`, replace `VERIFY` with an exact pin,
 and record the evidence. An unverified dependency is not eligible for a completed phase.
 

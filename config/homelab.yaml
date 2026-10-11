@@ -5,11 +5,13 @@ metadata:
   name: homelab
 spec:
   domain: CHANGE_ME_DOMAIN
+  acmeEmail: CHANGE_ME_ACME_EMAIL
   timezone: Africa/Casablanca
   gitlab:
     projectPath: CHANGE_ME_GITLAB_PROJECT_PATH
   network:
     adminCidr: CHANGE_ME_ADMIN_CIDR
+    privateRouteCidr: CHANGE_ME_PRIVATE_ROUTE_CIDR
     nodes:
       - name: pc-1
         address: CHANGE_ME_PC_1_LAN_IP

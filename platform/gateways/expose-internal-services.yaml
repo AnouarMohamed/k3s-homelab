@@ -1,0 +1,32 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: internal
+  namespace: gateways
+  labels:
+    app.kubernetes.io/name: internal-gateway
+    app.kubernetes.io/component: edge-routing
+    app.kubernetes.io/part-of: edge-access
+spec:
+  gatewayClassName: cilium
+  addresses:
+    - type: IPAddress
+      value: ${CONFIG_LOAD_BALANCER_START}
+  listeners:
+    - name: https
+      protocol: HTTPS
+      port: 443
+      hostname: '*.internal.${CONFIG_DOMAIN}'
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ''
+            kind: Secret
+            name: edge-wildcard-tls
+      allowedRoutes:
+        namespaces:
+          from: Selector
+          selector:
+            matchLabels:
+              homelab.anouar.dev/internal-gateway-access: 'true'

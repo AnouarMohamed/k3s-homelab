@@ -5,4 +5,9 @@ resources:
   - deploy-argocd.yaml
   - deploy-bootstrap-secrets.yaml
   - deploy-cilium.yaml
+  - deploy-cert-manager.yaml
+  - deploy-cloudflare-tunnel.yaml
+  - deploy-edge-secrets.yaml
+  - deploy-external-dns.yaml
+  - deploy-gateways.yaml
   - generate-applications.yaml
