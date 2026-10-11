@@ -1,24 +1,28 @@
+---
 extends: default
 
-ignore:
-  - .git/
-  - .tofu/
-  - .terraform/
-  - _templates/
+ignore: |
+  .git/
+  .tools/
+  .cache/
 
 rules:
-  line-length:
-    max: 130
-    level: warning
-  empty-lines:
-    level: warning
-  trailing-spaces: off
-  indentation:
-    level: warning
-  key-duplicates: off
+  braces:
+    max-spaces-inside: 1
+  comments:
+    min-spaces-from-content: 1
+  comments-indentation: false
+  document-end: disable
   document-start:
+    present: true
+  line-length:
+    max: 120
     level: warning
-  document-end:
-    level: warning
-  comments-indentation:
-    level: warning
+  octal-values:
+    forbid-explicit-octal: true
+    forbid-implicit-octal: true
+  truthy:
+    allowed-values:
+      - "true"
+      - "false"
+...

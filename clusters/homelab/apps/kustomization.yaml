@@ -1,4 +1,0 @@
-resources:
-  - cilium.yaml
-  - argocd.yaml
-  - appset.yaml

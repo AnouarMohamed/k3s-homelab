@@ -1,48 +1,176 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base"
+    "config:recommended"
+  ],
+  "dependencyDashboard": true,
+  "timezone": "Africa/Casablanca",
+  "schedule": [
+    "before 06:00 on Monday"
+  ],
+  "labels": [
+    "dependencies"
+  ],
+  "rangeStrategy": "pin",
+  "automerge": false,
+  "enabledManagers": [
+    "ansible-galaxy",
+    "dockerfile",
+    "gitlabci",
+    "gomod",
+    "helm-values",
+    "helmv3",
+    "kubernetes",
+    "npm",
+    "regex",
+    "terraform"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^scripts/tool-versions\\.env$/"
+      ],
+      "matchStrings": [
+        "KUBECONFORM_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "yannh/kubeconform",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^scripts/tool-versions\\.env$/"
+      ],
+      "matchStrings": [
+        "KUBE_LINTER_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "stackrox/kube-linter",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^scripts/tool-versions\\.env$/"
+      ],
+      "matchStrings": [
+        "GITLEAKS_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "gitleaks/gitleaks",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^scripts/tool-versions\\.env$/"
+      ],
+      "matchStrings": [
+        "KYVERNO_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "kyverno/kyverno",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^scripts/tool-versions\\.env$/"
+      ],
+      "matchStrings": [
+        "KUSTOMIZE_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "kubernetes-sigs/kustomize",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^kustomize/(?<version>v.*)$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^scripts/tool-versions\\.env$/"
+      ],
+      "matchStrings": [
+        "AGE_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "FiloSottile/age",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^scripts/tool-versions\\.env$/"
+      ],
+      "matchStrings": [
+        "YQ_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "mikefarah/yq",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^scripts/tool-versions\\.env$/"
+      ],
+      "matchStrings": [
+        "SOPS_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "getsops/sops",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^scripts/tool-versions\\.env$/"
+      ],
+      "matchStrings": [
+        "TOFU_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "opentofu/opentofu",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^scripts/tool-versions\\.env$/"
+      ],
+      "matchStrings": [
+        "PROMETHEUS_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "prometheus/prometheus",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^scripts/tool-versions\\.env$/"
+      ],
+      "matchStrings": [
+        "MARKDOWNLINT_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "markdownlint-cli2",
+      "datasourceTemplate": "npm"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^scripts/tool-versions\\.env$/"
+      ],
+      "matchStrings": [
+        "SHELLCHECK_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "koalaman/shellcheck",
+      "datasourceTemplate": "github-releases"
+    }
   ],
   "packageRules": [
     {
-      "matchDatasources": ["helm"],
-      "automerge": true,
-      "automergeType": "branch"
-    },
-    {
-      "matchDatasources": ["docker"],
-      "automerge": true,
-      "automergeType": "branch"
-    },
-    {
-      "matchDatasources": ["ansible", "galaxy"],
-      "automerge": true,
-      "automergeType": "branch"
-    },
-    {
-      "matchDatasources": ["gitlab-ci"],
-      "automerge": true,
-      "automergeType": "branch"
-    },
-    {
-      "matchDatasources": ["terraform", "tofu"],
-      "automerge": true,
-      "automergeType": "branch"
+      "description": "Never automerge infrastructure dependencies",
+      "matchManagers": [
+        "ansible-galaxy",
+        "gitlabci",
+        "helmv3",
+        "kubernetes",
+        "terraform"
+      ],
+      "automerge": false
     }
-  ],
-  "automerge": false,
-  "automergeType": "pr",
-  "platformAutomerge": true,
-  "schedule": ["before 5am on monday"],
-  "timezone": "UTC",
-  "labels": ["dependencies"],
-  "major": {
-    "automerge": false
-  },
-  "minor": {
-    "automerge": true
-  },
-  "patch": {
-    "automerge": true
-  }
+  ]
 }

@@ -1,0 +1,31 @@
+---
+apiVersion: homelab.anouar.dev/v1alpha1
+kind: HomelabConfig
+metadata:
+  name: homelab
+spec:
+  domain: CHANGE_ME_DOMAIN
+  timezone: Africa/Casablanca
+  gitlab:
+    projectPath: CHANGE_ME_GITLAB_PROJECT_PATH
+  network:
+    nodes:
+      - name: pc-1
+        address: CHANGE_ME_PC_1_LAN_IP
+        interface: CHANGE_ME_PC_1_INTERFACE
+      - name: pc-2
+        address: CHANGE_ME_PC_2_LAN_IP
+        interface: CHANGE_ME_PC_2_INTERFACE
+      - name: pc-3
+        address: CHANGE_ME_PC_3_LAN_IP
+        interface: CHANGE_ME_PC_3_INTERFACE
+    controlPlaneVip: CHANGE_ME_CONTROL_PLANE_VIP
+    loadBalancerPool:
+      start: CHANGE_ME_LOAD_BALANCER_START_IP
+      stop: CHANGE_ME_LOAD_BALANCER_STOP_IP
+  storage:
+    longhornDiskPath: CHANGE_ME_LONGHORN_DISK_PATH
+    s3:
+      endpoint: CHANGE_ME_S3_ENDPOINT
+      bucket: CHANGE_ME_S3_BUCKET
+...

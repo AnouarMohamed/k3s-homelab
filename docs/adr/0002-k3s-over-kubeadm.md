@@ -1,22 +1,29 @@
-# Choose k3s over Kubeadm for Homelab Kubernetes
+# Choose k3s over kubeadm
 
 ## Status
+
 Accepted
 
 ## Context
-We need to install a Kubernetes cluster on three Ubuntu Server LTS nodes for the homelab. The cluster should be lightweight, easy to maintain, and suitable for a resource-constrained environment while still being production-grade.
+
+The homelab needs a highly available Kubernetes control plane on three modest Ubuntu
+Server nodes. All control-plane nodes must also remain schedulable.
 
 ## Decision
-We chose k3s as the Kubernetes distribution instead of kubeadm for the following reasons:
-- k3s is lightweight, with a small binary and minimal dependencies, ideal for homelab hardware.
-- It bundles etcd, CNI, and other components, reducing operational complexity.
-- k3s supports embedded etcd for HA clusters, which fits our three-node requirement.
-- It simplifies installation and upgrades with a single script or automated Ansible playbook.
-- k3s has built-in support for running control-plane nodes as workers, maximizing resource utilization.
-- The default installation includes Flannel, but we will replace it with Cilium (see ADR 0003).
+
+Use k3s with embedded etcd. Pin the release to `v1.36.5+k3s1`, verify the downloaded
+binary checksum, and install it through Ansible. Disable Flannel, kube-proxy, the
+built-in network-policy controller, Traefik, and ServiceLB at installation time so
+Cilium can own those functions without a migration from a live CNI.
+
+k3s retains the upstream Kubernetes API while reducing the number of separately
+managed binaries. Its embedded etcd mode fits the required three-member quorum, and
+the server nodes can run workloads.
 
 ## Consequences
-- We will use k3s v1.28.x or later, pinned to a specific version.
-- The cluster will be installed using Ansible playbooks in the `infra/ansible/` directory.
-- We will disable the default Flannel CNI and install Cilium instead.
-- Future upgrades of k3s will be managed through the Ansible playbook and GitOps practices.
+
+- Ansible must control installation order, flags, snapshots, and rolling upgrades.
+- Nodes are expected to remain `NotReady` between k3s and Cilium bootstrap.
+- The platform depends on k3s packaging and must validate upgrades against the Cilium
+  compatibility matrix before changing Kubernetes minors.
+- kubeadm-specific operational procedures do not apply.

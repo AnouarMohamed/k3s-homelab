@@ -1,4 +1,0 @@
-resources:
-  - platform-project.yaml
-  - observability-project.yaml
-  - apps-project.yaml

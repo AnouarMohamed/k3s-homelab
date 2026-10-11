@@ -5,7 +5,7 @@ checks against the three physical nodes are tracked separately as `PENDING HARDW
 
 ## Phase checklist
 
-- [ ] Phase 0 — Skeleton and CI (repair required)
+- [x] Phase 0 — Skeleton and CI (offline validation complete)
 - [ ] Phase 1 — Nodes and k3s (repair required)
 - [ ] Phase 2 — Cilium (repair required)
 - [ ] Phase 3 — Argo CD (repair required)
@@ -41,8 +41,32 @@ Present: git, helm, kubectl, yamllint, ansible, ansible-lint, cosign, k6.
 Missing at audit time: kubeconform, kube-linter, markdownlint, shellcheck, tofu, sops,
 age, gitleaks, kyverno, promtool, kustomize.
 
-Network access was available. Missing tools will be installed into the ignored local
-tool directory by the pinned Phase 0 installer and re-inventoried before validation.
+`make tools` subsequently installed the missing tools into ignored `.tools/bin`. The
+installer pins kubeconform `v0.8.0`, kube-linter `v0.8.3`, gitleaks `v8.30.1`, Kyverno
+CLI `v1.19.1`, Kustomize `v5.7.1`, age `v1.3.2`, yq `v4.54.1`, SOPS `v3.13.3`,
+OpenTofu `v1.13.1`, promtool `3.15.0`, markdownlint-cli2 `0.23.3`, and ShellCheck
+`0.11.0`. Go module sums, npm integrity metadata, or upstream release checksums are
+verified according to the distribution method. ShellCheck's release digest is pinned
+explicitly because that release has no checksum-list asset.
+
+## Phase 0 validation — 2026-10-11
+
+- `make tools` returned exit 0. Release checksum output reported `OK` for Kyverno,
+  OpenTofu, Prometheus, and ShellCheck.
+- `make lint` returned exit 0. Markdownlint reported 36 files and zero issues;
+  ansible-lint reported zero failures and zero warnings. No Ansible implementation
+  files exist yet, so the latter is a configuration check rather than a Phase 1 gate.
+- `make validate` returned exit 0. Forbidden-file, private-value/domain, and dependency
+  pin checks passed. It correctly reported that no built-in Kubernetes manifests exist
+  yet.
+- `sops filestatus` reported `{"encrypted":true}` for the placeholder GitLab
+  credential document. Encrypted source files are excluded from direct kubeconform;
+  their decrypted in-memory render becomes a Phase 3 validation input.
+- `jq empty renovate.json` returned exit 0.
+- `make security` returned exit 0. Gitleaks scanned all six commits, approximately
+  2.03 MB, and reported no leaks.
+- `git diff --check` returned exit 0.
+- The generated GitLab pipeline has not run; CI execution remains unverified.
 
 ## Unverified
 

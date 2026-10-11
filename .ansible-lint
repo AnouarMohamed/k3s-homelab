@@ -1,0 +1,10 @@
+---
+profile: production
+exclude_paths:
+  - .cache/
+  - .tools/
+  - infra/ansible/inventory/hosts.yaml
+  - infra/ansible/inventory/hosts.yml
+mock_roles: []
+mock_modules: []
+...

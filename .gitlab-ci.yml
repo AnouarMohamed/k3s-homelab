@@ -1,80 +1,65 @@
+---
 stages:
   - lint
   - validate
   - security
 
-# Variables
-variables:
-  # Directory to scan for Kubernetes manifests
-  KUBE_MANIFESTS_DIR: "clusters/ platform/ apps/"
-  # For markdownlint, we can specify config file
-  MARKDOWNLINT_CONFIG: ".markdownlint.yaml"
+default:
+  interruptible: true
 
-# Lint stage
-yamllint:
+variables:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PIP_NO_CACHE_DIR: "1"
+  GOTOOLCHAIN: local
+
+lint:yaml-and-ansible:
   stage: lint
-  image: cytopia/yamllint:1.35.1
+  image: python:3.14.7-slim@sha256:51dafde81dbdb6ebde285137a295cf18a47ca95234fe388a343719cb97305b3d
+  before_script:
+    - python -m pip install ansible-lint==26.9.0 yamllint==1.38.0
   script:
     - yamllint .
-  allow_failure: false
+    - ansible-lint infra/ansible
 
-markdownlint:
+lint:markdown:
   stage: lint
-  image: igorshubovych/markdownlint-cli:v0.41.0
+  image:
+    name: davidanson/markdownlint-cli2:v0.23.3@sha256:d5f3f3f04b2e285dcbcdcd13b4454d119e273e3c393a9dabd163dba4abad526d
+    entrypoint:
+      - ""
   script:
-    - markdownlint "**/*.md" --config "$MARKDOWNLINT_CONFIG"
-  allow_failure: false
+    - markdownlint-cli2
 
-# Validate stage
-gitleaks:
+lint:shell:
+  stage: lint
+  image:
+    name: koalaman/shellcheck-alpine:v0.11.0@sha256:9955be09ea7f0dbf7ae942ac1f2094355bb30d96fffba0ec09f5432207544002
+    entrypoint:
+      - ""
+  script:
+    - shellcheck scripts/*.sh
+
+validate:repository:
   stage: validate
-  image: gitleaks/gitleaks:v8.16.1
+  image: golang:1.26.8-bookworm@sha256:dc9ad6c05acc7a88e5b71bde60a5fe3bd4b9f0db209011711b464107438a8107
+  before_script:
+    - export GOBIN="${CI_PROJECT_DIR}/.tools/bin"
+    - mkdir -p "${GOBIN}"
+    - go install github.com/yannh/kubeconform/cmd/kubeconform@v0.8.0
+    - go install golang.stackrox.io/kube-linter/cmd/kube-linter@v0.8.3
+    - export PATH="${GOBIN}:${PATH}"
   script:
-    - gitleaks detect --source . --verbose --exit-code 0 --no-git --report-format json --report-path gl-gitleaks-report.json
-    # If the report exists and has findings, we can fail the job
-    - |
-      if [ -f gl-gitleaks-report.json ] && [ $(jq '. | length' gl-gitleaks-report.json) -gt 0 ]; then
-        echo "Gitleaks found secrets!";
-        cat gl-gitleaks-report.json;
-        exit 1;
-      fi
-  allow_failure: false
+    - scripts/check-forbidden-files.sh
+    - scripts/check-private-values.sh
+    - scripts/check-pins.sh
+    - scripts/validate-manifests.sh
 
-kubeconform:
-  stage: validate
-  image: instrumenta/kubeconform:v0.4.0
-  script:
-    # Find all yaml files in the specified directories and run kubeconform
-    - |
-      find $KUBE_MANIFESTS_DIR -type f -name "*.yaml" -o -name "*.yml" | while read manifest; do
-        echo "Validating $manifest";
-        kubeconform -strict "$manifest" || exit 1;
-      done
-  allow_failure: false
-
-kube-linter:
-  stage: validate
-  image: instrumenta/kube-linter:0.3.2
-  script:
-    # kube-linter expects a directory or file; we'll run it on the manifest directories
-    - |
-      find $KUBE_MANIFESTS_DIR -type f -name "*.yaml" -o -name "*.yml" | while read manifest; do
-        echo "Running kube-linter on $manifest";
-        kube-linter lint "$manifest" || exit 1;
-      done
-  allow_failure: false
-
-# Security stage
-# We can add security scanning jobs here, e.g., Trivy for container images, or Bandit for Python.
-# For now, we'll leave it as a placeholder or add a simple security check.
-# Since the requirement is to have a security stage, we'll add a job that runs a security scan if applicable.
-# However, in Phase 0, we don't have container images or Python code to scan.
-# We'll create a job that always passes but indicates that security scanning is not implemented yet.
-security-scan:
+security:gitleaks:
   stage: security
-  image: alpine:latest
+  image:
+    name: zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
+    entrypoint:
+      - ""
   script:
-    - echo "Security scanning not implemented yet for Phase 0."
-    - echo "In future phases, we will add Trivy, Bandit, or other security scanners here."
-  allow_failure: false
+    - gitleaks git --redact --verbose --log-opts=--all
 ...

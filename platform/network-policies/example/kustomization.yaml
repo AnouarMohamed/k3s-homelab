@@ -1,7 +1,0 @@
----
-namespace: example-namespace
-resources:
-  - namespace.yaml
-bases:
-  - ../../base
-...

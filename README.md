@@ -1,80 +1,82 @@
-# k3s-homelab
+# k3s homelab
 
-Production-grade, GitOps-managed Kubernetes homelab as a public portfolio repository.
+I am building this three-node homelab to practice the work expected of a platform and
+DevSecOps engineer: provisioning Linux, operating highly available Kubernetes, shipping
+through GitOps, securing the software supply chain, and proving recovery procedures.
+This repository describes my real environment. It is not a generic cluster template.
 
-## Planned Architecture
+> Current state: Phase 0 passes local validation; its GitLab pipeline has not run.
+> Platform components remain planned and unverified on hardware.
+> [See the evidence ledger](docs/STATUS.md).
 
 ```mermaid
-graph TD
-    subgraph Internet
-        CF[Cloudflare Tunnel]
-    end
-    subgraph LAN
-        subgraph Control Plane
-            CP1[pc-1: k3s server]
-            CP2[pc-2: k3s server]
-            CP3[pc-3: k3s server]
-            VIP[kube-vip VIP]
-        end
-        subgroup Worker Nodes
-            WN1[pc-1: k3s agent]
-            WN2[pc-2: k3s agent]
-            WN3[pc-3: k3s agent]
-        end
-        subgroup Network
-            Cilium[cni: Cilium]
-            KVIP[kube-vip: LB/VP]
-        end
-        subgroup Storage
-            Longhorn[longhorn-system]
-        end
-        subgroup GitOps
-            ArgoCD[argo-cd: Application controller]
-            AppOfApps[ApplicationSet: app-of-apps]
-        end
-        subgroup Platform
-            CertManager[cert-manager]
-            OpenBao[openbao]
-            ExternalSecrets[external-secrets]
-        end
-        subgroup Observability
-            Monitoring[prometheus-stack]
-            Logging[loki]
-            Tracing[tempo]
-        end
-        subgroup Policies
-            Kyverno[kyverno-policies]
-        end
-        subgroup Apps
-            DemoApp[apps/demo]
-            SelfHosted[apps/self-hosted]
-        end
-    end
-
-    CF -->|HTTPS/TLS| VIP
-    VIP --> CP1 & CP2 & CP3
-    CP1 & CP2 & CP3 --> Cilium
-    Cilium --> WN1 & WN2 & WN3
-    WN1 & WN2 & WN3 --> Longhorn
-    WN1 & WN2 & WN3 --> Platform
-    WN1 & WN2 & WN3 --> Observability
-    WN1 & WN2 & WN3 --> Policies
-    WN1 & WN2 & WN3 --> Apps
-    ArgoCD --> AppOfApps
-    AppOfApps --> Platform
-    AppOfApps --> Observability
-    AppOfApps --> Policies
-    AppOfApps --> Apps
+flowchart LR
+  Git[GitLab CI and registry] --> Argo[Argo CD]
+  Users[Public users] --> CF[Cloudflare Tunnel]
+  Admin[Administrator via WARP] --> CF
+  CF --> Gateway[Cilium Gateway API]
+  Argo --> Cluster
+  subgraph Cluster[Three schedulable k3s servers]
+    VIP[kube-vip API address]
+    Cilium[Cilium and Hubble]
+    Storage[Longhorn and CloudNativePG]
+    Observe[Metrics, logs, and traces]
+    Apps[Homelab Sentinel and selected apps]
+  end
+  Gateway --> Apps
+  Apps --> Storage
+  Cluster --> Observe
 ```
 
-## Phases Status
+## What this is intended to demonstrate
 
-| Phase | Description | Status |
-|-------|-------------|--------|
-| 0 | Repository skeleton and tooling | ✅ done |
-| 1 | Bootstrap clusters with k3s | ⬜ not started |
-| 2 | Install platform components (Cilium, cert-manager, etc.) | 🟡 preparation completed |
-| 3 | Deploy Argo CD and app-of-apps | ⬜ not started |
-| 4 | Add observability stack | ⬜ not started |
-| 5 | Add policy engine | ⬜ not started |
-| 6 | Deploy demo and self-hosted apps | ⬜ not started |
+| Capability | Planned evidence |
+| --- | --- |
+| Three-node HA control plane | [Architecture](docs/architecture.md) and hardware verification |
+| Reconciled GitOps delivery | Argo CD tree and recovery runbook |
+| Zero inbound router ports | [Public surface](docs/security/public-surface.md) |
+| Backup and disaster recovery | [DR documents](docs/dr/README.md) and measured results |
+| Supply-chain security | Kyverno tests, SBOMs, Trivy reports, and Cosign verification |
+| Full-stack observability | Prometheus rules, dashboards, Loki, Tempo, and SLOs |
+| Canary delivery | Homelab Sentinel Rollout and Prometheus analysis |
+
+## Hardware
+
+| Node | Architecture | Role | Scheduling |
+| --- | --- | --- | --- |
+| `pc-1` | x86-64 | k3s server and embedded etcd member | Enabled |
+| `pc-2` | x86-64 | k3s server and embedded etcd member | Enabled |
+| `pc-3` | x86-64 | k3s server and embedded etcd member | Enabled |
+
+Addresses, interfaces, domains, and external service identifiers live only in
+[`config/homelab.yaml`](config/homelab.yaml).
+
+## Build status
+
+| Phase | Status |
+| --- | --- |
+| 0 — Skeleton and CI | Implemented; CI runner untested |
+| 1 — Nodes and k3s | Planned |
+| 2 — Cilium | Planned |
+| 3 — Argo CD | Planned |
+| 4 — Certificates, DNS, and access | Planned |
+| 5 — Storage and backups | Planned |
+| 6 — Runtime secrets | Planned |
+| 7 — Observability | Planned |
+| 8 — Policy and supply chain | Planned |
+| 9 — Homelab Sentinel | Planned |
+| 10 — Identity and self-hosted apps | Planned |
+| 11 — Chaos and disaster recovery | Planned |
+| 12 — Portfolio polish | Planned |
+
+## Start here
+
+- [Implementation plan](PLAN.md)
+- [Build specification](docs/BUILD_SPEC.md)
+- [Human-only inputs](HUMAN_TODO.md)
+- [Current evidence](docs/STATUS.md)
+- [Hardware verification](docs/VERIFY_ON_HARDWARE.md)
+- [Skills demonstrated](docs/skills-demonstrated.md)
+
+Run `make help` for repository entry points. Bootstrap commands are for Anouar to run
+only after completing the human tasks and reading the matching runbooks.

@@ -1,71 +1,67 @@
-# Variables for bootstrap-cni
-GATEWAY_API_VERSION := v1.2.0
-CILIUM_CHART_VERSION := 1.15.0
-CILIUM_NAMESPACE := kube-system
+SHELL := /usr/bin/env bash
+REPOSITORY_ROOT := $(CURDIR)
+TOOL_BIN := $(REPOSITORY_ROOT)/.tools/bin
+export PATH := $(TOOL_BIN):$(PATH)
 
-.PHONY: help lint validate bootstrap-nodes upgrade-k3s reset bootstrap-cni bootstrap-gitops
+.DEFAULT_GOAL := help
 
-help:
-	@echo "Available targets:"
-	@echo "  help        Show this help message"
-	@echo "  lint        Run linters"
-	@echo "  validate    Run validation scripts"
-	@echo "  bootstrap-nodes   Bootstrap the cluster (harden nodes and deploy k3s HA)"
-	@echo "  upgrade-k3s       Upgrade k3s cluster (rolling update)"
-	@echo "  reset             Teardown the cluster (remove k3s and kube-vip)"
-	@echo "  bootstrap-cni     Install Gateway API CRDs and Cilium (kube-proxy replacement)"
-	@echo "  bootstrap-gitops  Deploy Argo CD and GitOps structure"
+.PHONY: help tools lint validate security bootstrap bootstrap-nodes upgrade-k3s reset \
+	bootstrap-cni bootstrap-gitops bootstrap-platform test tofu-plan teardown
 
-lint:
-	@echo "Running linters..."
-	# This will be implemented with pre-commit and other linters in later phases
-	@echo "Linting not fully implemented yet; run 'pre-commit run --all-files' for pre-commit hooks."
+help: ## Show all supported targets
+	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} \
+		/^[a-zA-Z0-9_-]+:.*## / {printf "  %-22s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-validate:
-	@echo "Running validation..."
-	# This will be implemented with kubeconform, kube-linter, etc. in later phases
-	@echo "Validation not fully implemented yet."
+tools: ## Install pinned local validation tools into .tools/bin
+	@scripts/install-tools.sh
 
-bootstrap-nodes:
-	@echo "Bootstrapping nodes (hardening and k3s HA cluster)..."
-	ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/site.yml
+lint: ## Lint YAML, Markdown, shell, and Ansible sources
+	@git ls-files -co --exclude-standard -z -- '*.yaml' '*.yml' | \
+		while IFS= read -r -d '' file; do \
+			[[ -f "$$file" ]] && printf '%s\0' "$$file"; \
+		done | xargs -0 -r yamllint
+	@markdownlint-cli2
+	@shellcheck scripts/*.sh
+	@ansible-lint infra/ansible
 
-upgrade-k3s:
-	@echo "Upgrading k3s cluster (rolling update)..."
-	ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/upgrade.yml
+validate: ## Validate repository policy and Kubernetes manifests
+	@scripts/check-forbidden-files.sh
+	@scripts/check-private-values.sh
+	@scripts/check-pins.sh
+	@scripts/validate-manifests.sh
 
-reset:
-	@echo "Tearing down the cluster..."
-	ansible-playbook -i infra/ansible/inventory/hosts.yml infra/ansible/reset.yml
+security: ## Scan the complete Git history for secrets
+	@gitleaks git --redact --verbose --log-opts=--all
 
-bootstrap-cni:
-	@echo "Installing Gateway API CRDs version $(GATEWAY_API_VERSION)..."
-	@curl -L https://github.com/kubernetes-sigs/gateway-api/releases/download/$(GATEWAY_API_VERSION)/standard-install.yaml | kubectl apply -f -
-	@echo "Adding Helm repo for Cilium..."
-	@helm repo add cilium https://helm.cilium.io/ 2>/dev/null || echo "Repo already exists"
-	@helm repo update
-	@echo "Installing Cilium chart version $(CILIUM_CHART_VERSION) in namespace $(CILIUM_NAMESPACE)..."
-	@helm install cilium cilium/cilium \
-	  --namespace $(CILIUM_NAMESPACE) \
-	  --version $(CILIUM_CHART_VERSION) \
-	  -f platform/cilium/values.yml \
-	  --wait
-	@echo "Applying CiliumLoadBalancerIPPool..."
-	@kubectl apply -f platform/cilium/cilium-lb-ippool.yaml
-	@echo "Applying CiliumL2AnnouncementPolicy..."
-	@kubectl apply -f platform/cilium/cilium-l2-policy.yaml
-	@echo "Waiting for Cilium agent rollout..."
-	@kubectl rollout status daemonset/cilium -n $(CILIUM_NAMESPACE) --timeout=5m
-	@echo "Waiting for Cilium operator rollout..."
-	@kubectl rollout status deployment/cilium-operator -n $(CILIUM_NAMESPACE) --timeout=5m
-	@echo "Cilium installation complete. Run 'cilium status --wait' to verify."
+bootstrap: bootstrap-nodes bootstrap-cni bootstrap-gitops bootstrap-platform ## Run the documented bootstrap sequence
 
-bootstrap-gitops:
-	@echo "Deploying Argo CD and GitOps structure..."
-	@kubectl apply -k clusters/homelab/bootstrap/
-	@echo "Waiting for Argo CD rollout..."
-	@kubectl rollout status deployment/argocd-server -n argocd --timeout=5m
-	@echo "Argo CD installation complete. Access via:"
-	@echo "  kubectl port-forward svc/argocd-server -n argocd 8080:443"
-	@echo "  Then visit https://localhost:8080"
-	@echo "  Initial admin password: $(kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath=\"{.data.password}\" | base64 -d)"
+bootstrap-nodes: ## Provision and harden the three k3s servers
+	@ansible-playbook -i infra/ansible/inventory/hosts.yaml infra/ansible/site.yaml
+
+upgrade-k3s: ## Perform a guarded rolling k3s upgrade
+	@ansible-playbook -i infra/ansible/inventory/hosts.yaml infra/ansible/upgrade.yaml
+
+reset: ## Reset k3s only when CONFIRM_RESET=homelab is supplied
+	@test "$(CONFIRM_RESET)" = homelab || \
+		{ printf 'Refusing reset; use CONFIRM_RESET=homelab after reading the runbook.\n' >&2; exit 1; }
+	@ansible-playbook -i infra/ansible/inventory/hosts.yaml infra/ansible/reset.yaml
+
+bootstrap-cni: ## Install Gateway API CRDs and Cilium
+	@scripts/bootstrap-cni.sh
+
+bootstrap-gitops: ## Bootstrap Argo CD and its root application
+	@scripts/bootstrap-gitops.sh
+
+bootstrap-platform: ## Synchronize the platform through Argo CD
+	@scripts/bootstrap-platform.sh
+
+test: ## Run application unit and integration tests
+	@$(MAKE) -C apps/sentinel test
+
+tofu-plan: ## Produce non-destructive OpenTofu plans
+	@tofu -chdir=infra/tofu init -backend=false
+	@tofu -chdir=infra/tofu validate
+	@tofu -chdir=infra/tofu plan -lock=false
+
+teardown: ## Alias for the guarded reset target
+	@$(MAKE) reset CONFIRM_RESET="$(CONFIRM_RESET)"

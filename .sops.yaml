@@ -1,0 +1,7 @@
+---
+creation_rules:
+  - path_regex: \.sops\.ya?ml$
+    encrypted_regex: ^(data|stringData)$
+    # Disposable placeholder recipient; its private identity is not committed.
+    age: age17mvgle6026gdpsflmnxtsmrflmwhe0h28kdwpp5jusqaha7f4ufsm2cle5
+...
