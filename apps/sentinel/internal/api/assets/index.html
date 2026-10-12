@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="dark light">
+    <title>Homelab Sentinel</title>
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Homelab Sentinel</p>
+      <h1>Service status</h1>
+      <p id="summary" aria-live="polite">Loading current observations…</p>
+      <section id="services" aria-label="Service status"></section>
+      <p class="footnote">Read-only health data. Internal targets and diagnostics are not exposed.</p>
+    </main>
+    <script src="/status.js" defer></script>
+  </body>
+</html>
