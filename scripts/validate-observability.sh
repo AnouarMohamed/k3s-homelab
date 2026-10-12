@@ -158,6 +158,10 @@ test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "argocd
   "${validation_dir}/argocd-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "PrometheusServiceLevel" and .spec.service == "prometheus-api" and .spec.slos[0].objective == 99.9)] | length' \
   "${validation_dir}/resources-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "ClusterRole" and .metadata.name == "sloth") | .rules[] | select((.resources | contains(["*"])) or (.verbs | contains(["*"])))] | length' \
+  "${validation_dir}/sloth-first.yaml")" = 0
+test "$(yq eval-all '[select(.kind == "ClusterRole" and .metadata.name == "sloth") | .rules[]] | length' \
+  "${validation_dir}/sloth-first.yaml")" = 3
 test "$(yq eval-all '[select(.kind == "PrometheusRule" and .metadata.name == "homelab-platform-alerts") | .spec.groups[].rules[] | select(.alert == "Watchdog")] | length' \
   "${validation_dir}/resources-first.yaml")" = 1
 
@@ -192,7 +196,7 @@ test "$(yq eval-all '[select(.kind == "AlertmanagerConfig" and .spec.receivers[0
   "${validation_dir}/runtime-secrets-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "ExternalSecret" and .metadata.name == "argocd-notifications" and .spec.target.name == "argocd-notifications-secret")] | length' \
   "${validation_dir}/argocd-notifications-first.yaml")" = 1
-test "$(yq eval-all '[select(.kind == "ServiceMonitor" and .metadata.name == "openbao" and .metadata.namespace == "openbao" and .spec.endpoints[0].tlsConfig.ca.secret.name == "openbao-server-tls")] | length' \
+test "$(yq eval-all '[select(.kind == "ServiceMonitor" and .metadata.name == "openbao" and .metadata.namespace == "openbao" and .spec.endpoints[0].port == "https" and .spec.endpoints[0].tlsConfig.ca.secret.name == "openbao-server-tls")] | length' \
   "${validation_dir}/resources-first.yaml")" = 1
 
 for manifest in "${strict_workloads[@]}"; do

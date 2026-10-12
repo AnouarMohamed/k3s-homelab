@@ -1,4 +1,6 @@
 ---
+# Dashboard JSON is intentionally stored as compact scalar values.
+# yamllint disable rule:line-length
 apiVersion: v1
 kind: ConfigMap
 metadata:

@@ -12,7 +12,7 @@ checks against the three physical nodes are tracked separately as `PENDING HARDW
 - [x] Phase 4 — Certificates, DNS, and public access (offline validation complete; pending hardware)
 - [x] Phase 5 — Storage and backups (offline validation complete; pending hardware)
 - [x] Phase 6 — Runtime secrets (offline validation complete; pending hardware)
-- [ ] Phase 7 — Observability
+- [x] Phase 7 — Observability (offline validation complete; pending hardware)
 - [ ] Phase 8 — Policy and supply chain
 - [ ] Phase 9 — Homelab Sentinel and delivery
 - [ ] Phase 10 — Identity and self-hosted applications
@@ -309,6 +309,53 @@ explicitly because that release has no checksum-list asset.
   manual unseal, Raft election, audit persistence, Kubernetes authentication, secret
   refresh, rotation, revocation, and break-glass recovery remain `PENDING HARDWARE`.
 
+## Phase 7 validation — 2026-10-12
+
+- Phase 7 was committed as `2a6197b` before the progress ledger, full repository gate,
+  and skeptical review were complete. The repair commit preserves history and adds the
+  missing evidence, corrects the OpenBao monitor port and monitoring ingress boundary,
+  and replaces Sloth's chart-provided wildcard RBAC.
+- Official chart archives matched the pinned SHA-256 values for
+  kube-prometheus-stack `92.3.0`, Prometheus Blackbox Exporter `11.20.0`, Loki `7.3.0`,
+  Alloy `1.13.1`, Tempo `1.24.4`, OpenTelemetry Collector `0.175.1`, and Sloth `0.16.0`.
+  Every rendered Phase 7 workload image is pinned by OCI digest.
+- `make validate-observability` returned exit 0. Seven Helm charts linted with no
+  failures, and two independently produced renders of each component compared
+  byte-for-byte equal.
+- Strict built-in kubeconform passes reported 1 valid bootstrap resource; 3 valid and
+  4 custom runtime-secret resources; 66 valid and 53 custom kube-prometheus-stack
+  resources; 6 valid blackbox resources; 9 valid Loki resources; 8 valid and 1 custom
+  Alloy resources; 4 valid and 1 custom Tempo resources; 6 valid and 1 custom OTel
+  resources; 4 valid and 2 custom Sloth resources; 3 valid and 8 custom repository
+  resources; and 3 valid and 2 custom notification resources. A separate strict pass
+  validated all 61 selected custom resources against schemas extracted from pinned
+  CRDs with zero invalid, errored, or skipped objects.
+- `promtool check rules` reported success for 10 repository-authored alerting rules.
+  The validator also parsed all 7 dashboard JSON documents and matched every alert's
+  `runbook_url` fragment to a real runbook heading.
+- Workload assertions found no missing requests, limits, probes, digest pins, dropped
+  capabilities, read-only root filesystem, or privilege-escalation denial. Kube-linter
+  reported no findings across the Phase 7 outputs, with only the documented upstream
+  node-exporter host-access and operator-created Service exceptions excluded.
+- Source review of Sloth `v0.16.0` found only list/watch access to
+  `PrometheusServiceLevel`, status updates, and create/get/update access to generated
+  `PrometheusRule` objects. The renderer replaces the chart's wildcard ClusterRole
+  with those exact permissions, and the validator rejects wildcard resources or verbs.
+- `make lint` returned exit 0 after the review fixes. Markdownlint checked 92 files
+  with no issues, yamllint and ShellCheck reported no findings, and ansible-lint again
+  reported zero failures and warnings across 28 processed files.
+- `make validate` returned exit 0 across every Phase 1–7 gate and repository policy
+  check. The final generic kubeconform pass validated 25 resources from 17 files with
+  no invalid, errored, or skipped objects, and kube-linter reported no findings.
+- `make security` returned exit 0. Gitleaks scanned approximately 529 KB of the working
+  tree and 2.54 MB across 17 commits, finding no leaks.
+- The Tempo chart prints an upstream deprecation warning. The pinned chart remains
+  validated for this phase, but migration to a supported Tempo chart is an upgrade
+  item and is not represented as resolved.
+- No cluster or external notification endpoint was contacted. Scrape discovery,
+  ingestion, retention under real load, dashboard queries, SLO rule generation,
+  blackbox checks, and notification delivery remain `PENDING HARDWARE`.
+
 ## Unverified
 
 - All real-hardware behavior.
@@ -316,6 +363,8 @@ explicitly because that release has no checksum-list asset.
 - The GitLab pipeline, until run by GitLab.
 - Compatibility of the selected S3 service with Longhorn, Barman Cloud, and Velero.
 - OpenBao HCL startup and the declarative audit device on the real cluster.
+- Phase 7 signal ingestion, storage sizing, scrape selectors, alert delivery, and the
+  pinned deprecated Tempo chart's behavior on the real cluster.
 
 ## Not done
 

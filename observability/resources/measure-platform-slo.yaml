@@ -1,4 +1,6 @@
 ---
+# Sloth requires a complete PromQL expression on one scalar line.
+# yamllint disable rule:line-length
 apiVersion: sloth.slok.dev/v1
 kind: PrometheusServiceLevel
 metadata:

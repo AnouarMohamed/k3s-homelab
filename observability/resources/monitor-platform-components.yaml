@@ -98,7 +98,7 @@ spec:
     matchLabels:
       app.kubernetes.io/name: openbao
   endpoints:
-    - port: http
+    - port: https
       scheme: https
       path: /v1/sys/metrics
       params:

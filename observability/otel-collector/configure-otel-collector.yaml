@@ -1,3 +1,4 @@
+---
 mode: deployment
 replicaCount: 2
 image:

@@ -38,6 +38,24 @@ yq eval '
         .
       end
     )
+  elif .kind == "ClusterRole" and .metadata.name == "sloth" then
+    .rules = [
+      {
+        "apiGroups": ["sloth.slok.dev"],
+        "resources": ["prometheusservicelevels"],
+        "verbs": ["list", "watch"]
+      },
+      {
+        "apiGroups": ["sloth.slok.dev"],
+        "resources": ["prometheusservicelevels/status"],
+        "verbs": ["update"]
+      },
+      {
+        "apiGroups": ["monitoring.coreos.com"],
+        "resources": ["prometheusrules"],
+        "verbs": ["create", "get", "update"]
+      }
+    ]
   else
     .
   end
