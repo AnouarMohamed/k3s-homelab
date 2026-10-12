@@ -88,6 +88,72 @@ case "${relative_path}" in
     kustomize build "${repository_root}/platform/external-dns/resources" | \
       bash "${repository_root}/scripts/render-config.sh" -
     ;;
+  platform/snapshot-controller)
+    set -a
+    # shellcheck disable=SC1091
+    source "${repository_root}/platform/snapshot-controller/dependencies.env"
+    set +a
+    kustomize build "${repository_root}/platform/snapshot-controller" | \
+      bash "${repository_root}/scripts/render-config.sh" -
+    ;;
+  platform/longhorn)
+    set -a
+    # shellcheck disable=SC1091
+    source "${repository_root}/platform/longhorn/dependencies.env"
+    set +a
+    longhorn_chart="${repository_root}/.cache/phase5/longhorn"
+    test -f "${longhorn_chart}/Chart.yaml"
+    bash "${repository_root}/scripts/render-config.sh" \
+      "${repository_root}/platform/longhorn/configure-longhorn.yaml" | \
+      helm template longhorn "${longhorn_chart}" \
+        --namespace longhorn-system \
+        --include-crds \
+        --values -
+    printf '%s\n' '---'
+    kustomize build "${repository_root}/platform/longhorn/resources" | \
+      bash "${repository_root}/scripts/render-config.sh" -
+    ;;
+  platform/cloudnative-pg)
+    set -a
+    # shellcheck disable=SC1091
+    source "${repository_root}/platform/cloudnative-pg/dependencies.env"
+    set +a
+    export CNPG_POSTGRES_IMAGE="${POSTGRES_IMAGE}"
+    cnpg_chart="${repository_root}/.cache/phase5/cloudnative-pg"
+    barman_chart="${repository_root}/.cache/phase5/plugin-barman-cloud"
+    test -f "${cnpg_chart}/Chart.yaml"
+    test -f "${barman_chart}/Chart.yaml"
+    helm template cloudnative-pg "${cnpg_chart}" \
+      --namespace cnpg-system \
+      --include-crds \
+      --values "${repository_root}/platform/cloudnative-pg/configure-cloudnative-pg.yaml"
+    printf '%s\n' '---'
+    helm template barman-cloud "${barman_chart}" \
+      --namespace cnpg-system \
+      --include-crds \
+      --values "${repository_root}/platform/cloudnative-pg/configure-barman-cloud.yaml" | \
+      bash "${repository_root}/scripts/harden-barman-render.sh"
+    printf '%s\n' '---'
+    kustomize build "${repository_root}/platform/cloudnative-pg/resources" | \
+      bash "${repository_root}/scripts/render-config.sh" -
+    ;;
+  platform/velero)
+    set -a
+    # shellcheck disable=SC1091
+    source "${repository_root}/platform/velero/dependencies.env"
+    set +a
+    velero_chart="${repository_root}/.cache/phase5/velero"
+    test -f "${velero_chart}/Chart.yaml"
+    bash "${repository_root}/scripts/render-config.sh" \
+      "${repository_root}/platform/velero/configure-velero.yaml" | \
+      helm template velero "${velero_chart}" \
+        --namespace velero \
+        --include-crds \
+        --values -
+    printf '%s\n' '---'
+    kustomize build "${repository_root}/platform/velero/resources" | \
+      bash "${repository_root}/scripts/render-config.sh" -
+    ;;
   clusters/homelab/bootstrap | clusters/homelab/bootstrap/* | apps/*/overlays/prod | platform/* | observability/* | policies/*)
     test -f "${source_path}/kustomization.yaml" || test -f "${source_path}/kustomization.yml"
     kustomize build --enable-alpha-plugins --enable-exec "${source_path}" | \

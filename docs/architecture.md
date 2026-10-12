@@ -46,3 +46,23 @@ flowchart LR
 The public and administrative paths share no router port. OpenTofu owns the temporary
 public Tunnel CNAME. Internal names resolve only through split DNS and the internal
 Gateway's centrally configured load-balancer address.
+
+## Phase 5 storage and recovery
+
+```mermaid
+flowchart LR
+  Apps[Stateful workloads] --> PVC[Longhorn PVC]
+  PVC --> R1[Replica on pc-1]
+  PVC --> R2[Replica on pc-2]
+  PVC --> R3[Replica on pc-3]
+  PVC --> CSI[CSI snapshot]
+  CSI --> Velero[Velero cluster backup]
+  Postgres[CloudNativePG] --> WAL[WAL and base backup]
+  R1 --> LonghornBackup[Longhorn backup]
+  LonghornBackup --> S3[S3-compatible bucket]
+  WAL --> S3
+  Velero --> S3
+```
+
+Local replicas provide availability, not disaster recovery. Longhorn, CNPG, and Velero
+use separate prefixes and scoped credentials in the same centrally configured bucket.

@@ -263,6 +263,90 @@
         "CLOUDFLARED_VERSION=(?<currentValue>[^\\s]+)\\nCLOUDFLARED_IMAGE=(?<depName>docker\\.io/cloudflare/cloudflared):[^@\\s]+@(?<currentDigest>sha256:[a-f0-9]{64})"
       ],
       "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/longhorn/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "LONGHORN_CHART_VERSION=(?<currentValue>[^\\s]+)\\nLONGHORN_APP_VERSION=(?<appVersion>[^\\s]+)\\nLONGHORN_CHART_URL=https://github\\.com/longhorn/charts/releases/download/longhorn-[^/]+/longhorn-[^\\s]+\\.tgz"
+      ],
+      "depNameTemplate": "longhorn/charts",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^longhorn-(?<version>.*)$",
+      "autoReplaceStringTemplate": "LONGHORN_CHART_VERSION={{{newValue}}}\\nLONGHORN_APP_VERSION=v{{{newValue}}}\\nLONGHORN_CHART_URL=https://github.com/longhorn/charts/releases/download/longhorn-{{{newValue}}}/longhorn-{{{newValue}}}.tgz"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/cloudnative-pg/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "CNPG_CHART_VERSION=(?<currentValue>[^\\s]+)\\nCNPG_APP_VERSION=(?<appVersion>[^\\s]+)\\nCNPG_CHART_URL=https://github\\.com/cloudnative-pg/charts/releases/download/cloudnative-pg-v[^/]+/cloudnative-pg-[^\\s]+\\.tgz"
+      ],
+      "depNameTemplate": "cloudnative-pg/charts",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^cloudnative-pg-v(?<version>.*)$",
+      "autoReplaceStringTemplate": "CNPG_CHART_VERSION={{{newValue}}}\\nCNPG_APP_VERSION={{{appVersion}}}\\nCNPG_CHART_URL=https://github.com/cloudnative-pg/charts/releases/download/cloudnative-pg-v{{{newValue}}}/cloudnative-pg-{{{newValue}}}.tgz"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/cloudnative-pg/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "BARMAN_CHART_VERSION=(?<currentValue>[^\\s]+)\\nBARMAN_APP_VERSION=(?<appVersion>[^\\s]+)\\nBARMAN_CHART_URL=https://github\\.com/cloudnative-pg/charts/releases/download/plugin-barman-cloud-v[^/]+/plugin-barman-cloud-[^\\s]+\\.tgz"
+      ],
+      "depNameTemplate": "cloudnative-pg/charts",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^plugin-barman-cloud-v(?<version>.*)$",
+      "autoReplaceStringTemplate": "BARMAN_CHART_VERSION={{{newValue}}}\\nBARMAN_APP_VERSION={{{appVersion}}}\\nBARMAN_CHART_URL=https://github.com/cloudnative-pg/charts/releases/download/plugin-barman-cloud-v{{{newValue}}}/plugin-barman-cloud-{{{newValue}}}.tgz"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/cloudnative-pg/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "POSTGRES_IMAGE=(?<depName>ghcr\\.io/cloudnative-pg/postgresql):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/velero/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "VELERO_CHART_VERSION=(?<currentValue>[^\\s]+)\\nVELERO_APP_VERSION=(?<appVersion>[^\\s]+)\\nVELERO_CHART_URL=https://github\\.com/vmware-tanzu/helm-charts/releases/download/velero-[^/]+/velero-[^\\s]+\\.tgz"
+      ],
+      "depNameTemplate": "vmware-tanzu/helm-charts",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^velero-(?<version>.*)$",
+      "autoReplaceStringTemplate": "VELERO_CHART_VERSION={{{newValue}}}\\nVELERO_APP_VERSION={{{appVersion}}}\\nVELERO_CHART_URL=https://github.com/vmware-tanzu/helm-charts/releases/download/velero-{{{newValue}}}/velero-{{{newValue}}}.tgz"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/velero/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "VELERO_AWS_PLUGIN_VERSION=(?<currentValue>[^\\s]+)\\nVELERO_AWS_PLUGIN_IMAGE=(?<depName>docker\\.io/velero/velero-plugin-for-aws):[^@\\s]+@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker",
+      "autoReplaceStringTemplate": "VELERO_AWS_PLUGIN_VERSION={{{newValue}}}\\nVELERO_AWS_PLUGIN_IMAGE={{{depName}}}:{{{newValue}}}@{{{newDigest}}}"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/snapshot-controller/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "SNAPSHOT_CONTROLLER_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "kubernetes-csi/external-snapshotter",
+      "datasourceTemplate": "github-releases"
     }
   ],
   "packageRules": [

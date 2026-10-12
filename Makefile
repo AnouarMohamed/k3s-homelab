@@ -7,8 +7,8 @@ ANSIBLE_INVENTORY := $(REPOSITORY_ROOT)/infra/ansible/inventory/homelab.py
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools lint ansible-syntax ansible-templates phase2-deps validate-cni phase3-deps validate-gitops phase4-deps validate-edge validate security bootstrap bootstrap-nodes upgrade-k3s reset \
-	bootstrap-cni bootstrap-gitops bootstrap-platform test tofu-init tofu-plan teardown
+.PHONY: help tools lint ansible-syntax ansible-templates phase2-deps validate-cni phase3-deps validate-gitops phase4-deps validate-edge phase5-deps validate-storage validate security bootstrap bootstrap-nodes upgrade-k3s reset \
+	bootstrap-cni bootstrap-gitops bootstrap-platform test test-storage-reschedule tofu-init tofu-plan teardown
 
 help: ## Show all supported targets
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} \
@@ -53,7 +53,13 @@ phase4-deps: ## Fetch checksum-verified edge platform dependencies
 validate-edge: ## Validate certificates, DNS, gateways, tunnel, test route, and OpenTofu
 	@scripts/validate-edge.sh
 
-validate: ansible-syntax ansible-templates validate-cni validate-gitops validate-edge ## Validate repository policy and Kubernetes manifests
+phase5-deps: ## Fetch checksum-verified storage and backup charts
+	@scripts/fetch-phase5-dependencies.sh
+
+validate-storage: ## Validate storage, database backup, CSI snapshot, and Velero resources
+	@scripts/validate-storage.sh
+
+validate: ansible-syntax ansible-templates validate-cni validate-gitops validate-edge validate-storage ## Validate repository policy and Kubernetes manifests
 	@scripts/check-forbidden-files.sh
 	@scripts/check-private-values.sh
 	@scripts/check-pins.sh
@@ -88,6 +94,9 @@ bootstrap-platform: ## Synchronize the platform through Argo CD
 
 test: ## Run application unit and integration tests
 	@$(MAKE) -C apps/sentinel test
+
+test-storage-reschedule: ## Run the confirmed PVC reschedule test on hardware
+	@scripts/test-storage-reschedule.sh
 
 tofu-init: ## Initialize the encrypted, lockfile-enabled remote state backend
 	@scripts/initialize-tofu-backend.sh

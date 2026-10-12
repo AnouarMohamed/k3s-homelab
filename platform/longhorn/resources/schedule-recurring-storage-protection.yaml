@@ -1,0 +1,34 @@
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: hourly-snapshot
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: hourly-snapshot
+    app.kubernetes.io/component: backup
+    app.kubernetes.io/part-of: storage
+    recurring-job-group.longhorn.io/standard-storage-protection: enabled
+spec:
+  cron: 15 * * * *
+  task: snapshot
+  retain: 24
+  concurrency: 1
+---
+apiVersion: longhorn.io/v1beta2
+kind: RecurringJob
+metadata:
+  name: daily-backup
+  namespace: longhorn-system
+  labels:
+    app.kubernetes.io/name: daily-backup
+    app.kubernetes.io/component: backup
+    app.kubernetes.io/part-of: storage
+    recurring-job-group.longhorn.io/standard-storage-protection: enabled
+spec:
+  cron: 30 2 * * *
+  task: backup
+  retain: 14
+  concurrency: 1
+  parameters:
+    full-backup-interval: '7'

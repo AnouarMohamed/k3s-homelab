@@ -1,0 +1,111 @@
+---
+image:
+  repository: docker.io/velero/velero
+  tag: v1.18.2
+  digest: sha256:19ab41ee1c8dee7db027bd2e10b61a5139e51c02b0699ba391cf5415f0e82ec0
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: '1'
+    memory: 512Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+initContainers:
+  - name: velero-plugin-for-aws
+    image: ${VELERO_AWS_PLUGIN_IMAGE}
+    imagePullPolicy: IfNotPresent
+    securityContext:
+      allowPrivilegeEscalation: false
+      capabilities:
+        drop:
+          - ALL
+      readOnlyRootFilesystem: true
+      runAsNonRoot: true
+      runAsUser: 65532
+      seccompProfile:
+        type: RuntimeDefault
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        cpu: 200m
+        memory: 128Mi
+    volumeMounts:
+      - mountPath: /target
+        name: plugins
+
+upgradeCRDs: false
+cleanUpCRDs: false
+
+configuration:
+  backupStorageLocation:
+    - name: default
+      provider: aws
+      bucket: ${CONFIG_S3_BUCKET}
+      prefix: velero
+      default: true
+      accessMode: ReadWrite
+      credential:
+        name: velero-s3-credentials
+        key: cloud
+      config:
+        region: us-east-1
+        s3ForcePathStyle: true
+        s3Url: ${CONFIG_S3_ENDPOINT}
+  volumeSnapshotLocation: []
+  defaultBackupStorageLocation: default
+  defaultBackupTTL: 336h
+  features: EnableCSI
+  logFormat: json
+
+credentials:
+  useSecret: true
+  existingSecret: velero-s3-credentials
+
+backupsEnabled: true
+snapshotsEnabled: true
+deployNodeAgent: false
+
+schedules:
+  hourly-critical:
+    disabled: false
+    schedule: 10 * * * *
+    useOwnerReferencesInBackup: false
+    template:
+      ttl: 72h
+      storageLocation: default
+      snapshotVolumes: true
+      includedNamespaces:
+        - argocd
+        - storage-verification
+  daily-cluster:
+    disabled: false
+    schedule: 45 3 * * *
+    useOwnerReferencesInBackup: false
+    template:
+      ttl: 720h
+      storageLocation: default
+      snapshotVolumes: true
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: false

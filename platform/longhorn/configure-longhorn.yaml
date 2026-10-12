@@ -1,0 +1,74 @@
+---
+global:
+  timezone: ${CONFIG_TIMEZONE}
+
+networkPolicies:
+  enabled: true
+  restrictInternalTraffic: true
+  type: k3s
+
+persistence:
+  createStorageClass: true
+  defaultClass: true
+  defaultClassReplicaCount: 3
+  defaultDataLocality: disabled
+  reclaimPolicy: Retain
+  volumeBindingMode: WaitForFirstConsumer
+  recurringJobSelector:
+    enable: true
+    jobList:
+      - name: standard-storage-protection
+        isGroup: true
+
+preUpgradeChecker:
+  jobEnabled: false
+  upgradeVersionCheck: false
+
+csi:
+  kubeletRootDir: /var/lib/kubelet
+  attacherReplicaCount: 3
+  provisionerReplicaCount: 3
+  resizerReplicaCount: 3
+  snapshotterReplicaCount: 3
+
+defaultSettings:
+  allowRecurringJobWhileVolumeDetached: true
+  createDefaultDiskLabeledNodes: false
+  defaultDataPath: ${CONFIG_LONGHORN_DISK_PATH}
+  defaultReplicaCount: '{"v1":"3","v2":"3"}'
+  replicaAutoBalance: best-effort
+  storageMinimalAvailablePercentage: 25
+  storageOverProvisioningPercentage: 100
+  upgradeChecker: false
+  allowCollectingLonghornUsageMetrics: false
+  backupCompressionMethod: lz4
+  backupConcurrentLimit: 2
+  restoreConcurrentLimit: 2
+
+defaultBackupStore:
+  backupTarget: s3://${CONFIG_S3_BUCKET}@us-east-1/longhorn
+  backupTargetCredentialSecret: longhorn-s3-credentials
+  pollInterval: 300
+
+longhornManager:
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: '1'
+      memory: 512Mi
+
+longhornUI:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 20m
+      memory: 64Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
+metrics:
+  serviceMonitor:
+    enabled: false

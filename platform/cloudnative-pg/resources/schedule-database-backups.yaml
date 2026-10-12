@@ -1,0 +1,19 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: daily-storage-verification
+  namespace: storage-verification
+  labels:
+    app.kubernetes.io/name: daily-storage-verification
+    app.kubernetes.io/component: backup
+    app.kubernetes.io/part-of: storage
+spec:
+  schedule: 0 0 3 * * *
+  backupOwnerReference: self
+  immediate: false
+  cluster:
+    name: storage-verification
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io

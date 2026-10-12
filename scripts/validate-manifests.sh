@@ -12,6 +12,14 @@ for root in "${manifest_roots[@]}"; do
     if [[ "${file}" == *.sops.yaml ]]; then
       continue
     fi
+    case "${file}" in
+      "${repository_root}/platform/longhorn/"* | \
+        "${repository_root}/platform/cloudnative-pg/"* | \
+        "${repository_root}/platform/snapshot-controller/"* | \
+        "${repository_root}/platform/velero/"*)
+        continue
+        ;;
+    esac
     if ! grep -q '^apiVersion:' "${file}" || ! grep -q '^kind:' "${file}"; then
       continue
     fi

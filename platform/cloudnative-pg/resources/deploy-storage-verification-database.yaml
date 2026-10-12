@@ -1,0 +1,42 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: storage-verification
+  namespace: storage-verification
+  labels:
+    app.kubernetes.io/name: storage-verification-postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: storage
+spec:
+  instances: 3
+  imageName: ${CNPG_POSTGRES_IMAGE}
+  primaryUpdateStrategy: unsupervised
+  enableSuperuserAccess: false
+  inheritedMetadata:
+    labels:
+      app.kubernetes.io/name: storage-verification-postgres
+      app.kubernetes.io/component: database
+      app.kubernetes.io/part-of: storage
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: '1'
+      memory: 1Gi
+  storage:
+    size: 5Gi
+    storageClass: longhorn
+  walStorage:
+    size: 2Gi
+    storageClass: longhorn
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
+    podAntiAffinityType: required
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: homelab-s3

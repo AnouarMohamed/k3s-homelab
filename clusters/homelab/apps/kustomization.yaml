@@ -10,4 +10,10 @@ resources:
   - deploy-edge-secrets.yaml
   - deploy-external-dns.yaml
   - deploy-gateways.yaml
+  - deploy-storage-secrets.yaml
+  - deploy-snapshot-controller.yaml
+  - deploy-longhorn.yaml
+  - deploy-cloudnative-pg.yaml
+  - deploy-velero.yaml
+  - deploy-storage-verification.yaml
   - generate-applications.yaml

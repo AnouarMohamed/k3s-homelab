@@ -91,7 +91,30 @@ From an enrolled WARP client, verify the private CIDR and split-DNS internal hos
 repeat from an unenrolled client and confirm administration endpoints are unreachable.
 Delete or disable the temporary whoami route after capturing redacted evidence.
 
-## Phases 5–12
+## Phase 5 — Storage and backups
+
+Status: **PENDING HARDWARE**
+
+```bash
+kubectl get storageclass
+kubectl -n longhorn-system get pods -o wide
+kubectl -n longhorn-system get nodes.longhorn.io,recurringjobs.longhorn.io
+kubectl get volumesnapshotclass longhorn-snapshot
+kubectl -n cnpg-system get deploy,pod -o wide
+kubectl -n storage-verification get clusters.postgresql.cnpg.io,scheduledbackups
+kubectl -n storage-verification get objectstores.barmancloud.cnpg.io
+kubectl -n velero get backupstoragelocations.velero.io,schedules.velero.io
+CONFIRM_STORAGE_TEST=homelab make test-storage-reschedule
+```
+
+Expected: `longhorn` is the sole default class; every Longhorn volume has three healthy
+replicas on distinct nodes; both controller replicas are spread; the CNPG cluster has
+one primary and two healthy replicas; WAL archive status is healthy; Velero's backup
+location is Available; and the marker survives movement to a different node. Then run
+`docs/dr/restore-drill-storage.md`. Scheduled backups, restores, replica recovery, and
+measured recovery time remain unverified until that empty results table is filled.
+
+## Phases 6–12
 
 Status: **PENDING HARDWARE**
 

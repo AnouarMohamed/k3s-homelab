@@ -1,0 +1,14 @@
+---
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: local-path
+  labels:
+    app.kubernetes.io/name: local-path
+    app.kubernetes.io/component: legacy-storage
+    app.kubernetes.io/part-of: storage
+  annotations:
+    storageclass.kubernetes.io/is-default-class: 'false'
+provisioner: rancher.io/local-path
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer

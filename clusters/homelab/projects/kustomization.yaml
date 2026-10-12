@@ -7,3 +7,4 @@ resources:
   - restrict-edge-project.yaml
   - restrict-gitops-project.yaml
   - restrict-platform-project.yaml
+  - restrict-storage-project.yaml

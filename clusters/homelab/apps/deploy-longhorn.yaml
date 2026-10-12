@@ -1,0 +1,33 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: longhorn
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: longhorn
+    app.kubernetes.io/component: storage
+    app.kubernetes.io/part-of: storage
+  annotations:
+    argocd.argoproj.io/sync-wave: '-23'
+spec:
+  project: storage
+  source:
+    repoURL: ${CONFIG_GITLAB_REPOSITORY_URL}
+    targetRevision: main
+    path: platform/longhorn
+    plugin:
+      name: homelab-renderer-v1
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=false
+      - PruneLast=true
+      - ServerSideApply=true
+  revisionHistoryLimit: 10

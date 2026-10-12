@@ -1,0 +1,23 @@
+---
+replicaCount: 2
+resources:
+  requests:
+    cpu: 30m
+    memory: 64Mi
+  limits:
+    cpu: 300m
+    memory: 256Mi
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: DoNotSchedule
+    labelSelector:
+      matchLabels:
+        app.kubernetes.io/name: plugin-barman-cloud
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - topologyKey: kubernetes.io/hostname
+        labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: plugin-barman-cloud

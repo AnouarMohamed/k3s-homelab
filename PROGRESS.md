@@ -10,7 +10,7 @@ checks against the three physical nodes are tracked separately as `PENDING HARDW
 - [x] Phase 2 — Cilium (offline validation complete; pending hardware)
 - [x] Phase 3 — Argo CD (offline validation complete; pending hardware)
 - [x] Phase 4 — Certificates, DNS, and public access (offline validation complete; pending hardware)
-- [ ] Phase 5 — Storage and backups
+- [x] Phase 5 — Storage and backups (offline validation complete; pending hardware)
 - [ ] Phase 6 — Runtime secrets
 - [ ] Phase 7 — Observability
 - [ ] Phase 8 — Policy and supply chain
@@ -218,12 +218,64 @@ explicitly because that release has no checksum-list asset.
   acceptance, tunnel redundancy, public routing, split DNS, and WARP administration
   remain `PENDING HARDWARE` or `PENDING ACCOUNT`.
 
+## Phase 5 validation — 2026-10-12
+
+- Official release archives matched the pinned SHA-256 values for Longhorn `1.12.1`,
+  CloudNativePG `0.29.1`, Barman Cloud `0.8.1`, and Velero `12.2.1`. The five vendored
+  external-snapshotter `v8.6.0` manifests also matched their individually pinned
+  upstream checksums.
+- `make validate-storage` returned exit 0. Helm lint reported one chart and zero
+  failures for each of Longhorn, CloudNativePG, Barman Cloud, and Velero. Two renders
+  of every Phase 5 component compared byte-for-byte equal.
+- Strict built-in validation reported 7 valid snapshot-controller resources with 3
+  CRDs skipped, 28 valid Longhorn resources with 28 custom resources skipped, 23 valid
+  CNPG/Barman resources with 18 custom resources skipped, 9 valid Velero resources
+  with 16 custom resources skipped, and 3 valid storage-test resources. A separate
+  pass validated all 9 selected custom resources against schemas extracted from the
+  pinned CRDs with no invalid, errored, or skipped objects.
+- Phase-specific assertions confirmed the three-replica default Longhorn class,
+  non-default local-path class, two recurring Longhorn jobs, three CNPG instances, two
+  Velero schedules, encrypted SOPS placeholders, and a NetworkPolicy for every
+  rendered Phase 5 controller namespace. Strict controller hardening assertions and
+  kube-linter both passed.
+- `make lint` returned exit 0. Markdownlint checked 70 files with no issues;
+  ShellCheck and yamllint returned no findings; ansible-lint again reported zero
+  failures and zero warnings across 28 processed files.
+- `make validate` returned exit 0 from the staged tree across the Ansible, Cilium,
+  GitOps, edge, storage, repository-policy, OpenTofu, generic kubeconform, and
+  kube-linter gates. The generic pass validated 25 resources from 17 files with no
+  invalid, errored, or skipped objects. The pin gate also resolved every rendered
+  image variable to a digest-pinned dependency declaration.
+- `make test-storage-reschedule` without `CONFIRM_STORAGE_TEST=homelab` returned exit 2
+  after printing its refusal. It stopped before invoking `kubectl`.
+- `make security` returned exit 0. Gitleaks scanned approximately 381 KB of the
+  working tree and 2.26 MB across 13 existing commits, finding no leaks.
+- The skeptical review added the two missing CNPG-system controller policies and both
+  service and k3s API ports to snapshot-controller egress. It records Longhorn's
+  required privileged host access in the infrastructure exception ledger instead of
+  claiming the upstream storage workloads meet application restrictions. CNPG-created
+  PostgreSQL pods remain runtime-generated and require hardware verification.
+- The exact upstream snapshot-controller manifests are excluded from source-format
+  linting and direct source image checks: all five files are checksum-verified, and the
+  Kustomize overlay replaces the upstream tag with the recorded controller digest
+  before the rendered workload is validated.
+- S3 bucket creation is not modeled because the central configuration intentionally
+  names only a vendor-neutral endpoint and bucket; no correct provider can be selected
+  without inventing the service. Anouar creates and versions the bucket as a human-only
+  account task. OpenTofu continues to consume it as the encrypted remote-state backend.
+- No cluster, S3 endpoint, disk, Cloudflare account, or Git remote was modified.
+  Volume scheduling, replica recovery, WAL archival, backup completion, and every
+  restore remain `PENDING HARDWARE` or `PENDING ACCOUNT`.
+
 ## Unverified
 
 - All real-hardware behavior.
 - Every dependency not yet listed with upstream evidence in `PLAN.md`.
 - The GitLab pipeline, until run by GitLab.
+- Compatibility of the selected S3 service with Longhorn, Barman Cloud, and Velero.
 
 ## Not done
 
 - No real node, cluster, Cloudflare account, S3 service, or Git remote was modified.
+- Vendor-specific S3 bucket provisioning is not implemented because the service has
+  not been selected; creating and versioning the bucket is a documented human task.

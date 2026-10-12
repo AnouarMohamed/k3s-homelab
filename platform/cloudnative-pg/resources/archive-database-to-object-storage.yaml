@@ -1,0 +1,37 @@
+---
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: homelab-s3
+  namespace: storage-verification
+  labels:
+    app.kubernetes.io/name: homelab-s3
+    app.kubernetes.io/component: backup
+    app.kubernetes.io/part-of: storage
+spec:
+  retentionPolicy: 30d
+  configuration:
+    destinationPath: s3://${CONFIG_S3_BUCKET}/cnpg
+    endpointURL: ${CONFIG_S3_ENDPOINT}
+    s3Credentials:
+      accessKeyId:
+        name: cnpg-s3-credentials
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: cnpg-s3-credentials
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+      maxParallel: 2
+    data:
+      compression: gzip
+      jobs: 2
+  instanceSidecarConfiguration:
+    retentionPolicyIntervalSeconds: 1800
+    resources:
+      requests:
+        cpu: 30m
+        memory: 64Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi

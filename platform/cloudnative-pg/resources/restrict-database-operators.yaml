@@ -1,0 +1,78 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: restrict-cloudnative-pg-operator
+  namespace: cnpg-system
+  labels:
+    app.kubernetes.io/name: cloudnative-pg
+    app.kubernetes.io/component: policy
+    app.kubernetes.io/part-of: storage
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: cloudnative-pg
+      app.kubernetes.io/instance: cloudnative-pg
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8080
+        - protocol: TCP
+          port: 9443
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 6443
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: restrict-barman-cloud-controller
+  namespace: cnpg-system
+  labels:
+    app.kubernetes.io/name: plugin-barman-cloud
+    app.kubernetes.io/component: policy
+    app.kubernetes.io/part-of: storage
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: plugin-barman-cloud
+      app.kubernetes.io/instance: barman-cloud
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 8081
+        - protocol: TCP
+          port: 9090
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 6443

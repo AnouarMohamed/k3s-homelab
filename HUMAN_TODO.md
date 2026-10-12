@@ -26,7 +26,10 @@ block repository implementation.
 - [ ] Enable versioning on the S3 state bucket, export its narrowly scoped credentials,
   run `make tofu-init`, then review `make tofu-plan` and manually apply it. Never use
   local state for a real apply.
-- [ ] Create the S3 bucket/credentials or authorize OpenTofu to create them.
+- [ ] Create the S3 bucket and enable versioning. Its endpoint must use HTTPS on port
+  443 unless the Phase 5 egress policies are deliberately changed and revalidated.
+- [ ] Replace and re-encrypt the Longhorn, CloudNativePG, and Velero S3 credential
+  placeholders with three least-privilege identities restricted to their prefixes.
 
 ## During platform bring-up
 

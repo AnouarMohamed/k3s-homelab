@@ -1,0 +1,33 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: velero
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: velero
+    app.kubernetes.io/component: backup
+    app.kubernetes.io/part-of: storage
+  annotations:
+    argocd.argoproj.io/sync-wave: '-21'
+spec:
+  project: storage
+  source:
+    repoURL: ${CONFIG_GITLAB_REPOSITORY_URL}
+    targetRevision: main
+    path: platform/velero
+    plugin:
+      name: homelab-renderer-v1
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: velero
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=false
+      - PruneLast=true
+      - ServerSideApply=true
+  revisionHistoryLimit: 10

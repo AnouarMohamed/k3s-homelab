@@ -5,6 +5,7 @@ ignore: |
   .git/
   .tools/
   .cache/
+  platform/snapshot-controller/upstream/
 
 rules:
   braces:

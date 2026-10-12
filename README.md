@@ -5,8 +5,8 @@ DevSecOps engineer: provisioning Linux, operating highly available Kubernetes, s
 through GitOps, securing the software supply chain, and proving recovery procedures.
 This repository describes my real environment. It is not a generic cluster template.
 
-> Current state: Phases 0–4 pass local validation; the GitLab pipeline has not run.
-> Nodes, networking, GitOps, certificates, DNS, Tunnel, and WARP behavior remain
+> Current state: Phases 0–5 pass local validation; the GitLab pipeline has not run.
+> Nodes, networking, GitOps, edge access, storage, backup, and restore behavior remain
 > unverified on hardware.
 > [See the evidence ledger](docs/STATUS.md).
 
@@ -61,7 +61,7 @@ Addresses, interfaces, domains, and external service identifiers live only in
 | 2 — Cilium | Implemented; pending hardware |
 | 3 — Argo CD | Implemented; pending hardware |
 | 4 — Certificates, DNS, and access | Implemented; pending hardware/account |
-| 5 — Storage and backups | Planned |
+| 5 — Storage and backups | Implemented; pending hardware/account |
 | 6 — Runtime secrets | Planned |
 | 7 — Observability | Planned |
 | 8 — Policy and supply chain | Planned |

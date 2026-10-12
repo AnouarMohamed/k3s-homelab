@@ -1,0 +1,42 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-ingress-by-default
+  namespace: velero
+  labels:
+    app.kubernetes.io/name: velero-network
+    app.kubernetes.io/component: policy
+    app.kubernetes.io/part-of: storage
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-backup-operation
+  namespace: velero
+  labels:
+    app.kubernetes.io/name: velero-network
+    app.kubernetes.io/component: policy
+    app.kubernetes.io/part-of: storage
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - ports:
+        - protocol: TCP
+          port: 443

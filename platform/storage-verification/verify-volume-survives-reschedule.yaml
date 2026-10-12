@@ -1,0 +1,109 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: reschedule-marker
+  namespace: storage-verification
+  labels:
+    app.kubernetes.io/name: storage-reschedule-verification
+    app.kubernetes.io/component: test
+    app.kubernetes.io/part-of: storage
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: storage-reschedule-verification
+  namespace: storage-verification
+  labels:
+    app.kubernetes.io/name: storage-reschedule-verification
+    app.kubernetes.io/component: test
+    app.kubernetes.io/part-of: storage
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: storage-reschedule-verification
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: storage-reschedule-verification
+        app.kubernetes.io/component: test
+        app.kubernetes.io/part-of: storage
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        fsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: marker
+          image: docker.io/library/busybox@sha256:d82f458899c9696cb26a7c02d5568f81c8c8223f8661bb2edeb06ee7adf3a156
+          command:
+            - /bin/sh
+            - -ec
+          args:
+            - >-
+              test -s /data/marker || printf 'initialized\n' > /data/marker;
+              exec sleep 86400
+          livenessProbe:
+            exec:
+              command:
+                - test
+                - -s
+                - /data/marker
+            periodSeconds: 10
+            initialDelaySeconds: 120
+          readinessProbe:
+            exec:
+              command:
+                - test
+                - -s
+                - /data/marker
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 5m
+              memory: 8Mi
+            limits:
+              cpu: 100m
+              memory: 32Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: reschedule-marker
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: isolate-storage-reschedule-verification
+  namespace: storage-verification
+  labels:
+    app.kubernetes.io/name: storage-reschedule-verification
+    app.kubernetes.io/component: policy
+    app.kubernetes.io/part-of: storage
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: storage-reschedule-verification
+  policyTypes:
+    - Ingress
+    - Egress

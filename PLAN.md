@@ -89,6 +89,12 @@ before later phases begin.
 | Cloudflare provider | `5.27.0` | Exact official OpenTofu provider constraint and dependency lock |
 | cloudflared | `2026.10.0` | OCI digest `sha256:9b49eed8f62806d5d45ddf59ecefb5710429598ea6d3fcccd2af938f621b2b07` |
 | whoami | `v1.11.0` | OCI digest `sha256:200689790a0a0ea48ca45992e0450bc26ccab5307375b41c84dfc4f2475937ab` |
+| external-snapshotter | `v8.6.0` | Five official manifests are checksum-pinned; controller OCI digest `sha256:0d01d2b374e36437781aa0264809aeacec842b0f378556582601106eff503753` |
+| Longhorn chart | `1.12.1` | Official stable release archive SHA-256 `c8cf4b35a9d872cd5f7e44fd26d8e6ac7c2abaee42f4e2f2a0b0ebbc6e3a6116` |
+| CloudNativePG chart | `0.29.1` | Official archive SHA-256 `b53d3991fe84bcf38767e7702cae78666265427a127a26fff168ab4207d2b1df`; app `1.30.1` |
+| Barman Cloud chart | `0.8.1` | Official archive SHA-256 `9ad0b9e56da2777a1a0269feaf7215e18297e9c8b5730e04acb27b5d462e9456`; app `v0.15.1` |
+| Velero chart | `12.2.1` | Official archive SHA-256 `fe4acd70a0123c369e7af7064457b4ffdddebee413e2bb01976a4fe07c471773`; app `1.18.2` |
+| Velero AWS plugin | `v1.14.4` | OCI digest `sha256:e6d328cefcdccecea23510ce361f8979e80a91386a99f21b0055e554259a35ec` |
 
 All remaining later-phase chart, provider, collection, application image, and CI image
 versions are `VERIFY`. Before implementing their phase I will verify them against an official chart

@@ -1,6 +1,6 @@
 # Runbooks
 
-Implemented Phase 1 runbooks:
+Implemented runbooks:
 
 - [Replace a node](node-replacement.md)
 - [Upgrade k3s](k3s-upgrade.md)
@@ -10,6 +10,9 @@ Implemented Phase 1 runbooks:
 - [Understand GitOps sync waves](gitops-sync-waves.md)
 - [Use Cloudflare WARP private access](cloudflare-warp-access.md)
 - [Configure split DNS](split-dns.md)
+- [Operate storage and backups](storage-and-backup.md)
+- [Run the storage reschedule test](storage-reschedule-test.md)
+- [Restore PostgreSQL](restore-postgres.md)
 
 Later component runbooks are added with the phase that creates each operational
 responsibility.

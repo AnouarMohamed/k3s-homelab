@@ -1,0 +1,51 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-ingress-by-default
+  namespace: storage-verification
+  labels:
+    app.kubernetes.io/name: storage-verification-network
+    app.kubernetes.io/component: policy
+    app.kubernetes.io/part-of: storage
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-database-operation
+  namespace: storage-verification
+  labels:
+    app.kubernetes.io/name: storage-verification-network
+    app.kubernetes.io/component: policy
+    app.kubernetes.io/part-of: storage
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cnpg-system
+  egress:
+    - to:
+        - podSelector: {}
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    - ports:
+        - protocol: TCP
+          port: 443

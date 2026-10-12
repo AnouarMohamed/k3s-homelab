@@ -1,0 +1,151 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: storage
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: storage-project
+    app.kubernetes.io/component: authorization
+    app.kubernetes.io/part-of: argocd
+spec:
+  description: Storage, database backup, cluster backup, and bounded verification only.
+  sourceRepos:
+    - ${CONFIG_GITLAB_REPOSITORY_URL}
+  destinations:
+    - namespace: kube-system
+      server: https://kubernetes.default.svc
+    - namespace: longhorn-system
+      server: https://kubernetes.default.svc
+    - namespace: cnpg-system
+      server: https://kubernetes.default.svc
+    - namespace: velero
+      server: https://kubernetes.default.svc
+    - namespace: storage-verification
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+      name: longhorn-system
+    - group: ''
+      kind: Namespace
+      name: cnpg-system
+    - group: ''
+      kind: Namespace
+      name: velero
+    - group: ''
+      kind: Namespace
+      name: storage-verification
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      name: '*.longhorn.io'
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      name: '*.postgresql.cnpg.io'
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      name: '*.barmancloud.cnpg.io'
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      name: '*.velero.io'
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      name: '*.snapshot.storage.k8s.io'
+    - group: admissionregistration.k8s.io
+      kind: MutatingWebhookConfiguration
+      name: '*cnpg*'
+    - group: admissionregistration.k8s.io
+      kind: ValidatingWebhookConfiguration
+      name: '*cnpg*'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: '*longhorn*'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: '*cnpg*'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: '*barman*'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: '*velero*'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
+      name: snapshot-controller-runner
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+      name: '*longhorn*'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+      name: '*cnpg*'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+      name: '*barman*'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+      name: '*velero*'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+      name: snapshot-controller-role
+    - group: storage.k8s.io
+      kind: StorageClass
+      name: longhorn
+    - group: storage.k8s.io
+      kind: StorageClass
+      name: local-path
+    - group: storage.k8s.io
+      kind: CSIDriver
+      name: driver.longhorn.io
+    - group: snapshot.storage.k8s.io
+      kind: VolumeSnapshotClass
+      name: longhorn-snapshot
+    - group: scheduling.k8s.io
+      kind: PriorityClass
+      name: longhorn-critical
+  namespaceResourceWhitelist:
+    - group: ''
+      kind: ConfigMap
+    - group: ''
+      kind: Endpoints
+    - group: ''
+      kind: PersistentVolumeClaim
+    - group: ''
+      kind: Secret
+    - group: ''
+      kind: Service
+    - group: ''
+      kind: ServiceAccount
+    - group: apps
+      kind: DaemonSet
+    - group: apps
+      kind: Deployment
+    - group: apps
+      kind: StatefulSet
+    - group: batch
+      kind: CronJob
+    - group: batch
+      kind: Job
+    - group: coordination.k8s.io
+      kind: Lease
+    - group: longhorn.io
+      kind: RecurringJob
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: postgresql.cnpg.io
+      kind: Cluster
+    - group: postgresql.cnpg.io
+      kind: ScheduledBackup
+    - group: barmancloud.cnpg.io
+      kind: ObjectStore
+    - group: rbac.authorization.k8s.io
+      kind: Role
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+    - group: velero.io
+      kind: BackupStorageLocation
+    - group: velero.io
+      kind: Schedule
+  orphanedResources:
+    warn: true
