@@ -17,8 +17,8 @@ done
 : "${AWS_SECRET_ACCESS_KEY:?Set AWS_SECRET_ACCESS_KEY for the S3-compatible state backend}"
 
 config_file="${repository_root}/config/homelab.yaml"
-state_endpoint="$(yq -er '.spec.s3.endpoint' "${config_file}")"
-state_bucket="$(yq -er '.spec.s3.bucket' "${config_file}")"
+state_endpoint="$(yq -er '.spec.storage.s3.endpoint' "${config_file}")"
+state_bucket="$(yq -er '.spec.storage.s3.bucket' "${config_file}")"
 
 export AWS_ENDPOINT_URL_S3="${state_endpoint}"
 export AWS_REGION="${AWS_REGION:-us-east-1}"

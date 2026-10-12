@@ -156,6 +156,11 @@ tofu -chdir="${plan_root}/infra/tofu" validate >/dev/null
 export CLOUDFLARE_API_TOKEN=validation-placeholder-token
 export TF_VAR_cloudflare_account_id=00000000000000000000000000000000
 export TF_VAR_cloudflare_zone_id=11111111111111111111111111111111
+
+grep -q "\.spec\.storage\.s3\.endpoint" \
+  "${repository_root}/scripts/initialize-tofu-backend.sh"
+grep -q "\.spec\.storage\.s3\.bucket" \
+  "${repository_root}/scripts/initialize-tofu-backend.sh"
 tofu -chdir="${plan_root}/infra/tofu" plan \
   -no-color \
   -refresh=false \
