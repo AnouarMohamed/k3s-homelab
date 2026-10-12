@@ -39,13 +39,15 @@ jobs:
         uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@b5ca514310cfbbe0ccf321453f017c57c2102ab0 # v3.10.0
+        uses: docker/setup-buildx-action@f7ce87c1d6bead3e36075b2ce75da1f6cc28aaca # v3.9.0
 
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c59f231a3f12149c3b49d # v3.8.1
-
-      - name: Install Syft
-        uses: anchore/sbom-action/download-syft@fc46e5eb669145be11b222956cf04f2d3be85e96 # v0.17.9
+      - name: Install Supply Chain Tools (Cosign, Syft, Trivy)
+        run: |
+          source ci/dependencies.env
+          curl -sSL -o /tmp/cosign "https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-amd64"
+          sudo install -m 0755 /tmp/cosign /usr/local/bin/cosign
+          curl -sSL "https://github.com/anchore/syft/releases/download/${SYFT_VERSION}/syft_${SYFT_VERSION#v}_linux_amd64.tar.gz" | sudo tar -xz -C /usr/local/bin syft
+          curl -sSL "https://github.com/aquasecurity/trivy/releases/download/v${TRIVY_VERSION}/trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz" | sudo tar -xz -C /usr/local/bin trivy
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
@@ -70,7 +72,7 @@ jobs:
 
       - name: Build & Push Sentinel API
         id: build_api
-        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
         with:
           context: apps/sentinel
           file: apps/sentinel/Dockerfile.api
@@ -80,7 +82,7 @@ jobs:
 
       - name: Build & Push Sentinel Worker
         id: build_worker
-        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        uses: docker/build-push-action@4f58ea79222b3b9dc2c8bbdd6debcef730109a75 # v6.9.0
         with:
           context: apps/sentinel
           file: apps/sentinel/Dockerfile.worker
@@ -102,21 +104,13 @@ jobs:
 
       - name: Vulnerability Scan (Sentinel API)
         if: steps.meta.outputs.push_image == 'true'
-        uses: aquasecurity/trivy-action@18f2510ee396bbfd6cc5110a174092b3a8eb4cf7 # v0.29.0
-        with:
-          image-ref: ${{ steps.meta.outputs.api_image }}@${{ steps.build_api.outputs.digest }}
-          format: table
-          exit-code: 1
-          severity: CRITICAL,HIGH
+        run: |
+          trivy image --exit-code 1 --severity CRITICAL,HIGH "${{ steps.meta.outputs.api_image }}@${{ steps.build_api.outputs.digest }}"
 
       - name: Vulnerability Scan (Sentinel Worker)
         if: steps.meta.outputs.push_image == 'true'
-        uses: aquasecurity/trivy-action@18f2510ee396bbfd6cc5110a174092b3a8eb4cf7 # v0.29.0
-        with:
-          image-ref: ${{ steps.meta.outputs.worker_image }}@${{ steps.build_worker.outputs.digest }}
-          format: table
-          exit-code: 1
-          severity: CRITICAL,HIGH
+        run: |
+          trivy image --exit-code 1 --severity CRITICAL,HIGH "${{ steps.meta.outputs.worker_image }}@${{ steps.build_worker.outputs.digest }}"
 
       - name: Cosign Sign & Attest (Keyless OIDC)
         if: steps.meta.outputs.push_image == 'true'
@@ -128,4 +122,3 @@ jobs:
           cosign sign --yes "${worker_ref}"
           cosign attest --yes --predicate worker-sbom.spdx.json --type spdx "${worker_ref}"
 ...
-
