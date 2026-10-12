@@ -154,6 +154,28 @@ case "${relative_path}" in
     kustomize build "${repository_root}/platform/velero/resources" | \
       bash "${repository_root}/scripts/render-config.sh" -
     ;;
+  platform/openbao)
+    openbao_chart="${repository_root}/.cache/phase6/openbao"
+    test -f "${openbao_chart}/Chart.yaml"
+    helm template openbao "${openbao_chart}" \
+      --namespace openbao \
+      --include-crds \
+      --skip-tests \
+      --values "${repository_root}/platform/openbao/configure-openbao.yaml" | \
+      bash "${repository_root}/scripts/harden-runtime-secret-render.sh"
+    printf '%s\n' '---'
+    kustomize build "${repository_root}/platform/openbao/resources"
+    ;;
+  platform/external-secrets)
+    external_secrets_chart="${repository_root}/.cache/phase6/external-secrets"
+    test -f "${external_secrets_chart}/Chart.yaml"
+    helm template external-secrets "${external_secrets_chart}" \
+      --namespace external-secrets \
+      --include-crds \
+      --skip-tests \
+      --values "${repository_root}/platform/external-secrets/configure-external-secrets.yaml" | \
+      bash "${repository_root}/scripts/harden-runtime-secret-render.sh"
+    ;;
   clusters/homelab/bootstrap | clusters/homelab/bootstrap/* | apps/*/overlays/prod | platform/* | observability/* | policies/*)
     test -f "${source_path}/kustomization.yaml" || test -f "${source_path}/kustomization.yml"
     kustomize build --enable-alpha-plugins --enable-exec "${source_path}" | \

@@ -16,4 +16,8 @@ resources:
   - deploy-cloudnative-pg.yaml
   - deploy-velero.yaml
   - deploy-storage-verification.yaml
+  - deploy-runtime-secret-prerequisites.yaml
+  - deploy-openbao.yaml
+  - deploy-external-secrets.yaml
+  - deploy-runtime-secret-stores.yaml
   - generate-applications.yaml

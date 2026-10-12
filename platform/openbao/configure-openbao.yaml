@@ -1,0 +1,184 @@
+---
+global:
+  tlsDisable: false
+
+injector:
+  enabled: false
+
+server:
+  authDelegator:
+    enabled: true
+  image:
+    registry: quay.io
+    repository: openbao/openbao
+    tag: 2.7.1@sha256:6d2b93856e3fcf7b18ad855a0b51eaba474dc8b79cf554379ea32034797d2acf
+    pullPolicy: IfNotPresent
+  updateStrategyType: OnDelete
+  logLevel: info
+  logFormat: json
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: '1'
+      memory: 1Gi
+  readinessProbe:
+    enabled: true
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+  livenessProbe:
+    enabled: true
+    path: /v1/sys/health?standbyok=true&sealedcode=204&uninitcode=204
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 3
+    failureThreshold: 3
+  dataStorage:
+    enabled: true
+    size: 10Gi
+    storageClass: longhorn
+    accessMode: ReadWriteOnce
+  auditStorage:
+    enabled: true
+    size: 5Gi
+    storageClass: longhorn
+    accessMode: ReadWriteOnce
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  volumes:
+    - name: tls
+      secret:
+        secretName: openbao-server-tls
+    - name: configuration
+      configMap:
+        name: openbao-runtime-configuration
+        defaultMode: 360
+  volumeMounts:
+    - name: tls
+      mountPath: /openbao/tls
+      readOnly: true
+    - name: configuration
+      mountPath: /openbao/configuration
+      readOnly: true
+  statefulSet:
+    securityContext:
+      pod:
+        runAsNonRoot: true
+        runAsUser: 100
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      container:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: true
+  networkPolicy:
+    enabled: true
+    ingress:
+      - from:
+          - podSelector: {}
+        ports:
+          - protocol: TCP
+            port: 8200
+          - protocol: TCP
+            port: 8201
+      - from:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: external-secrets
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: monitoring
+        ports:
+          - protocol: TCP
+            port: 8200
+    egress:
+      - to:
+          - namespaceSelector:
+              matchLabels:
+                kubernetes.io/metadata.name: kube-system
+        ports:
+          - protocol: UDP
+            port: 53
+          - protocol: TCP
+            port: 53
+      - ports:
+          - protocol: TCP
+            port: 443
+          - protocol: TCP
+            port: 6443
+  standalone:
+    enabled: false
+  ha:
+    enabled: true
+    replicas: 3
+    raft:
+      enabled: true
+      setNodeId: true
+      config: |
+        ui = true
+        disable_mlock = true
+
+        listener "tcp" {
+          address = "[::]:8200"
+          cluster_address = "[::]:8201"
+          tls_cert_file = "/openbao/tls/tls.crt"
+          tls_key_file = "/openbao/tls/tls.key"
+          tls_client_ca_file = "/openbao/tls/ca.crt"
+          telemetry {
+            unauthenticated_metrics_access = "true"
+          }
+        }
+
+        storage "raft" {
+          path = "/openbao/data"
+          retry_join {
+            leader_api_addr = "https://openbao-0.openbao-internal:8200"
+            leader_tls_servername = "openbao.openbao.svc"
+            leader_ca_cert_file = "/openbao/tls/ca.crt"
+          }
+          retry_join {
+            leader_api_addr = "https://openbao-1.openbao-internal:8200"
+            leader_tls_servername = "openbao.openbao.svc"
+            leader_ca_cert_file = "/openbao/tls/ca.crt"
+          }
+          retry_join {
+            leader_api_addr = "https://openbao-2.openbao-internal:8200"
+            leader_tls_servername = "openbao.openbao.svc"
+            leader_ca_cert_file = "/openbao/tls/ca.crt"
+          }
+        }
+
+        audit "file" "file" {
+          description = "Persistent JSON audit log"
+          options = {
+            file_path = "/openbao/audit/audit.log"
+            log_raw = "false"
+            mode = "0600"
+          }
+        }
+
+        service_registration "kubernetes" {}
+
+        telemetry {
+          prometheus_retention_time = "30s"
+          disable_hostname = true
+        }
+    disruptionBudget:
+      enabled: true
+      maxUnavailable: 1
+
+ui:
+  enabled: true
+  serviceType: ClusterIP
+  activeOpenbaoPodOnly: true
+
+serverTelemetry:
+  prometheusOperator: false

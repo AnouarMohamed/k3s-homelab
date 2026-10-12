@@ -33,8 +33,11 @@ block repository implementation.
 
 ## During platform bring-up
 
-- [ ] Initialize OpenBao once, distribute unseal key shares to separate secure
-  locations, and keep the root token offline after configuration.
+- [ ] Follow the OpenBao initialization runbook exactly once, distribute five unseal
+  shares to separate secure locations, verify that three shares can unseal every voter,
+  and keep the initialization record and root token encrypted offline.
+- [ ] Complete one supervised runtime-secret rotation and break-glass exercise; destroy
+  the temporary operator-token file after the non-renewable session ends.
 - [ ] Configure the Alertmanager notification destination as an OpenBao secret.
 - [ ] Enroll administrator MFA in Keycloak and test the local Argo CD/Grafana
   break-glass accounts before enabling SSO-only access.

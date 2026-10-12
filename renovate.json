@@ -347,6 +347,52 @@
       ],
       "depNameTemplate": "kubernetes-csi/external-snapshotter",
       "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/openbao/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "OPENBAO_CHART_VERSION=(?<currentValue>[^\\s]+)\\nOPENBAO_APP_VERSION=(?<appVersion>[^\\s]+)\\nOPENBAO_CHART_URL=https://github\\.com/openbao/openbao-helm/releases/download/openbao-[^/]+/openbao-[^\\s]+\\.tgz"
+      ],
+      "depNameTemplate": "openbao/openbao-helm",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^openbao-(?<version>.*)$",
+      "autoReplaceStringTemplate": "OPENBAO_CHART_VERSION={{{newValue}}}\\nOPENBAO_APP_VERSION={{{appVersion}}}\\nOPENBAO_CHART_URL=https://github.com/openbao/openbao-helm/releases/download/openbao-{{{newValue}}}/openbao-{{{newValue}}}.tgz"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/openbao/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "OPENBAO_IMAGE=(?<depName>quay\\.io/openbao/openbao):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/external-secrets/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "EXTERNAL_SECRETS_CHART_VERSION=(?<currentValue>[^\\s]+)\\nEXTERNAL_SECRETS_APP_VERSION=(?<appVersion>[^\\s]+)\\nEXTERNAL_SECRETS_CHART_URL=https://github\\.com/external-secrets/external-secrets/releases/download/helm-chart-[^/]+/external-secrets-[^\\s]+\\.tgz"
+      ],
+      "depNameTemplate": "external-secrets/external-secrets",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^helm-chart-(?<version>.*)$",
+      "autoReplaceStringTemplate": "EXTERNAL_SECRETS_CHART_VERSION={{{newValue}}}\\nEXTERNAL_SECRETS_APP_VERSION={{{appVersion}}}\\nEXTERNAL_SECRETS_CHART_URL=https://github.com/external-secrets/external-secrets/releases/download/helm-chart-{{{newValue}}}/external-secrets-{{{newValue}}}.tgz"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/external-secrets/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "EXTERNAL_SECRETS_IMAGE=(?<depName>ghcr\\.io/external-secrets/external-secrets):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
     }
   ],
   "packageRules": [

@@ -13,6 +13,9 @@ Implemented runbooks:
 - [Operate storage and backups](storage-and-backup.md)
 - [Run the storage reschedule test](storage-reschedule-test.md)
 - [Restore PostgreSQL](restore-postgres.md)
+- [Initialize and unseal OpenBao](initialize-and-unseal-openbao.md)
+- [Rotate runtime secrets](rotate-runtime-secrets.md)
+- [Recover runtime secrets](recover-runtime-secrets.md)
 
 Later component runbooks are added with the phase that creates each operational
 responsibility.

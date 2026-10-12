@@ -114,7 +114,38 @@ location is Available; and the marker survives movement to a different node. The
 `docs/dr/restore-drill-storage.md`. Scheduled backups, restores, replica recovery, and
 measured recovery time remain unverified until that empty results table is filled.
 
-## Phases 6–12
+## Phase 6 — Runtime secrets
+
+Status: **PENDING HARDWARE**
+
+Follow `docs/runbooks/initialize-and-unseal-openbao.md`; never copy recovery values into
+the verification log. Then run only the non-secret status checks below.
+
+```bash
+kubectl -n openbao get pods,pvc -o wide
+kubectl -n openbao get certificate openbao-server
+kubectl exec -n openbao openbao-0 -- \
+  env BAO_ADDR=https://127.0.0.1:8200 BAO_CACERT=/openbao/tls/ca.crt \
+  bao status
+kubectl get clustersecretstore openbao
+kubectl -n external-secrets get deploy,pod -o wide
+kubectl auth can-i create serviceaccounts/token \
+  --as=system:serviceaccount:external-secrets:external-secrets \
+  --resource-name=openbao-auth -n external-secrets
+kubectl auth can-i create serviceaccounts/token \
+  --as=system:serviceaccount:external-secrets:external-secrets \
+  --resource-name=default -n external-secrets
+```
+
+Expected: one active and two standby OpenBao voters are unsealed, all data and audit
+PVCs are Bound, the TLS certificate is Ready, the store is Ready, and all six ESO pods
+are spread across the three nodes. The exact TokenRequest is allowed and the request
+for `default` is denied. Perform a test rotation, confirm ESO refresh and an audit-log
+entry without recording the value, then restart voters one at a time and manually
+unseal each. Initialization, unseal, Raft failover, audit persistence, authentication,
+rotation, revocation, and recovery remain unverified until Anouar records those results.
+
+## Phases 7–12
 
 Status: **PENDING HARDWARE**
 

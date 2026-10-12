@@ -66,3 +66,21 @@ flowchart LR
 
 Local replicas provide availability, not disaster recovery. Longhorn, CNPG, and Velero
 use separate prefixes and scoped credentials in the same centrally configured bucket.
+
+## Phase 6 secret flow
+
+```mermaid
+flowchart LR
+  Age[Offline age identity] --> SOPS[SOPS bootstrap documents]
+  SOPS --> Bootstrap[GitLab, Cloudflare, and S3 bootstrap Secrets]
+  Operator[Human operator] -->|manual Shamir unseal| Bao[OpenBao HA Raft]
+  Workload[Namespaced service account] -->|audience-bound token| Auth[Kubernetes auth]
+  Auth -->|namespace read policy| Bao
+  Bao --> ESO[External Secrets Operator]
+  ESO --> Materialized[Namespaced Kubernetes Secret]
+  Materialized --> App[Workload]
+```
+
+SOPS cannot depend on OpenBao because it establishes the services needed to start and
+recover OpenBao. Runtime consumers receive short-lived identities and cannot write
+secret data. Manual unseal remains an explicit availability tradeoff.

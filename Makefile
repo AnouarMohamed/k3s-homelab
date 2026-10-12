@@ -7,7 +7,7 @@ ANSIBLE_INVENTORY := $(REPOSITORY_ROOT)/infra/ansible/inventory/homelab.py
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools lint ansible-syntax ansible-templates phase2-deps validate-cni phase3-deps validate-gitops phase4-deps validate-edge phase5-deps validate-storage validate security bootstrap bootstrap-nodes upgrade-k3s reset \
+.PHONY: help tools lint ansible-syntax ansible-templates phase2-deps validate-cni phase3-deps validate-gitops phase4-deps validate-edge phase5-deps validate-storage phase6-deps validate-secrets validate security bootstrap bootstrap-nodes upgrade-k3s reset \
 	bootstrap-cni bootstrap-gitops bootstrap-platform test test-storage-reschedule tofu-init tofu-plan teardown
 
 help: ## Show all supported targets
@@ -23,7 +23,7 @@ lint: ## Lint YAML, Markdown, shell, and Ansible sources
 			[[ -f "$$file" ]] && printf '%s\0' "$$file"; \
 		done | xargs -0 -r yamllint
 	@markdownlint-cli2
-	@shellcheck scripts/*.sh
+	@git ls-files -co --exclude-standard -z -- '*.sh' | xargs -0 -r shellcheck
 	@ansible-lint infra/ansible
 
 ansible-syntax: ## Parse the dynamic inventory and all Ansible playbooks
@@ -59,7 +59,13 @@ phase5-deps: ## Fetch checksum-verified storage and backup charts
 validate-storage: ## Validate storage, database backup, CSI snapshot, and Velero resources
 	@scripts/validate-storage.sh
 
-validate: ansible-syntax ansible-templates validate-cni validate-gitops validate-edge validate-storage ## Validate repository policy and Kubernetes manifests
+phase6-deps: ## Fetch checksum-verified runtime-secret charts
+	@scripts/fetch-phase6-dependencies.sh
+
+validate-secrets: ## Validate OpenBao, External Secrets, TLS, policies, and stores
+	@scripts/validate-secrets.sh
+
+validate: ansible-syntax ansible-templates validate-cni validate-gitops validate-edge validate-storage validate-secrets ## Validate repository policy and Kubernetes manifests
 	@scripts/check-forbidden-files.sh
 	@scripts/check-private-values.sh
 	@scripts/check-pins.sh

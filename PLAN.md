@@ -95,6 +95,10 @@ before later phases begin.
 | Barman Cloud chart | `0.8.1` | Official archive SHA-256 `9ad0b9e56da2777a1a0269feaf7215e18297e9c8b5730e04acb27b5d462e9456`; app `v0.15.1` |
 | Velero chart | `12.2.1` | Official archive SHA-256 `fe4acd70a0123c369e7af7064457b4ffdddebee413e2bb01976a4fe07c471773`; app `1.18.2` |
 | Velero AWS plugin | `v1.14.4` | OCI digest `sha256:e6d328cefcdccecea23510ce361f8979e80a91386a99f21b0055e554259a35ec` |
+| OpenBao chart | `0.30.3` | Official release archive SHA-256 `d50ed31b8305f430df308c342dd3c1efa877222380e99cb480f74f070d6beaa8`; app `v2.7.1` |
+| OpenBao | `2.7.1` | OCI index digest `sha256:6d2b93856e3fcf7b18ad855a0b51eaba474dc8b79cf554379ea32034797d2acf` |
+| External Secrets chart | `2.12.0` | Official release archive SHA-256 `4b584136b7311c0af8c8719d377cc5b1a7ef12c2de18f1fdb30614eab75bdeb3`; app `v2.12.0` |
+| External Secrets | `v2.12.0` | OCI index digest `sha256:7a3c4f7e038fa0f86a3172da19b9388f3f4d846e87e9994ee3474c5b72a9330d` |
 
 All remaining later-phase chart, provider, collection, application image, and CI image
 versions are `VERIFY`. Before implementing their phase I will verify them against an official chart

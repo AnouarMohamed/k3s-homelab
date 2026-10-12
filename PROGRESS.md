@@ -11,7 +11,7 @@ checks against the three physical nodes are tracked separately as `PENDING HARDW
 - [x] Phase 3 — Argo CD (offline validation complete; pending hardware)
 - [x] Phase 4 — Certificates, DNS, and public access (offline validation complete; pending hardware)
 - [x] Phase 5 — Storage and backups (offline validation complete; pending hardware)
-- [ ] Phase 6 — Runtime secrets
+- [x] Phase 6 — Runtime secrets (offline validation complete; pending hardware)
 - [ ] Phase 7 — Observability
 - [ ] Phase 8 — Policy and supply chain
 - [ ] Phase 9 — Homelab Sentinel and delivery
@@ -267,15 +267,60 @@ explicitly because that release has no checksum-list asset.
   Volume scheduling, replica recovery, WAL archival, backup completion, and every
   restore remain `PENDING HARDWARE` or `PENDING ACCOUNT`.
 
+## Phase 6 validation — 2026-10-12
+
+- Official release archives matched the pinned SHA-256 values for OpenBao chart
+  `0.30.3` and External Secrets chart `2.12.0`. Their application images use the
+  recorded immutable OCI index digests for OpenBao `2.7.1` and External Secrets
+  `v2.12.0`.
+- `make validate-secrets` returned exit 0. Helm lint reported one chart and zero
+  failures for each component, and two independent renders of the prerequisites,
+  OpenBao, External Secrets, and runtime store compared byte-for-byte equal.
+- Strict built-in validation reported 2 valid prerequisite resources with 4 custom
+  resources skipped, 14 valid OpenBao resources, 25 valid External Secrets resources
+  with 25 CRDs skipped, and 3 valid runtime-store resources with 1 custom resource
+  skipped. A separate pass validated all 5 selected Certificate, Issuer, and
+  ClusterSecretStore resources against schemas extracted from the pinned CRDs with no
+  invalid, errored, or skipped objects.
+- Phase-specific assertions confirmed three OpenBao Raft voters, two retained PVCs per
+  voter, TLS, a persistent file audit device, digest-pinned images, hardened
+  containers, three two-replica ESO controllers, bounded TokenRequest RBAC, and an
+  audience-bound Kubernetes-auth store. Kube-linter reported no findings.
+- `make lint` returned exit 0. Markdownlint checked 78 files with no issues; ShellCheck
+  and yamllint returned no findings; ansible-lint again reported zero failures and
+  warnings across 28 processed files.
+- The staged `make validate` returned exit 0 across every Phase 1–6 gate and repository
+  policy check. The final generic kubeconform pass validated 25 resources from 17 files
+  with no invalid, errored, or skipped objects, and kube-linter reported no findings.
+- `make security` returned exit 0. Gitleaks scanned approximately 431 KB of the staged
+  working tree and 2.39 MB across 14 existing commits, finding no leaks.
+- The skeptical review removed unsupported object-name fields from the AppProject
+  cluster-resource allowlist; Argo CD supports group/kind allowlisting there, while the
+  exact repository and destination namespaces provide the remaining boundary. It also
+  added required pod anti-affinity, `AlwaysAllow` unhealthy-pod eviction policy, and an
+  explicit OpenBao auth-delegator setting.
+- The OpenBao chart exposes active and standby Services using runtime labels that do
+  not exist in a static StatefulSet render. Only its `dangling-service` kube-linter
+  check is excluded as a documented false positive; all other checks remain enabled.
+- The SOPS/OpenBao ADR keeps only circular bootstrap dependencies in SOPS. No fake
+  `ExternalSecret` or runtime value was added: real namespaced stores and consumers are
+  introduced with the workloads that own them.
+- No cluster, secret service, account, or Git remote was modified. Initialization,
+  manual unseal, Raft election, audit persistence, Kubernetes authentication, secret
+  refresh, rotation, revocation, and break-glass recovery remain `PENDING HARDWARE`.
+
 ## Unverified
 
 - All real-hardware behavior.
 - Every dependency not yet listed with upstream evidence in `PLAN.md`.
 - The GitLab pipeline, until run by GitLab.
 - Compatibility of the selected S3 service with Longhorn, Barman Cloud, and Velero.
+- OpenBao HCL startup and the declarative audit device on the real cluster.
 
 ## Not done
 
 - No real node, cluster, Cloudflare account, S3 service, or Git remote was modified.
 - Vendor-specific S3 bucket provisioning is not implemented because the service has
   not been selected; creating and versioning the bucket is a documented human task.
+- Automatic OpenBao unseal is intentionally not implemented because no external KMS or
+  HSM has been selected; the manual Shamir boundary is documented and pending exercise.

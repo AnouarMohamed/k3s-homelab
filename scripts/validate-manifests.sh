@@ -16,7 +16,11 @@ for root in "${manifest_roots[@]}"; do
       "${repository_root}/platform/longhorn/"* | \
         "${repository_root}/platform/cloudnative-pg/"* | \
         "${repository_root}/platform/snapshot-controller/"* | \
-        "${repository_root}/platform/velero/"*)
+        "${repository_root}/platform/velero/"* | \
+        "${repository_root}/platform/openbao/"* | \
+        "${repository_root}/platform/external-secrets/"* | \
+        "${repository_root}/platform/runtime-secrets/"* | \
+        "${repository_root}/clusters/homelab/bootstrap/runtime-secrets/"*)
         continue
         ;;
     esac
