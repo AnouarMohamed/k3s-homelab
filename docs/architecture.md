@@ -7,7 +7,7 @@ addresses, implements Gateway API, and encrypts eligible cross-node traffic.
 ```mermaid
 flowchart LR
   GitLab[GitLab repository and CI] --> Argo[Argo CD]
-  Admin[Administrator via Cloudflare WARP] --> Tunnel[Cloudflare Tunnel]
+  Admin[Administrator via WARP WireGuard] --> Tunnel[Cloudflare Tunnel]
   Internet[Public HTTPS] --> Tunnel
   Tunnel --> Gateway[Cilium Gateway API]
   Argo --> Platform[Platform desired state]
@@ -27,3 +27,22 @@ flowchart LR
 
 Detailed network, storage, secrets, GitOps, delivery, and backup diagrams are completed
 in Phase 12 and linked to observed evidence where available.
+
+## Phase 4 edge traffic
+
+```mermaid
+flowchart LR
+  Public[Public client] --> Edge[Cloudflare DNS and TLS]
+  Edge --> Outbound[Outbound-only cloudflared replicas]
+  Outbound --> PublicGateway[Cilium public Gateway]
+  PublicGateway --> PublicRoute[Selected HTTPRoute]
+  PublicRoute --> App[Public application]
+  Admin[Enrolled WARP WireGuard client] --> PrivateRoute[Cloudflare private route]
+  PrivateRoute --> InternalGateway[Cilium internal Gateway]
+  Lan[Trusted LAN client with split DNS] --> InternalGateway
+  InternalGateway --> AdminService[Internal administration service]
+```
+
+The public and administrative paths share no router port. OpenTofu owns the temporary
+public Tunnel CNAME. Internal names resolve only through split DNS and the internal
+Gateway's centrally configured load-balancer address.

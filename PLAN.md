@@ -257,8 +257,9 @@ screenshots exposing private information.
 
 - I will repair forward and retain the weak initial commits as part of the history.
 - No Git remote is pushed automatically.
-- Cloudflare WARP private routing supersedes raw inbound WireGuard for administration;
-  Cilium WireGuard still encrypts eligible cluster traffic.
+- Cloudflare WARP's WireGuard-based client provides private administration without a
+  raw inbound WireGuard listener; Cilium WireGuard still encrypts eligible cluster
+  traffic.
 - Keycloak is the identity provider.
 - Homelab Sentinel is written in Go, uses CNPG, and does not use Redis.
 - Infrastructure components that require host access or elevated capabilities receive

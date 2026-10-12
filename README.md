@@ -5,15 +5,16 @@ DevSecOps engineer: provisioning Linux, operating highly available Kubernetes, s
 through GitOps, securing the software supply chain, and proving recovery procedures.
 This repository describes my real environment. It is not a generic cluster template.
 
-> Current state: Phases 0–3 pass local validation; the GitLab pipeline has not run.
-> Node, Cilium, and Argo CD behavior remains unverified on hardware.
+> Current state: Phases 0–4 pass local validation; the GitLab pipeline has not run.
+> Nodes, networking, GitOps, certificates, DNS, Tunnel, and WARP behavior remain
+> unverified on hardware.
 > [See the evidence ledger](docs/STATUS.md).
 
 ```mermaid
 flowchart LR
   Git[GitLab CI and registry] --> Argo[Argo CD]
   Users[Public users] --> CF[Cloudflare Tunnel]
-  Admin[Administrator via WARP] --> CF
+  Admin[Administrator via WARP WireGuard] --> CF
   CF --> Gateway[Cilium Gateway API]
   Argo --> Cluster
   subgraph Cluster[Three schedulable k3s servers]
@@ -59,7 +60,7 @@ Addresses, interfaces, domains, and external service identifiers live only in
 | 1 — Nodes and k3s | Implemented; pending hardware |
 | 2 — Cilium | Implemented; pending hardware |
 | 3 — Argo CD | Implemented; pending hardware |
-| 4 — Certificates, DNS, and access | Planned |
+| 4 — Certificates, DNS, and access | Implemented; pending hardware/account |
 | 5 — Storage and backups | Planned |
 | 6 — Runtime secrets | Planned |
 | 7 — Observability | Planned |

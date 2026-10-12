@@ -10,17 +10,22 @@ Zero Trust network route, and DNS editing for the one zone. Account and zone IDs
 are supplied as sensitive `TF_VAR_cloudflare_account_id` and
 `TF_VAR_cloudflare_zone_id` values.
 
-State contains the tunnel token. Initialize the S3 backend using runtime-only
-`-backend-config` arguments for the central endpoint and bucket, credentials from
-the environment, locking, and encryption. Local backend use is validation-only:
+State contains the tunnel token. Supply S3-compatible credentials only through
+`AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`, then initialize the backend from
+the central endpoint and bucket. The initializer enables encryption, native S3
+lockfiles, and path-style access without putting credentials in files:
 
 ```bash
-tofu -chdir=infra/tofu init -backend=false
-tofu -chdir=infra/tofu validate
-tofu -chdir=infra/tofu plan -refresh=false
+make tofu-init
+make tofu-plan
 ```
+
+The state bucket must have versioning enabled. `AWS_REGION` defaults to
+`us-east-1` for S3-compatible services and can be overridden at runtime. Offline
+repository validation uses an isolated temporary copy with its backend disabled;
+it never contacts the configured endpoint.
 
 After an authorized apply, retrieve the sensitive output explicitly and encrypt
 it into `provide-cloudflared-tunnel-token.sops.yaml`. Never redirect a plaintext
 token into the repository or a shell history. Applies and state migrations are
-manual human operations; CI and Make only plan.
+manual human operations; Make exposes initialization and planning only.

@@ -66,7 +66,8 @@ case "${relative_path}" in
       helm template cert-manager "${cert_manager_chart}" \
         --namespace cert-manager \
         --include-crds \
-        --values -
+        --values - | \
+      bash "${repository_root}/scripts/harden-cert-manager-render.sh"
     printf '%s\n' '---'
     kustomize build "${repository_root}/platform/cert-manager/resources" | \
       bash "${repository_root}/scripts/render-config.sh" -

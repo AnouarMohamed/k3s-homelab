@@ -23,8 +23,9 @@ block repository implementation.
 - [ ] Replace and re-encrypt all three Phase 4 SOPS token placeholders, then confirm
   that the cert-manager, external-dns, and cloudflared namespaces contain only their
   individually scoped credential.
-- [ ] Initialize the encrypted, versioned S3 OpenTofu backend with locking; review and
-  manually apply the Cloudflare plan. Never use local state for a real apply.
+- [ ] Enable versioning on the S3 state bucket, export its narrowly scoped credentials,
+  run `make tofu-init`, then review `make tofu-plan` and manually apply it. Never use
+  local state for a real apply.
 - [ ] Create the S3 bucket/credentials or authorize OpenTofu to create them.
 
 ## During platform bring-up

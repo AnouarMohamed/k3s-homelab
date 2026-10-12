@@ -1,4 +1,4 @@
-# Cloudflare WARP private administration
+# Cloudflare WARP WireGuard administration
 
 ## Preconditions
 

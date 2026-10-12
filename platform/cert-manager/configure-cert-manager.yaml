@@ -13,6 +13,9 @@ prometheus:
   servicemonitor:
     enabled: false
 
+networkPolicy:
+  enabled: true
+
 resources:
   requests:
     cpu: 20m
@@ -26,6 +29,8 @@ webhook:
   podDisruptionBudget:
     enabled: true
     maxUnavailable: 1
+  networkPolicy:
+    enabled: true
   resources:
     requests:
       cpu: 20m
@@ -40,6 +45,8 @@ cainjector:
   podDisruptionBudget:
     enabled: true
     maxUnavailable: 1
+  networkPolicy:
+    enabled: true
   resources:
     requests:
       cpu: 20m

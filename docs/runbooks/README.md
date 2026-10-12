@@ -9,6 +9,7 @@ Implemented Phase 1 runbooks:
 - [Recover Argo CD](argocd-recovery.md)
 - [Understand GitOps sync waves](gitops-sync-waves.md)
 - [Use Cloudflare WARP private access](cloudflare-warp-access.md)
+- [Configure split DNS](split-dns.md)
 
 Later component runbooks are added with the phase that creates each operational
 responsibility.

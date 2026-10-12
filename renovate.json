@@ -209,6 +209,60 @@
         "YQ_IMAGE=(?<depName>docker\\.io/mikefarah/yq):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
       ],
       "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/cilium/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "CILIUM_VERSION=(?<currentValue>[^\\s]+)\\nCILIUM_CHART_REF=oci://(?<depName>quay\\.io/cilium/charts/cilium)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/cilium/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "GATEWAY_API_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "kubernetes-sigs/gateway-api",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/cert-manager/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "CERT_MANAGER_CHART_VERSION=(?<currentValue>[^\\s]+)\\nCERT_MANAGER_CHART_REF=oci://(?<depName>quay\\.io/jetstack/charts/cert-manager)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/external-dns/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "EXTERNAL_DNS_CHART_VERSION=(?<currentValue>[^\\s]+)\\nEXTERNAL_DNS_APP_VERSION=(?<appVersion>[^\\s]+)\\nEXTERNAL_DNS_CHART_URL=https://github\\.com/kubernetes-sigs/external-dns/releases/download/helm-chart-[^/]+/external-dns-[^\\s]+\\.tgz"
+      ],
+      "depNameTemplate": "kubernetes-sigs/external-dns",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^helm-chart-(?<version>.*)$",
+      "autoReplaceStringTemplate": "EXTERNAL_DNS_CHART_VERSION={{{newValue}}}\\nEXTERNAL_DNS_APP_VERSION={{{appVersion}}}\\nEXTERNAL_DNS_CHART_URL=https://github.com/kubernetes-sigs/external-dns/releases/download/helm-chart-{{{newValue}}}/external-dns-{{{newValue}}}.tgz"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/cloudflared/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "CLOUDFLARED_VERSION=(?<currentValue>[^\\s]+)\\nCLOUDFLARED_IMAGE=(?<depName>docker\\.io/cloudflare/cloudflared):[^@\\s]+@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
     }
   ],
   "packageRules": [

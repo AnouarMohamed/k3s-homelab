@@ -8,7 +8,7 @@ ANSIBLE_INVENTORY := $(REPOSITORY_ROOT)/infra/ansible/inventory/homelab.py
 .DEFAULT_GOAL := help
 
 .PHONY: help tools lint ansible-syntax ansible-templates phase2-deps validate-cni phase3-deps validate-gitops phase4-deps validate-edge validate security bootstrap bootstrap-nodes upgrade-k3s reset \
-	bootstrap-cni bootstrap-gitops bootstrap-platform test tofu-plan teardown
+	bootstrap-cni bootstrap-gitops bootstrap-platform test tofu-init tofu-plan teardown
 
 help: ## Show all supported targets
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} \
@@ -89,10 +89,16 @@ bootstrap-platform: ## Synchronize the platform through Argo CD
 test: ## Run application unit and integration tests
 	@$(MAKE) -C apps/sentinel test
 
-tofu-plan: ## Produce non-destructive OpenTofu plans
-	@tofu -chdir=infra/tofu init -backend=false
+tofu-init: ## Initialize the encrypted, lockfile-enabled remote state backend
+	@scripts/initialize-tofu-backend.sh
+
+tofu-plan: ## Produce a non-destructive Cloudflare OpenTofu plan
+	@scripts/check-config-ready.sh
+	@test -d infra/tofu/.terraform || \
+		{ printf 'OpenTofu is not initialized; run make tofu-init first.\n' >&2; exit 1; }
+	@tofu -chdir=infra/tofu fmt -check
 	@tofu -chdir=infra/tofu validate
-	@tofu -chdir=infra/tofu plan -lock=false -refresh=false
+	@tofu -chdir=infra/tofu plan
 
 teardown: ## Alias for the guarded reset target
 	@$(MAKE) reset CONFIRM_RESET="$(CONFIRM_RESET)"

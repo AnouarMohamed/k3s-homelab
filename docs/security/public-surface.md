@@ -11,7 +11,8 @@ disabled. Phase 3 administration therefore requires a trusted local port-forward
 later internal route must remain reachable only through WARP private routing.
 
 Cloudflare Tunnel creates outbound connections from the cluster. Administration uses
-Cloudflare WARP private routing so the router exposes no inbound port.
+Cloudflare WARP's WireGuard-based private routing so the router exposes no inbound
+port.
 
 Phase 4 publishes exactly one DNS name, `whoami.<configured-domain>`, through a
 remotely managed Tunnel. OpenTofu owns that CNAME; external-dns is restricted to

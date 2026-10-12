@@ -70,7 +70,7 @@ done
 kubeconform -strict -summary \
   -schema-location "${schema_dir}/{{.ResourceKind}}-{{.ResourceAPIVersion}}.json" \
   -reject '*' \
-  -skip CustomResourceDefinition,Namespace,ServiceAccount,Service,Deployment,PodDisruptionBudget,Role,RoleBinding,ClusterRole,ClusterRoleBinding,MutatingWebhookConfiguration,ValidatingWebhookConfiguration,APIService,ConfigMap,Job \
+  -skip CustomResourceDefinition,Namespace,ServiceAccount,Service,Deployment,PodDisruptionBudget,NetworkPolicy,Role,RoleBinding,ClusterRole,ClusterRoleBinding,MutatingWebhookConfiguration,ValidatingWebhookConfiguration,APIService,ConfigMap,Job \
   "${validation_dir}/cert-manager-first.yaml"
 
 for resource_kind in gateway httproute; do
@@ -114,13 +114,56 @@ test "$(yq eval-all '[select(.kind == "HTTPRoute" and .metadata.name == "whoami"
   "${validation_dir}/whoami-first.yaml")" = 1
 test "$(yq eval-all '[.. | select(tag == "!!map" and has("containers")) | .containers[] | select(.image | test(":latest($|@)"))] | length' \
   "${validation_dir}"/*-first.yaml)" = 0
+test "$(yq eval-all '[select(.kind == "Deployment") | .spec.template.spec.containers[] | select(.resources.requests == null or .resources.limits == null or .livenessProbe == null or .readinessProbe == null)] | length' \
+  "${validation_dir}"/*-first.yaml)" = 0
+test "$(yq eval-all '[select(.kind == "Deployment") | .spec.template.spec.containers[] | select(.securityContext.allowPrivilegeEscalation != false or .securityContext.readOnlyRootFilesystem != true or (.securityContext.capabilities.drop | contains(["ALL"]) | not))] | length' \
+  "${validation_dir}"/*-first.yaml)" = 0
+test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace == "cert-manager")] | length' \
+  "${validation_dir}/cert-manager-first.yaml")" -ge 3
+test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace == "external-dns")] | length' \
+  "${validation_dir}/external-dns-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace == "cloudflare")] | length' \
+  "${validation_dir}/cloudflared-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace == "apps-whoami")] | length' \
+  "${validation_dir}/whoami-first.yaml")" = 1
 
 kube-linter lint \
   "${validation_dir}/cloudflared-first.yaml" \
   "${validation_dir}/whoami-first.yaml"
 
 tofu -chdir="${repository_root}/infra/tofu" fmt -check -recursive
+export TF_PLUGIN_CACHE_DIR="${TF_PLUGIN_CACHE_DIR:-${repository_root}/.cache/tofu-plugins}"
+mkdir -p "${TF_PLUGIN_CACHE_DIR}"
 tofu -chdir="${repository_root}/infra/tofu" init -backend=false -input=false
 tofu -chdir="${repository_root}/infra/tofu" validate
+
+plan_root="${validation_dir}/repository"
+mkdir -p "${plan_root}/infra/tofu" "${plan_root}/config"
+cp \
+  "${repository_root}/infra/tofu/main.tf" \
+  "${repository_root}/infra/tofu/outputs.tf" \
+  "${repository_root}/infra/tofu/providers.tf" \
+  "${repository_root}/infra/tofu/variables.tf" \
+  "${repository_root}/infra/tofu/versions.tf" \
+  "${repository_root}/infra/tofu/.terraform.lock.hcl" \
+  "${plan_root}/infra/tofu/"
+yq \
+  '.spec.domain = "example.invalid" | .spec.network.privateRouteCidr = "192.0.2.0/24"' \
+  "${repository_root}/config/homelab.yaml" \
+  >"${plan_root}/config/homelab.yaml"
+tofu -chdir="${plan_root}/infra/tofu" init -backend=false -input=false >/dev/null
+tofu -chdir="${plan_root}/infra/tofu" validate >/dev/null
+export CLOUDFLARE_API_TOKEN=validation-placeholder-token
+export TF_VAR_cloudflare_account_id=00000000000000000000000000000000
+export TF_VAR_cloudflare_zone_id=11111111111111111111111111111111
+tofu -chdir="${plan_root}/infra/tofu" plan \
+  -no-color \
+  -refresh=false \
+  -lock=false \
+  -input=false \
+  -out="${validation_dir}/edge.tfplan" \
+  >"${validation_dir}/tofu-plan.log"
+grep -q 'Plan: 4 to add, 0 to change, 0 to destroy.' \
+  "${validation_dir}/tofu-plan.log"
 
 printf 'Phase 4 edge resources rendered deterministically and validated.\n'

@@ -164,6 +164,60 @@ explicitly because that release has no checksum-list asset.
 - Argo controller health, repository authentication, root synchronization, RBAC login,
   self-healing, and Cilium adoption remain `PENDING HARDWARE`.
 
+## Phase 4 validation — 2026-10-12
+
+- Phase 4 was committed as `884e5ef` before its full repository gate and skeptical
+  review had finished. The follow-up repair preserves that history and adds the missing
+  workload probes, NetworkPolicies, provider hash, split-DNS documentation, and
+  evidence. The Phase 2 fetcher changed only to checksum the pinned Cilium network
+  policy CRD required to validate the Phase 4 whoami policy. Renovate coverage for
+  the previously omitted Cilium, Gateway API, cert-manager, and cloudflared pins was
+  repaired without enabling automerge.
+- The official cert-manager chart `v1.21.1` was pulled by OCI digest
+  `sha256:15c0b46d9006ce8eb9ff14d1bf54d1bbfcc587bb9e24cd9fe186fb8fec56af1f`.
+  The official external-dns chart `1.22.0` archive matched SHA-256
+  `ec26bba67e02f46a55ac33790ad9d9ded724a163af6f6b4a63ce68f883201f4f`.
+- The Cloudflare provider `5.27.0` Linux package matched upstream SHA-256
+  `ae47a9f29594d57e634cc0b5b96a18da5a364f43cbd735622ce5fe808728065f`.
+  `tofu init -backend=false` selected that locked provider and `tofu validate` reported
+  the configuration valid.
+- `make validate-edge` returned exit 0. Two independent renders compared byte-for-byte
+  equal. Helm lint reported one chart and zero failures for both charts. Strict
+  kubeconform reported six valid external-dns resources, four valid cloudflared
+  resources, and 53 valid cert-manager built-ins with no invalid objects or errors.
+- Schemas extracted from the pinned cert-manager, Gateway API, and Cilium CRDs validated
+  three cert-manager resources and four Gateway/HTTPRoute/Cilium policy resources.
+  The remaining objects in those schema-only passes were deliberately skipped because
+  the built-in pass had already validated them.
+- Workload assertions found no Deployment container missing requests, limits,
+  liveness, readiness, dropped capabilities, read-only root filesystem, or privilege
+  escalation denial. Each Phase 4 workload namespace rendered a NetworkPolicy;
+  kube-linter reported no findings for cloudflared or whoami.
+- An offline OpenTofu plan used documentation-only values in an isolated temporary
+  copy and reported `Plan: 4 to add, 0 to change, 0 to destroy.` It planned one Tunnel,
+  its remote configuration, the private WARP route, and the temporary whoami CNAME.
+  No Cloudflare credential or API request was used.
+- `make validate` returned exit 0 across Ansible, Cilium, Argo CD, Phase 4, repository
+  policy, generic kubeconform, and kube-linter gates. The generic pass validated 18
+  resources from 15 files with no invalid objects, errors, or skips.
+- `make lint` returned exit 0. Markdownlint checked 58 files with no issues, ShellCheck
+  accepted every repository script, and the Ansible production profile again reported
+  zero failures and warnings.
+- `make security` returned exit 0. Gitleaks scanned approximately 244.62 KB of the
+  working tree and 2.24 MB across 12 commits, reporting no leaks in either scan.
+- `make tofu-init` now reads the backend endpoint and bucket directly from the central
+  config and requires credentials in the environment. It enables encrypted state,
+  versioned-bucket recovery, path-style S3 access, and native lockfiles; it was not run
+  because doing so would contact the configured S3 service. `make tofu-plan` requires
+  that explicit initialization and performs no apply.
+- The skeptical review found and removed an ignored legacy static inventory containing
+  private addresses. The supported inventory is the tracked dynamic inventory that
+  reads `config/homelab.yaml`; no private address remained in tracked or untracked
+  repository files after the cleanup.
+- No manifest was applied and no OpenTofu apply was run. DNS, ACME issuance, Gateway
+  acceptance, tunnel redundancy, public routing, split DNS, and WARP administration
+  remain `PENDING HARDWARE` or `PENDING ACCOUNT`.
+
 ## Unverified
 
 - All real-hardware behavior.
