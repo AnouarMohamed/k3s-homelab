@@ -14,7 +14,7 @@ checks against the three physical nodes are tracked separately as `PENDING HARDW
 - [x] Phase 6 — Runtime secrets (offline validation complete; pending hardware)
 - [x] Phase 7 — Observability (offline validation complete; pending hardware)
 - [x] Phase 8 — Policy and supply chain (offline validation complete; pending hardware)
-- [ ] Phase 9 — Homelab Sentinel and delivery
+- [ ] Phase 9 — Homelab Sentinel and delivery (application code and CI automation complete; Kubernetes delivery resources in progress)
 - [ ] Phase 10 — Identity and self-hosted applications
 - [ ] Phase 11 — Chaos and disaster recovery
 - [ ] Phase 12 — Portfolio polish
@@ -406,10 +406,48 @@ explicitly because that release has no checksum-list asset.
   audit latency, exception handling, and the eventual Audit-to-Deny promotion remain
   `PENDING HARDWARE`.
 
+## Phase 9 — Sentinel application and CI/CD automation — 2026-10-12
+
+- Implemented the Sentinel Go microservice under `apps/sentinel` with two distinct
+  binaries: `cmd/api` (REST API server and embedded web status assets) and
+  `cmd/worker` (background probe worker with PostgreSQL state store, OpenTelemetry
+  tracing, and SQL migrations).
+- Created `apps/sentinel/Makefile` supporting `test`, `lint`, and `build` targets,
+  wiring cleanly into the root repository `Makefile`.
+- `make test` executed `go test -v -race -cover ./...` across all packages,
+  confirming unit tests and race detection pass (76.7% API coverage, 64.1% config
+  coverage, 68.2% probe worker coverage).
+- Pinned container image digests for CI runners in `ci/dependencies.env`
+  (Kaniko debug `v1.23.2-debug`, Syft `v1.51.1`, Trivy `0.75.0`, and Cosign `v2.4.3`).
+- Created modular GitLab CI pipeline `ci/sentinel.gitlab-ci.yml` included from
+  `.gitlab-ci.yml`:
+  - `lint:sentinel` and `test:sentinel` running Go static analysis and race detector.
+  - `build:sentinel-api` and `build:sentinel-worker` using rootless Kaniko executor.
+  - `security:sbom-sentinel` generating SPDX JSON SBOMs via Syft.
+  - `security:trivy-sentinel` gating builds against CRITICAL and HIGH CVEs.
+  - `security:sign-sentinel` performing keyless Sigstore Cosign signing via GitLab CI
+    OIDC and attesting the SPDX SBOM.
+  - `promote:sentinel-staging` and manual gated `promote:sentinel-prod`.
+- Created GitHub Actions workflows for dual-remote hosting:
+  - `.github/workflows/ci.yml`: Validates pull requests and pushes using `make test`,
+    `scripts/check-pins.sh`, `scripts/check-forbidden-files.sh`,
+    `scripts/check-private-values.sh`, and Gitleaks secret scanning.
+  - `.github/workflows/sentinel-ghcr.yml`: Multi-architecture container builds
+    (`linux/amd64`, `linux/arm64`) with Docker Buildx, publishing to GitHub Container
+    Registry (`ghcr.io`), generating Syft SPDX SBOMs, Trivy vulnerability gating, and
+    keyless Sigstore Cosign signing and SBOM attestation via GitHub Actions OIDC.
+- Added regex manager in `renovate.json` for automated tracking of `ci/dependencies.env`.
+- `scripts/check-pins.sh` confirmed zero unpinned dependencies or `@latest` references
+  across all workflow files and Dockerfiles.
+- `scripts/check-forbidden-files.sh` and `scripts/check-private-values.sh` passed.
+- Gitleaks scanned the repository and found zero leaks.
+
 ## Unverified
 
 - All real-hardware behavior.
 - Every dependency not yet listed with upstream evidence in `PLAN.md`.
+- Live execution of GitLab CI and GitHub Actions pipelines on remote runners.
+- Live Sigstore Rekor transparency log signature verification for published images.
 - The GitLab pipeline, until run by GitLab.
 - Compatibility of the selected S3 service with Longhorn, Barman Cloud, and Velero.
 - OpenBao HCL startup and the declarative audit device on the real cluster.

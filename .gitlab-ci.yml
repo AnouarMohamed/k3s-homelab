@@ -2,7 +2,13 @@
 stages:
   - lint
   - validate
+  - test
+  - build
   - security
+  - deploy
+
+include:
+  - local: ci/sentinel.gitlab-ci.yml
 
 default:
   interruptible: true

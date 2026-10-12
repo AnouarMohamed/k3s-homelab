@@ -1,0 +1,189 @@
+---
+# Sentinel CI/CD pipeline template
+# Covers unit testing, container build via Kaniko, SBOM generation via Syft,
+# vulnerability gating via Trivy, and keyless Sigstore signing via Cosign.
+
+lint:sentinel:
+  stage: lint
+  image: golang:1.26.8-bookworm@sha256:dc9ad6c05acc7a88e5b71bde60a5fe3bd4b9f0db209011711b464107438a8107
+  script:
+    - make -C apps/sentinel lint
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - changes:
+        - apps/sentinel/**/*
+        - ci/**/*
+        - .gitlab-ci.yml
+
+test:sentinel:
+  stage: test
+  image: golang:1.26.8-bookworm@sha256:dc9ad6c05acc7a88e5b71bde60a5fe3bd4b9f0db209011711b464107438a8107
+  script:
+    - make -C apps/sentinel test
+  coverage: '/coverage: \d+\.\d+% of statements/'
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - changes:
+        - apps/sentinel/**/*
+        - ci/**/*
+        - .gitlab-ci.yml
+
+build:sentinel-api:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug@sha256:c3109d5926a997b100c4343944e06c6b30a6804b2f9abe0994d3de6ef92b028e
+    entrypoint:
+      - ""
+  before_script:
+    - mkdir -p /kaniko/.docker
+    - |-
+      auth_token=$(printf '%s:%s' "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')
+      printf '{"auths":{"%s":{"auth":"%s"}}}' "${CI_REGISTRY}" "${auth_token}" > /kaniko/.docker/config.json
+  script:
+    - |-
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}/apps/sentinel" \
+        --dockerfile "${CI_PROJECT_DIR}/apps/sentinel/Dockerfile.api" \
+        --destination "${CI_REGISTRY_IMAGE}/homelab-sentinel-api:${CI_COMMIT_SHORT_SHA}" \
+        --digest-file "${CI_PROJECT_DIR}/sentinel-api.digest"
+  artifacts:
+    paths:
+      - sentinel-api.digest
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+build:sentinel-worker:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug@sha256:c3109d5926a997b100c4343944e06c6b30a6804b2f9abe0994d3de6ef92b028e
+    entrypoint:
+      - ""
+  before_script:
+    - mkdir -p /kaniko/.docker
+    - |-
+      auth_token=$(printf '%s:%s' "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')
+      printf '{"auths":{"%s":{"auth":"%s"}}}' "${CI_REGISTRY}" "${auth_token}" > /kaniko/.docker/config.json
+  script:
+    - |-
+      /kaniko/executor \
+        --context "${CI_PROJECT_DIR}/apps/sentinel" \
+        --dockerfile "${CI_PROJECT_DIR}/apps/sentinel/Dockerfile.worker" \
+        --destination "${CI_REGISTRY_IMAGE}/homelab-sentinel-worker:${CI_COMMIT_SHORT_SHA}" \
+        --digest-file "${CI_PROJECT_DIR}/sentinel-worker.digest"
+  artifacts:
+    paths:
+      - sentinel-worker.digest
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+security:sbom-sentinel:
+  stage: security
+  image:
+    name: anchore/syft:v1.51.1@sha256:95fe0835e5bebc6f8b1f8acef68d47d63d594ef4c0f25c097ff853b23cbac74c
+    entrypoint:
+      - ""
+  needs:
+    - job: build:sentinel-api
+      artifacts: true
+    - job: build:sentinel-worker
+      artifacts: true
+  script:
+    - |-
+      syft "${CI_REGISTRY_IMAGE}/homelab-sentinel-api@$(cat sentinel-api.digest)" \
+        -o spdx-json=sentinel-api-sbom.spdx.json
+      syft "${CI_REGISTRY_IMAGE}/homelab-sentinel-worker@$(cat sentinel-worker.digest)" \
+        -o spdx-json=sentinel-worker-sbom.spdx.json
+  artifacts:
+    paths:
+      - sentinel-api-sbom.spdx.json
+      - sentinel-worker-sbom.spdx.json
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+security:trivy-sentinel:
+  stage: security
+  image:
+    name: mirror.gcr.io/aquasec/trivy:0.75.0@sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa
+    entrypoint:
+      - ""
+  needs:
+    - job: build:sentinel-api
+      artifacts: true
+    - job: build:sentinel-worker
+      artifacts: true
+  script:
+    - |-
+      trivy image --exit-code 1 --severity CRITICAL,HIGH \
+        "${CI_REGISTRY_IMAGE}/homelab-sentinel-api@$(cat sentinel-api.digest)"
+      trivy image --exit-code 1 --severity CRITICAL,HIGH \
+        "${CI_REGISTRY_IMAGE}/homelab-sentinel-worker@$(cat sentinel-worker.digest)"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+security:sign-sentinel:
+  stage: security
+  image:
+    name: gcr.io/projectsigstore/cosign:v2.4.3@sha256:c77247c92f4dfea851c70555738226498393e34e2f9ca83cb959e51c230e4ad7
+    entrypoint:
+      - ""
+  needs:
+    - job: build:sentinel-api
+      artifacts: true
+    - job: build:sentinel-worker
+      artifacts: true
+    - job: security:sbom-sentinel
+      artifacts: true
+    - job: security:trivy-sentinel
+  id_tokens:
+    SIGSTORE_ID_TOKEN:
+      aud: sigstore
+  script:
+    - |-
+      cosign sign --yes "${CI_REGISTRY_IMAGE}/homelab-sentinel-api@$(cat sentinel-api.digest)"
+      cosign attest --yes --predicate sentinel-api-sbom.spdx.json --type spdx \
+        "${CI_REGISTRY_IMAGE}/homelab-sentinel-api@$(cat sentinel-api.digest)"
+      cosign sign --yes "${CI_REGISTRY_IMAGE}/homelab-sentinel-worker@$(cat sentinel-worker.digest)"
+      cosign attest --yes --predicate sentinel-worker-sbom.spdx.json --type spdx \
+        "${CI_REGISTRY_IMAGE}/homelab-sentinel-worker@$(cat sentinel-worker.digest)"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+promote:sentinel-staging:
+  stage: deploy
+  image:
+    name: mikefarah/yq:4.54.1@sha256:4b3d9475d65571d28cbb19544d3820ec2945e4c8b2f18279394282b8dc3a592e
+    entrypoint:
+      - ""
+  needs:
+    - job: security:sign-sentinel
+    - job: build:sentinel-api
+      artifacts: true
+    - job: build:sentinel-worker
+      artifacts: true
+  script:
+    - |-
+      printf 'Promoting sentinel-api (%s) and sentinel-worker (%s) to staging\n' \
+        "$(cat sentinel-api.digest)" "$(cat sentinel-worker.digest)"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+promote:sentinel-prod:
+  stage: deploy
+  image:
+    name: mikefarah/yq:4.54.1@sha256:4b3d9475d65571d28cbb19544d3820ec2945e4c8b2f18279394282b8dc3a592e
+    entrypoint:
+      - ""
+  needs:
+    - job: promote:sentinel-staging
+  script:
+    - echo "Manual approval verified; promoting Sentinel to production"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
+...
+

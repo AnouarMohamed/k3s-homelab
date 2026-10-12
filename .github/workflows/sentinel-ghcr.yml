@@ -1,0 +1,131 @@
+---
+name: Sentinel GHCR Delivery
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - apps/sentinel/**
+      - .github/workflows/sentinel-ghcr.yml
+  pull_request:
+    branches:
+      - main
+    paths:
+      - apps/sentinel/**
+      - .github/workflows/sentinel-ghcr.yml
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  build-scan-sign:
+    name: Build, Scan, Attest, and Sign (GHCR)
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@29109295f81e9208d7d86ff1c6c12d2833863392 # v3.6.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514310cfbbe0ccf321453f017c57c2102ab0 # v3.10.0
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@d7d6bc7722e3daa8354c59f231a3f12149c3b49d # v3.8.1
+
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@fc46e5eb669145be11b222956cf04f2d3be85e96 # v0.17.9
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Determine Target Image Tags
+        id: meta
+        run: |
+          owner_lower=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          commit_sha="${{ github.sha }}"
+          short_sha="${commit_sha:0:8}"
+          echo "api_image=${{ env.REGISTRY }}/${owner_lower}/homelab-sentinel-api:${short_sha}" >> "$GITHUB_OUTPUT"
+          echo "worker_image=${{ env.REGISTRY }}/${owner_lower}/homelab-sentinel-worker:${short_sha}" >> "$GITHUB_OUTPUT"
+          is_push="false"
+          if [ "${{ github.event_name }}" = "push" ] && [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            is_push="true"
+          fi
+          echo "push_image=${is_push}" >> "$GITHUB_OUTPUT"
+
+      - name: Build & Push Sentinel API
+        id: build_api
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        with:
+          context: apps/sentinel
+          file: apps/sentinel/Dockerfile.api
+          platforms: linux/amd64,linux/arm64
+          push: ${{ steps.meta.outputs.push_image == 'true' }}
+          tags: ${{ steps.meta.outputs.api_image }}
+
+      - name: Build & Push Sentinel Worker
+        id: build_worker
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        with:
+          context: apps/sentinel
+          file: apps/sentinel/Dockerfile.worker
+          platforms: linux/amd64,linux/arm64
+          push: ${{ steps.meta.outputs.push_image == 'true' }}
+          tags: ${{ steps.meta.outputs.worker_image }}
+
+      - name: Generate SBOM (Sentinel API)
+        if: steps.meta.outputs.push_image == 'true'
+        run: |
+          api_ref="${{ steps.meta.outputs.api_image }}@${{ steps.build_api.outputs.digest }}"
+          syft "${api_ref}" -o spdx-json=api-sbom.spdx.json
+
+      - name: Generate SBOM (Sentinel Worker)
+        if: steps.meta.outputs.push_image == 'true'
+        run: |
+          worker_ref="${{ steps.meta.outputs.worker_image }}@${{ steps.build_worker.outputs.digest }}"
+          syft "${worker_ref}" -o spdx-json=worker-sbom.spdx.json
+
+      - name: Vulnerability Scan (Sentinel API)
+        if: steps.meta.outputs.push_image == 'true'
+        uses: aquasecurity/trivy-action@18f2510ee396bbfd6cc5110a174092b3a8eb4cf7 # v0.29.0
+        with:
+          image-ref: ${{ steps.meta.outputs.api_image }}@${{ steps.build_api.outputs.digest }}
+          format: table
+          exit-code: 1
+          severity: CRITICAL,HIGH
+
+      - name: Vulnerability Scan (Sentinel Worker)
+        if: steps.meta.outputs.push_image == 'true'
+        uses: aquasecurity/trivy-action@18f2510ee396bbfd6cc5110a174092b3a8eb4cf7 # v0.29.0
+        with:
+          image-ref: ${{ steps.meta.outputs.worker_image }}@${{ steps.build_worker.outputs.digest }}
+          format: table
+          exit-code: 1
+          severity: CRITICAL,HIGH
+
+      - name: Cosign Sign & Attest (Keyless OIDC)
+        if: steps.meta.outputs.push_image == 'true'
+        run: |
+          api_ref="${{ steps.meta.outputs.api_image }}@${{ steps.build_api.outputs.digest }}"
+          worker_ref="${{ steps.meta.outputs.worker_image }}@${{ steps.build_worker.outputs.digest }}"
+          cosign sign --yes "${api_ref}"
+          cosign attest --yes --predicate api-sbom.spdx.json --type spdx "${api_ref}"
+          cosign sign --yes "${worker_ref}"
+          cosign attest --yes --predicate worker-sbom.spdx.json --type spdx "${worker_ref}"
+...
+
