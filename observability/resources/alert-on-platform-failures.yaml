@@ -1,0 +1,94 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-platform-alerts
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: homelab-platform-alerts
+    app.kubernetes.io/component: alerting
+    app.kubernetes.io/part-of: observability
+    release: monitoring
+spec:
+  groups:
+    - name: homelab.availability
+      rules:
+        - alert: Watchdog
+          expr: vector(1)
+          labels:
+            severity: none
+          annotations:
+            summary: Alert pipeline heartbeat
+            runbook_url: ${CONFIG_GITLAB_REPOSITORY_URL}/-/blob/main/docs/runbooks/respond-to-platform-alerts.md#watchdog
+        - alert: NodeDown
+          expr: up{job=~".*node-exporter.*"} == 0
+          for: 5m
+          labels:
+            severity: critical
+          annotations:
+            summary: Node exporter target is unavailable
+            runbook_url: ${CONFIG_GITLAB_REPOSITORY_URL}/-/blob/main/docs/runbooks/respond-to-platform-alerts.md#node-down
+        - alert: EtcdLeaderChanges
+          expr: increase(etcd_server_leader_changes_seen_total[15m]) > 2
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: Embedded etcd leadership is unstable
+            runbook_url: ${CONFIG_GITLAB_REPOSITORY_URL}/-/blob/main/docs/runbooks/respond-to-platform-alerts.md#etcd-leader-changes
+        - alert: NodeDiskPressure
+          expr: kube_node_status_condition{condition="DiskPressure",status="true"} == 1
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: A node reports disk pressure
+            runbook_url: ${CONFIG_GITLAB_REPOSITORY_URL}/-/blob/main/docs/runbooks/respond-to-platform-alerts.md#disk-pressure
+        - alert: CertificateExpiringSoon
+          expr: certmanager_certificate_expiration_timestamp_seconds - time() < 1209600
+          for: 1h
+          labels:
+            severity: warning
+          annotations:
+            summary: A managed certificate expires within fourteen days
+            runbook_url: ${CONFIG_GITLAB_REPOSITORY_URL}/-/blob/main/docs/runbooks/respond-to-platform-alerts.md#certificate-expiry
+        - alert: ArgoApplicationOutOfSync
+          expr: argocd_app_info{sync_status!="Synced"} == 1
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: An Argo CD application remains out of sync
+            runbook_url: ${CONFIG_GITLAB_REPOSITORY_URL}/-/blob/main/docs/runbooks/respond-to-platform-alerts.md#argo-cd-out-of-sync
+        - alert: BackupJobFailed
+          expr: max by (namespace, job_name) (kube_job_status_failed{job_name=~".*(backup|snapshot).*"}) > 0
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: A backup or snapshot job failed
+            runbook_url: ${CONFIG_GITLAB_REPOSITORY_URL}/-/blob/main/docs/runbooks/respond-to-platform-alerts.md#backup-failure
+        - alert: LonghornVolumeDegraded
+          expr: longhorn_volume_robustness == 2
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: A Longhorn volume is degraded
+            runbook_url: ${CONFIG_GITLAB_REPOSITORY_URL}/-/blob/main/docs/runbooks/respond-to-platform-alerts.md#longhorn-degraded
+        - alert: ContainerRestartBurst
+          expr: increase(kube_pod_container_status_restarts_total[15m]) > 3
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: A container restarted repeatedly
+            runbook_url: ${CONFIG_GITLAB_REPOSITORY_URL}/-/blob/main/docs/runbooks/respond-to-platform-alerts.md#container-restarts
+        - alert: KubernetesApiHighLatency
+          expr: histogram_quantile(0.99, sum by (le) (rate(apiserver_request_duration_seconds_bucket{verb!~"WATCH|WATCHLIST"}[5m]))) > 1
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Kubernetes API p99 latency exceeds one second
+            runbook_url: ${CONFIG_GITLAB_REPOSITORY_URL}/-/blob/main/docs/runbooks/respond-to-platform-alerts.md#api-latency

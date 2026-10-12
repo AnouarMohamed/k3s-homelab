@@ -99,11 +99,19 @@ before later phases begin.
 | OpenBao | `2.7.1` | OCI index digest `sha256:6d2b93856e3fcf7b18ad855a0b51eaba474dc8b79cf554379ea32034797d2acf` |
 | External Secrets chart | `2.12.0` | Official release archive SHA-256 `4b584136b7311c0af8c8719d377cc5b1a7ef12c2de18f1fdb30614eab75bdeb3`; app `v2.12.0` |
 | External Secrets | `v2.12.0` | OCI index digest `sha256:7a3c4f7e038fa0f86a3172da19b9388f3f4d846e87e9994ee3474c5b72a9330d` |
+| kube-prometheus-stack chart | `92.3.0` | Official release archive SHA-256 `48399b911fa91b353e0c3d5e32c1cb7a67a168566549723553154ffd7be5d1fa`; app `v0.94.1` |
+| Prometheus blackbox exporter chart | `11.20.0` | Official release archive SHA-256 `e341b17f202c7ff95cae056d23a481d8080aa3dc1dbaaa5d68296595b8b90ace`; app `v0.29.0` |
+| Loki chart | `7.3.0` | Official release archive SHA-256 `04a339f712d770a1f599f05fc0a5a3cde18e43914e49ae6a49f7171be86bcc09`; app `3.6.12` |
+| Alloy chart | `1.13.1` | Official release archive SHA-256 `6c2b7df23e39438bb11f1e1fcf19eb9eb7c8bfeab7d49b7c975b6212abd0f99a`; app `v1.20.1` |
+| Tempo chart | `1.24.4` | Official release archive SHA-256 `f1f6e318d5bca3b5097cb676077796cdf8135beb2c1f71c4d14614ccf9b0081b`; app `2.9.0` |
+| OpenTelemetry Collector chart | `0.175.1` | Official release archive SHA-256 `33996399f5d831193603f8a56ed46b7cd3f012eeb6df4d5046c5b560a554e21d`; app `0.161.0` |
+| Sloth chart | `0.16.0` | Official release archive SHA-256 `616acb580eefc2e9836cc1b430cac6d424e0e4210130786b6ec883657217c6db` |
 
 All remaining later-phase chart, provider, collection, application image, and CI image
-versions are `VERIFY`. Before implementing their phase I will verify them against an official chart
-index, release, registry, or `helm show chart/values`, replace `VERIFY` with an exact pin,
-and record the evidence. An unverified dependency is not eligible for a completed phase.
+versions are `VERIFY`. Before implementing their phase I will verify them against an
+official chart index, release, registry, or `helm show chart/values`, replace `VERIFY`
+with an exact pin, and record the evidence. An unverified dependency is not eligible
+for a completed phase.
 
 ## Phase plan
 

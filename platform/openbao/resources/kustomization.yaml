@@ -19,5 +19,6 @@ configMapGenerator:
       - policy-external-dns.hcl=policies/external-dns.hcl
       - policy-external-secrets.hcl=policies/external-secrets.hcl
       - policy-longhorn-system.hcl=policies/longhorn-system.hcl
+      - policy-monitoring.hcl=policies/monitoring.hcl
       - policy-storage-verification.hcl=policies/storage-verification.hcl
       - policy-velero.hcl=policies/velero.hcl

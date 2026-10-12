@@ -1,0 +1,9 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - restrict-monitoring-network.yaml
+  - alert-on-platform-failures.yaml
+  - monitor-platform-components.yaml
+  - measure-platform-slo.yaml
+  - provide-platform-dashboards.yaml

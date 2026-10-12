@@ -1,0 +1,28 @@
+---
+apiVersion: sloth.slok.dev/v1
+kind: PrometheusServiceLevel
+metadata:
+  name: prometheus-api
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: prometheus-api-slo
+    app.kubernetes.io/component: slo
+    app.kubernetes.io/part-of: observability
+spec:
+  service: prometheus-api
+  labels:
+    owner: platform
+  slos:
+    - name: availability
+      objective: 99.9
+      description: Prometheus API requests succeed over a rolling thirty-day period.
+      sli:
+        events:
+          errorQuery: sum(rate(prometheus_http_requests_total{code=~"5.."}[{{.window}}]))
+          totalQuery: sum(rate(prometheus_http_requests_total[{{.window}}]))
+      alerting:
+        name: PrometheusApiAvailabilityBudgetBurn
+        labels:
+          severity: critical
+        annotations:
+          runbook_url: ${CONFIG_GITLAB_REPOSITORY_URL}/-/blob/main/docs/runbooks/respond-to-platform-alerts.md#slo-budget-burn

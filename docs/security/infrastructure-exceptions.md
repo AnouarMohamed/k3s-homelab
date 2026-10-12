@@ -18,9 +18,21 @@ chart. Application workloads using Longhorn volumes receive no privilege excepti
 Longhorn's generated system workloads do not all expose application-style HTTP probes
 or accept every baseline security-context field; the repository does not claim they do.
 
+## Node exporter
+
+| Workload | Required exception | Reason | Compensating controls |
+| --- | --- | --- | --- |
+| `monitoring-prometheus-node-exporter` | host network, host PID, and read-only host filesystem mounts | Node and filesystem metrics must be observed from the host namespaces | Exact chart workload only, digest-pinned image, no public Service, dropped capabilities, read-only root filesystem, resource bounds, probes, and namespace network policy |
+
+The `monitoring` namespace therefore enforces the privileged PSA profile while auditing
+and warning against restricted violations. This exception does not permit other
+monitoring workloads to add host access or privileges. Phase 8 binds the policy
+exception to the exact node-exporter controller and image.
+
 ## Review and expiry
 
-Re-check these exceptions on every Longhorn upgrade with `helm show values`, rendered
+Re-check these exceptions on every Longhorn or kube-prometheus-stack upgrade with
+`helm show values`, rendered
 manifests, and the pinned CRDs. Remove an exception when upstream supports the baseline.
 Phase 8 must bind Kyverno exclusions to exact namespace, controller, and image patterns;
 a wildcard exemption for `longhorn-system` is not acceptable.

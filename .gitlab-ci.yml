@@ -71,6 +71,25 @@ validate:repository:
       sed 's#tofu_.*_linux_amd64.tar.gz#/tmp/tofu.tgz#' |
       sha256sum --check --strict
     - tar --extract --gzip --file /tmp/tofu.tgz --directory "${GOBIN}" tofu
+    - prometheus_archive="prometheus-${PROMETHEUS_VERSION}.linux-amd64.tar.gz"
+    - prometheus_directory="prometheus-${PROMETHEUS_VERSION}.linux-amd64"
+    - prometheus_url="https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}"
+    - |-
+      curl --fail --location --silent --show-error --retry 5 --retry-all-errors \
+      --output "/tmp/${prometheus_archive}" \
+      "${prometheus_url}/${prometheus_archive}"
+    - |-
+      curl --fail --location --silent --show-error --retry 5 --retry-all-errors \
+      --output /tmp/prometheus-sha256sums.txt \
+      "${prometheus_url}/sha256sums.txt"
+    - |-
+      grep "  ${prometheus_archive}$" /tmp/prometheus-sha256sums.txt | \
+      sed "s#${prometheus_archive}#/tmp/${prometheus_archive}#" | \
+      sha256sum --check --strict
+    - |-
+      tar --extract --gzip --file "/tmp/${prometheus_archive}" --directory /tmp \
+      "${prometheus_directory}/promtool"
+    - install --mode 0755 "/tmp/${prometheus_directory}/promtool" "${GOBIN}/promtool"
     - export PATH="${GOBIN}:${PATH}"
   script:
     - scripts/check-forbidden-files.sh
@@ -80,6 +99,9 @@ validate:repository:
     - scripts/validate-cilium.sh
     - scripts/validate-gitops.sh
     - scripts/validate-edge.sh
+    - scripts/validate-storage.sh
+    - scripts/validate-secrets.sh
+    - scripts/validate-observability.sh
 
 security:gitleaks:
   stage: security

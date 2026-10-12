@@ -176,6 +176,57 @@ case "${relative_path}" in
       --values "${repository_root}/platform/external-secrets/configure-external-secrets.yaml" | \
       bash "${repository_root}/scripts/harden-runtime-secret-render.sh"
     ;;
+  observability/prometheus-stack)
+    helm template monitoring "${repository_root}/.cache/phase7/kube-prometheus-stack" \
+      --namespace monitoring \
+      --include-crds \
+      --skip-tests \
+      --values "${repository_root}/observability/prometheus-stack/configure-prometheus-stack.yaml" | \
+      bash "${repository_root}/scripts/harden-observability-render.sh"
+    ;;
+  observability/blackbox)
+    helm template blackbox "${repository_root}/.cache/phase7/blackbox-exporter" \
+      --namespace monitoring \
+      --skip-tests \
+      --values "${repository_root}/observability/blackbox/configure-blackbox-exporter.yaml" | \
+      bash "${repository_root}/scripts/harden-runtime-secret-render.sh"
+    ;;
+  observability/loki)
+    helm template loki "${repository_root}/.cache/phase7/loki" \
+      --namespace monitoring \
+      --skip-tests \
+      --values "${repository_root}/observability/loki/configure-loki.yaml" | \
+      bash "${repository_root}/scripts/harden-runtime-secret-render.sh"
+    ;;
+  observability/alloy)
+    helm template alloy "${repository_root}/.cache/phase7/alloy" \
+      --namespace monitoring \
+      --skip-tests \
+      --values "${repository_root}/observability/alloy/configure-alloy.yaml" | \
+      bash "${repository_root}/scripts/harden-runtime-secret-render.sh"
+    ;;
+  observability/tempo)
+    helm template tempo "${repository_root}/.cache/phase7/tempo" \
+      --namespace monitoring \
+      --skip-tests \
+      --values "${repository_root}/observability/tempo/configure-tempo.yaml" | \
+      bash "${repository_root}/scripts/harden-runtime-secret-render.sh"
+    ;;
+  observability/otel-collector)
+    helm template otel-collector "${repository_root}/.cache/phase7/otel-collector" \
+      --namespace monitoring \
+      --skip-tests \
+      --values "${repository_root}/observability/otel-collector/configure-otel-collector.yaml" | \
+      bash "${repository_root}/scripts/harden-runtime-secret-render.sh"
+    ;;
+  observability/sloth)
+    helm template sloth "${repository_root}/.cache/phase7/sloth" \
+      --namespace monitoring \
+      --include-crds \
+      --skip-tests \
+      --values "${repository_root}/observability/sloth/configure-sloth.yaml" | \
+      bash "${repository_root}/scripts/harden-observability-render.sh"
+    ;;
   clusters/homelab/bootstrap | clusters/homelab/bootstrap/* | apps/*/overlays/prod | platform/* | observability/* | policies/*)
     test -f "${source_path}/kustomization.yaml" || test -f "${source_path}/kustomization.yml"
     kustomize build --enable-alpha-plugins --enable-exec "${source_path}" | \

@@ -1,0 +1,164 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: cilium
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: platform-components
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: observability
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - kube-system
+  selector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values:
+          - cilium-agent
+          - cilium-envoy
+          - cilium-operator
+          - hubble
+          - hubble-relay
+  endpoints:
+    - port: metrics
+      interval: 30s
+    - port: hubble-metrics
+      interval: 30s
+    - port: envoy-metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: argocd
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: platform-components
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: observability
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - argocd
+  selector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: In
+        values:
+          - argocd-metrics
+          - argocd-applicationset-controller
+          - argocd-repo-server-metrics
+          - argocd-server-metrics
+  endpoints:
+    - port: http-metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: longhorn
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: platform-components
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: observability
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - longhorn-system
+  selector:
+    matchLabels:
+      app: longhorn-manager
+  endpoints:
+    - port: manager
+      path: /metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: openbao
+  namespace: openbao
+  labels:
+    app.kubernetes.io/name: platform-components
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: observability
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - openbao
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: openbao
+  endpoints:
+    - port: http
+      scheme: https
+      path: /v1/sys/metrics
+      params:
+        format:
+          - prometheus
+      tlsConfig:
+        ca:
+          secret:
+            name: openbao-server-tls
+            key: ca.crt
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: platform-controllers
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: platform-components
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: observability
+    release: monitoring
+spec:
+  namespaceSelector:
+    matchNames:
+      - cert-manager
+      - cnpg-system
+      - external-dns
+      - external-secrets
+      - velero
+  selector:
+    matchExpressions:
+      - key: app.kubernetes.io/name
+        operator: Exists
+  podMetricsEndpoints:
+    - port: metrics
+      interval: 30s
+    - port: http-metrics
+      interval: 30s
+    - port: http-monitoring
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Probe
+metadata:
+  name: platform-health
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: platform-components
+    app.kubernetes.io/component: metrics
+    app.kubernetes.io/part-of: observability
+    release: monitoring
+spec:
+  interval: 30s
+  module: http_2xx
+  prober:
+    url: blackbox-prometheus-blackbox-exporter.monitoring.svc:9115
+  targets:
+    staticConfig:
+      static:
+        - http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090/-/healthy
+        - http://loki.monitoring.svc:3100/ready
+        - http://tempo.monitoring.svc:3100/ready

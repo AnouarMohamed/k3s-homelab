@@ -1,0 +1,53 @@
+---
+apiVersion: external-secrets.io/v1
+kind: SecretStore
+metadata:
+  name: openbao
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: openbao
+    app.kubernetes.io/component: secret-store
+    app.kubernetes.io/part-of: observability
+spec:
+  provider:
+    vault:
+      server: https://openbao-active.openbao.svc:8200
+      path: secret
+      version: v2
+      caProvider:
+        type: Secret
+        namespace: openbao
+        name: openbao-server-tls
+        key: ca.crt
+      auth:
+        kubernetes:
+          mountPath: kubernetes
+          role: runtime-argocd
+          serviceAccountRef:
+            name: openbao-auth
+            audiences:
+              - openbao
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: argocd-notifications
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: argocd-notifications
+    app.kubernetes.io/component: notification
+    app.kubernetes.io/part-of: observability
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: SecretStore
+    name: openbao
+  target:
+    name: argocd-notifications-secret
+    creationPolicy: Owner
+    deletionPolicy: Retain
+  data:
+    - secretKey: webhook-url
+      remoteRef:
+        key: argocd/notifications
+        property: webhook-url

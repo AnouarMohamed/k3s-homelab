@@ -1,0 +1,79 @@
+deploymentMode: SingleBinary
+loki:
+  auth_enabled: false
+  image:
+    tag: 3.6.12
+    digest: sha256:2483b71b28b15dee230f85512cae2b20c4b5f6e98a6eabe686cbccfa5ea3ba4a
+  commonConfig:
+    replication_factor: 1
+  schemaConfig:
+    configs:
+      - from: '2024-01-01'
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+  storage:
+    type: filesystem
+  limits_config:
+    retention_period: 168h
+    allow_structured_metadata: true
+  compactor:
+    retention_enabled: true
+    delete_request_store: filesystem
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 30
+    timeoutSeconds: 3
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: http-metrics
+    initialDelaySeconds: 15
+    timeoutSeconds: 3
+singleBinary:
+  replicas: 1
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+    limits:
+      cpu: '1'
+      memory: 1Gi
+  persistence:
+    enabled: true
+    storageClass: longhorn
+    size: 20Gi
+    whenDeleted: Retain
+    whenScaled: Retain
+    enableStatefulSetAutoDeletePVC: false
+read:
+  replicas: 0
+write:
+  replicas: 0
+backend:
+  replicas: 0
+gateway:
+  enabled: false
+lokiCanary:
+  enabled: false
+chunksCache:
+  enabled: false
+resultsCache:
+  enabled: false
+sidecar:
+  rules:
+    enabled: false
+monitoring:
+  serviceMonitor:
+    enabled: true
+    labels:
+      release: monitoring
+  selfMonitoring:
+    enabled: false
+test:
+  enabled: false

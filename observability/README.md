@@ -1,10 +1,10 @@
-# Observability Stack
+# Observability
 
-This directory contains manifests for the observability stack deployed via Argo CD, including:
+This stack keeps metrics, logs, traces, probes, dashboards, SLOs, and notifications in
+Git. Prometheus, Alertmanager, and Grafana come from kube-prometheus-stack; Alloy sends
+pod logs to Loki, and the OpenTelemetry Collector sends traces to Tempo.
 
-- Prometheus Stack (Prometheus, Grafana, Alertmanager)
-- Loki (logging)
-- Tempo (tracing)
-- Associated dashboards and alerting rules
-
-Each component should have its own subdirectory with Kustomize bases and overlays.
+Argo CD renders each pinned chart through the repository renderer. Run
+`make validate-observability` for deterministic Helm rendering, CRD schema validation,
+Prometheus rule checks, dashboard JSON parsing, and workload policy checks. Runtime
+signal delivery remains `PENDING HARDWARE` until the verification ledger is completed.

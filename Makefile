@@ -7,7 +7,7 @@ ANSIBLE_INVENTORY := $(REPOSITORY_ROOT)/infra/ansible/inventory/homelab.py
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools lint ansible-syntax ansible-templates phase2-deps validate-cni phase3-deps validate-gitops phase4-deps validate-edge phase5-deps validate-storage phase6-deps validate-secrets validate security bootstrap bootstrap-nodes upgrade-k3s reset \
+.PHONY: help tools lint ansible-syntax ansible-templates phase2-deps validate-cni phase3-deps validate-gitops phase4-deps validate-edge phase5-deps validate-storage phase6-deps validate-secrets phase7-deps validate-observability validate security bootstrap bootstrap-nodes upgrade-k3s reset \
 	bootstrap-cni bootstrap-gitops bootstrap-platform test test-storage-reschedule tofu-init tofu-plan teardown
 
 help: ## Show all supported targets
@@ -65,7 +65,13 @@ phase6-deps: ## Fetch checksum-verified runtime-secret charts
 validate-secrets: ## Validate OpenBao, External Secrets, TLS, policies, and stores
 	@scripts/validate-secrets.sh
 
-validate: ansible-syntax ansible-templates validate-cni validate-gitops validate-edge validate-storage validate-secrets ## Validate repository policy and Kubernetes manifests
+phase7-deps: ## Fetch checksum-verified observability charts
+	@scripts/fetch-phase7-dependencies.sh
+
+validate-observability: ## Validate metrics, logs, traces, dashboards, alerts, and SLOs
+	@scripts/validate-observability.sh
+
+validate: ansible-syntax ansible-templates validate-cni validate-gitops validate-edge validate-storage validate-secrets validate-observability ## Validate repository policy and Kubernetes manifests
 	@scripts/check-forbidden-files.sh
 	@scripts/check-private-values.sh
 	@scripts/check-pins.sh

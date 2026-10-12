@@ -1,0 +1,39 @@
+image:
+  tag: v0.29.0
+  digest: sha256:9613f2884689b6fad9f1939f6a3b0388c93a022cfaededb19545b329b5c83dea
+replicas: 2
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchLabels:
+            app.kubernetes.io/name: prometheus-blackbox-exporter
+            app.kubernetes.io/instance: blackbox
+        topologyKey: kubernetes.io/hostname
+resources:
+  requests:
+    cpu: 20m
+    memory: 32Mi
+  limits:
+    cpu: 200m
+    memory: 128Mi
+podDisruptionBudget:
+  minAvailable: 1
+serviceMonitor:
+  enabled: true
+  defaults:
+    labels:
+      release: monitoring
+config:
+  modules:
+    http_2xx:
+      prober: http
+      timeout: 5s
+      http:
+        preferred_ip_protocol: ip4
+        follow_redirects: true
+        valid_http_versions:
+          - HTTP/1.1
+          - HTTP/2.0
+networkPolicy:
+  enabled: true

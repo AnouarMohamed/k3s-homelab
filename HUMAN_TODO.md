@@ -38,7 +38,15 @@ block repository implementation.
   and keep the initialization record and root token encrypted offline.
 - [ ] Complete one supervised runtime-secret rotation and break-glass exercise; destroy
   the temporary operator-token file after the non-renewable session ends.
-- [ ] Configure the Alertmanager notification destination as an OpenBao secret.
+- [ ] Using the short-lived write-only OpenBao operator workflow, store the
+  Alertmanager webhook as property `webhook-url` at
+  `secret/monitoring/alertmanager-notification`. Pass the value on standard input or
+  from a protected file; do not put it in shell history.
+- [ ] Store the separate Argo CD notification webhook as property `webhook-url` at
+  `secret/argocd/notifications`, then revoke the temporary write token.
+- [ ] Store a non-default Grafana break-glass username and generated password as
+  properties `admin-user` and `admin-password` at `secret/monitoring/grafana-admin`.
+  Keep the password in the recovery vault and never pass it as a shell argument.
 - [ ] Enroll administrator MFA in Keycloak and test the local Argo CD/Grafana
   break-glass accounts before enabling SSO-only access.
 

@@ -393,6 +393,100 @@
         "EXTERNAL_SECRETS_IMAGE=(?<depName>ghcr\\.io/external-secrets/external-secrets):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
       ],
       "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^observability/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "KUBE_PROMETHEUS_STACK_CHART_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "prometheus-community/helm-charts",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^kube-prometheus-stack-(?<version>.*)$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^observability/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "BLACKBOX_EXPORTER_CHART_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "prometheus-community/helm-charts",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^prometheus-blackbox-exporter-(?<version>.*)$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^observability/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "LOKI_CHART_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "grafana/helm-charts",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^helm-loki-(?<version>.*)$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^observability/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "ALLOY_CHART_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "grafana/helm-charts",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^alloy-(?<version>.*)$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^observability/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "TEMPO_CHART_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "grafana/helm-charts",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^tempo-(?<version>.*)$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^observability/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "OTEL_COLLECTOR_CHART_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "open-telemetry/opentelemetry-helm-charts",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^opentelemetry-collector-(?<version>.*)$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^observability/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "SLOTH_CHART_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "slok/sloth",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^sloth-helm-chart-(?<version>.*)$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^observability/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "[A-Z0-9_]+_IMAGE=(?<depName>(?:docker\\.io|quay\\.io|ghcr\\.io|registry\\.k8s\\.io)/[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
     }
   ],
   "packageRules": [

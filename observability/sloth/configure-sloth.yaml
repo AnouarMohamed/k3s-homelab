@@ -1,0 +1,25 @@
+image:
+  tag: v0.16.0@sha256:f0f0075b0d45c1cf684e92947508cc1d5bf573925f785f803a439b2306c8b9a5
+commonPlugins:
+  enabled: false
+sloth:
+  defaultSloPeriod: 30d
+  logger: json
+metrics:
+  enabled: true
+  prometheusLabels:
+    release: monitoring
+securityContext:
+  pod:
+    runAsNonRoot: true
+    runAsUser: 10001
+    runAsGroup: 10001
+    fsGroup: 10001
+    seccompProfile:
+      type: RuntimeDefault
+  container:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true

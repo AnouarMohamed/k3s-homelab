@@ -84,3 +84,26 @@ flowchart LR
 SOPS cannot depend on OpenBao because it establishes the services needed to start and
 recover OpenBao. Runtime consumers receive short-lived identities and cannot write
 secret data. Manual unseal remains an explicit availability tradeoff.
+
+## Phase 7 telemetry flow
+
+```mermaid
+flowchart LR
+  Nodes[Nodes and controllers] --> Prometheus[Prometheus]
+  Probes[Blackbox probes] --> Prometheus
+  Pods[Pod logs] --> Alloy[Grafana Alloy]
+  Alloy --> Loki[Loki]
+  Apps[Instrumented applications] --> OTel[OpenTelemetry Collector]
+  OTel --> Tempo[Tempo]
+  Prometheus --> Grafana[Grafana]
+  Loki --> Grafana
+  Tempo --> Grafana
+  Prometheus --> Alertmanager[Alertmanager]
+  OpenBao[OpenBao notification destinations] --> ESO[External Secrets]
+  ESO --> Alertmanager
+  ESO --> ArgoNotify[Argo CD notifications]
+```
+
+The telemetry backends are internal only. Their Longhorn volumes improve local
+availability, but telemetry remains disposable relative to application and backup data.
+Alertmanager and Argo CD receive distinct notification destinations from OpenBao.

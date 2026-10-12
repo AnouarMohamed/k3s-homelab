@@ -1,0 +1,29 @@
+---
+apiVersion: external-secrets.io/v1
+kind: SecretStore
+metadata:
+  name: openbao
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: openbao
+    app.kubernetes.io/component: secret-store
+    app.kubernetes.io/part-of: observability
+spec:
+  provider:
+    vault:
+      server: https://openbao-active.openbao.svc:8200
+      path: secret
+      version: v2
+      caProvider:
+        type: Secret
+        namespace: openbao
+        name: openbao-server-tls
+        key: ca.crt
+      auth:
+        kubernetes:
+          mountPath: kubernetes
+          role: runtime-monitoring
+          serviceAccountRef:
+            name: openbao-auth
+            audiences:
+              - openbao

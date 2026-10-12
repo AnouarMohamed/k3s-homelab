@@ -20,4 +20,15 @@ resources:
   - deploy-openbao.yaml
   - deploy-external-secrets.yaml
   - deploy-runtime-secret-stores.yaml
+  - deploy-monitoring-namespace.yaml
+  - deploy-monitoring-secrets.yaml
+  - deploy-prometheus-stack.yaml
+  - deploy-blackbox-exporter.yaml
+  - deploy-loki.yaml
+  - deploy-alloy.yaml
+  - deploy-tempo.yaml
+  - deploy-otel-collector.yaml
+  - deploy-sloth.yaml
+  - deploy-observability-resources.yaml
+  - deploy-argocd-notifications.yaml
   - generate-applications.yaml

@@ -82,7 +82,57 @@ dex:
   enabled: false
 
 notifications:
-  enabled: false
+  enabled: true
+  image:
+    repository: quay.io/argoproj/argocd
+    tag: v3.5.4@sha256:49dff79439bb38b1b942b19a113fe1fec7e6b6c671ddf9fe6a4a7c46bde0b77b
+    imagePullPolicy: IfNotPresent
+  secret:
+    create: false
+    name: argocd-notifications-secret
+  metrics:
+    enabled: true
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+  readinessProbe:
+    enabled: true
+  livenessProbe:
+    enabled: true
+  notifiers:
+    service.webhook.platform: |-
+      url: $webhook-url
+      headers:
+        - name: Content-Type
+          value: application/json
+  templates:
+    template.platform-sync-status: |-
+      webhook:
+        platform:
+          method: POST
+          body: |
+            {"application":"{{.app.metadata.name}}","sync":"{{.app.status.sync.status}}","health":"{{.app.status.health.status}}"}
+  triggers:
+    trigger.on-platform-degraded: |-
+      - description: Application health is degraded.
+        send:
+          - platform-sync-status
+        when: app.status.health.status == 'Degraded'
+    trigger.on-platform-out-of-sync: |-
+      - description: Application remains out of sync.
+        send:
+          - platform-sync-status
+        when: app.status.sync.status == 'OutOfSync'
+  subscriptions:
+    - recipients:
+        - platform
+      triggers:
+        - on-platform-degraded
+        - on-platform-out-of-sync
 
 server:
   replicas: 2

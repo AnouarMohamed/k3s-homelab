@@ -145,7 +145,39 @@ entry without recording the value, then restart voters one at a time and manuall
 unseal each. Initialization, unseal, Raft failover, audit persistence, authentication,
 rotation, revocation, and recovery remain unverified until Anouar records those results.
 
-## Phases 7–12
+## Phase 7 — Observability
+
+Status: **PENDING HARDWARE**
+
+```bash
+kubectl -n monitoring get pods,pvc -o wide
+kubectl -n monitoring get prometheus,alertmanager,prometheusrules
+kubectl -n monitoring get servicemonitors,podmonitors,probes
+kubectl -n monitoring get prometheusservicelevels.sloth.slok.dev
+kubectl -n monitoring get externalsecret alertmanager-notification
+kubectl -n argocd get externalsecret argocd-notifications
+kubectl -n monitoring port-forward service/monitoring-kube-prometheus-prometheus 9090:9090
+curl --fail --show-error http://127.0.0.1:9090/-/ready
+curl --fail --show-error 'http://127.0.0.1:9090/api/v1/query?query=ALERTS%7Balertname%3D%22Watchdog%22%7D'
+kubectl -n monitoring exec statefulset/loki -- wget -qO- http://127.0.0.1:3100/ready
+kubectl -n monitoring exec statefulset/tempo -- wget -qO- http://127.0.0.1:3200/ready
+kubectl -n monitoring logs deployment/alloy --all-containers --tail=100
+kubectl -n monitoring logs deployment/otel-collector-opentelemetry-collector --tail=100
+kubectl -n monitoring get configmap homelab-platform-dashboards
+kubectl -n monitoring get alertmanagerconfig platform -o yaml
+```
+
+Expected: every controller is Ready and spread where configured; all PVCs are Bound;
+Prometheus has two replicas and Alertmanager has three; targets and rule groups are
+healthy; `Watchdog` is firing and reaches the configured receiver; both ExternalSecrets
+are Ready without exposing their values; Loki and Tempo return ready; Alloy sends pod
+logs to Loki; an OTLP test trace reaches Tempo; all seven dashboards load with working
+data sources; and blackbox probes succeed. Measure storage growth for one week before
+changing retention. Notification delivery, dashboard content, log collection, trace
+delivery, probe results, and SLO evaluation remain unverified until Anouar records the
+observations.
+
+## Phases 8–12
 
 Status: **PENDING HARDWARE**
 

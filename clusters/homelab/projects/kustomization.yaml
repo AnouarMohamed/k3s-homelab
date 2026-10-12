@@ -9,3 +9,4 @@ resources:
   - restrict-platform-project.yaml
   - restrict-storage-project.yaml
   - restrict-runtime-secrets-project.yaml
+  - restrict-observability-project.yaml

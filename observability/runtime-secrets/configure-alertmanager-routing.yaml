@@ -1,0 +1,26 @@
+---
+apiVersion: monitoring.coreos.com/v1alpha1
+kind: AlertmanagerConfig
+metadata:
+  name: platform
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: alertmanager
+    app.kubernetes.io/component: routing
+    app.kubernetes.io/part-of: observability
+spec:
+  route:
+    receiver: platform-webhook
+    groupBy:
+      - alertname
+      - namespace
+    groupWait: 30s
+    groupInterval: 5m
+    repeatInterval: 4h
+  receivers:
+    - name: platform-webhook
+      webhookConfigs:
+        - sendResolved: true
+          urlSecret:
+            name: alertmanager-notification
+            key: webhook-url

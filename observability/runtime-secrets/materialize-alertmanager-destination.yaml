@@ -1,0 +1,24 @@
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: alertmanager-notification
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: alertmanager-notification
+    app.kubernetes.io/component: notification
+    app.kubernetes.io/part-of: observability
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: SecretStore
+    name: openbao
+  target:
+    name: alertmanager-notification
+    creationPolicy: Owner
+    deletionPolicy: Retain
+  data:
+    - secretKey: webhook-url
+      remoteRef:
+        key: monitoring/alertmanager-notification
+        property: webhook-url

@@ -20,7 +20,8 @@ for root in "${manifest_roots[@]}"; do
         "${repository_root}/platform/openbao/"* | \
         "${repository_root}/platform/external-secrets/"* | \
         "${repository_root}/platform/runtime-secrets/"* | \
-        "${repository_root}/clusters/homelab/bootstrap/runtime-secrets/"*)
+        "${repository_root}/clusters/homelab/bootstrap/runtime-secrets/"* | \
+        "${repository_root}/observability/"*)
         continue
         ;;
     esac
