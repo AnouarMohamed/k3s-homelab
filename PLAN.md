@@ -106,6 +106,8 @@ before later phases begin.
 | Tempo chart | `1.24.4` | Official release archive SHA-256 `f1f6e318d5bca3b5097cb676077796cdf8135beb2c1f71c4d14614ccf9b0081b`; app `2.9.0` |
 | OpenTelemetry Collector chart | `0.175.1` | Official release archive SHA-256 `33996399f5d831193603f8a56ed46b7cd3f012eeb6df4d5046c5b560a554e21d`; app `0.161.0` |
 | Sloth chart | `0.16.0` | Official release archive SHA-256 `616acb580eefc2e9836cc1b430cac6d424e0e4210130786b6ec883657217c6db` |
+| Kyverno chart | `3.9.1` | Official chart index archive SHA-256 `7b7fe51a431b5b133b0ce7eb9dcb222b6a37fb967c163223cf480054ad14d752`; app `v1.19.1` |
+| Trivy Operator chart | `0.37.0` | Official Aqua chart index archive SHA-256 `6d23f16d950496d17253258ca2e52bd068959041298e66c0652bf0841ccedf69`; app `0.35.0` |
 
 All remaining later-phase chart, provider, collection, application image, and CI image
 versions are `VERIFY`. Before implementing their phase I will verify them against an
@@ -210,11 +212,13 @@ alerts without actionable ownership.
 Files: Kyverno policies/tests/exceptions, PSA namespace configuration, Trivy Operator,
 security dashboards, threat model, posture summary, and enforcement rollout plan.
 
-Validation: `kyverno test`, policy application to all rendered resources, Trivy config
-render, and exception-expiry checks.
+Validation: `kyverno test`, deterministic Helm/Kustomize rendering, strict pinned CRD
+schemas, Audit and Deny overlay assertions, Trivy config render, Prometheus rule and
+dashboard parsing, workload checks, PSA-label coverage, and kube-linter.
 
 Risks: breaking required infrastructure privileges, policy bypass through broad
-exceptions, and enabling enforcement before existing resources comply.
+exceptions, enabling enforcement before existing resources comply, and the one legacy
+API-context policy that must be migrated before Kyverno 1.20.
 
 ### Phase 9 — Homelab Sentinel and delivery
 

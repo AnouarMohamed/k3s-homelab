@@ -1,0 +1,35 @@
+---
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: require-health-probes
+  annotations:
+    policies.kyverno.io/title: Require liveness and readiness probes
+    policies.kyverno.io/category: Homelab workload baseline
+    policies.kyverno.io/severity: medium
+spec:
+  failurePolicy: Fail
+  evaluation:
+    background:
+      enabled: true
+  validationActions:
+    - Audit
+  matchConstraints:
+    namespaceSelector:
+      matchLabels:
+        policy.homelab.dev/profile: application
+    resourceRules:
+      - apiGroups:
+          - ''
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+  validations:
+    - expression: >-
+        object.spec.containers.all(container,
+        has(container.livenessProbe) && has(container.readinessProbe))
+      message: Every application container requires liveness and readiness probes.

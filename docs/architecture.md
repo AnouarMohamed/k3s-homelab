@@ -107,3 +107,23 @@ flowchart LR
 The telemetry backends are internal only. Their Longhorn volumes improve local
 availability, but telemetry remains disposable relative to application and backup data.
 Alertmanager and Argo CD receive distinct notification destinations from OpenBao.
+
+## Phase 8 policy and supply-chain flow
+
+```mermaid
+flowchart LR
+  Commit[Reviewed Git commit] --> CI[GitLab CI]
+  CI --> Scan[Tests, SBOM, and Trivy gate]
+  CI --> Sign[GitLab OIDC Cosign signature]
+  Sign --> Registry[GitLab registry digest]
+  Registry --> Argo[Digest promotion]
+  Argo --> Kyverno[Kyverno admission]
+  Kyverno --> Workload[Application Pod]
+  Workload --> Trivy[Trivy Operator reports]
+  Trivy --> Prometheus[Prometheus metrics]
+  Prometheus --> Dashboard[Grafana security posture]
+```
+
+Phase 8 installs the admission and detection layers in Audit mode. Phase 9 supplies the
+owned, keylessly signed images and digest-only promotion path. Deny promotion requires
+clean reports and the explicit enforcement runbook.

@@ -177,7 +177,42 @@ changing retention. Notification delivery, dashboard content, log collection, tr
 delivery, probe results, and SLO evaluation remain unverified until Anouar records the
 observations.
 
-## Phases 8–12
+## Phase 8 — Policy and supply chain
+
+Status: **PENDING HARDWARE**
+
+```bash
+kubectl -n kyverno get deploy,pod,pdb,networkpolicy
+kubectl get validatingpolicies.policies.kyverno.io
+kubectl get imagevalidatingpolicies.policies.kyverno.io
+kubectl get clusterpolicy require-network-policy
+kubectl get clusterpolicyreports.wgpolicyk8s.io
+kubectl -n trivy-system get deploy,pod,networkpolicy,servicemonitor
+kubectl get vulnerabilityreports.aquasecurity.github.io --all-namespaces
+kubectl get configauditreports.aquasecurity.github.io --all-namespaces
+kubectl get rbacassessmentreports.aquasecurity.github.io --all-namespaces
+kubectl get sbomreports.aquasecurity.github.io --all-namespaces
+kubectl -n monitoring get prometheusrule homelab-security-findings
+kubectl -n monitoring get configmap homelab-security-posture-dashboard
+kubectl auth can-i create validatingpolicies.policies.kyverno.io \
+  --as=system:serviceaccount:apps-whoami:default
+kubectl auth can-i get vulnerabilityreports.aquasecurity.github.io \
+  --as=system:serviceaccount:apps-whoami:default -n apps-whoami
+sed 's/namespace: apps-invalid/namespace: apps-whoami/' \
+  policies/tests/resources/invalid-pod.yaml | \
+  kubectl apply --server-side --dry-run=server -f -
+```
+
+Expected: all Kyverno controllers are Ready with the configured replica counts and
+spread; both namespaces have a default-deny NetworkPolicy; six CEL validation policies,
+one image policy, and the matching-NetworkPolicy policy exist in Audit mode; the Trivy
+operator has two Ready replicas and produces fresh reports without node-collector jobs;
+both service-account authorization checks return `no`; the dashboard loads and the
+critical-finding alert evaluates from Trivy metrics. The invalid dry-run is admitted
+with Audit findings before promotion and denied only after the enforcement runbook is
+completed. GitLab OIDC signature acceptance remains pending the Phase 9 signed image.
+
+## Phases 9–12
 
 Status: **PENDING HARDWARE**
 

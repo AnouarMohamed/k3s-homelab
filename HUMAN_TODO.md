@@ -49,6 +49,8 @@ block repository implementation.
   Keep the password in the recovery vault and never pass it as a shell argument.
 - [ ] Enroll administrator MFA in Keycloak and test the local Argo CD/Grafana
   break-glass accounts before enabling SSO-only access.
+- [ ] Review Phase 8 Audit reports, resolve every application violation, and use the
+  policy-enforcement runbook before changing the GitOps path to the Deny overlay.
 
 ## Hardware verification
 

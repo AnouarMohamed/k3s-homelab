@@ -227,6 +227,21 @@ case "${relative_path}" in
       --values "${repository_root}/observability/sloth/configure-sloth.yaml" | \
       bash "${repository_root}/scripts/harden-observability-render.sh"
     ;;
+  policies/kyverno)
+    helm template kyverno "${repository_root}/.cache/phase8/kyverno" \
+      --namespace kyverno \
+      --include-crds \
+      --skip-tests \
+      --values "${repository_root}/policies/kyverno/configure-kyverno.yaml" | \
+      bash "${repository_root}/scripts/harden-policy-render.sh"
+    ;;
+  policies/trivy)
+    helm template trivy-operator "${repository_root}/.cache/phase8/trivy-operator" \
+      --namespace trivy-system \
+      --include-crds \
+      --skip-tests \
+      --values "${repository_root}/policies/trivy/configure-trivy-operator.yaml"
+    ;;
   clusters/homelab/bootstrap | clusters/homelab/bootstrap/* | apps/*/overlays/prod | platform/* | observability/* | policies/*)
     test -f "${source_path}/kustomization.yaml" || test -f "${source_path}/kustomization.yml"
     kustomize build --enable-alpha-plugins --enable-exec "${source_path}" | \

@@ -1,0 +1,39 @@
+---
+# Dashboard JSON is intentionally stored as one compact scalar value.
+# yamllint disable rule:line-length
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homelab-security-posture-dashboard
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: homelab-security-posture-dashboard
+    app.kubernetes.io/component: dashboard
+    app.kubernetes.io/part-of: homelab-security
+    grafana_dashboard: '1'
+data:
+  security-posture.json: '{"annotations":{"list":[]},"editable":false,"panels":[{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{"unit":"short"}},"gridPos":{"h":8,"w":8,"x":0,"y":0},"id":1,"targets":[{"expr":"sum(trivy_image_vulnerabilities{severity=\"Critical\"})","refId":"A"}],"title":"Critical image vulnerabilities","type":"stat"},{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{"unit":"short"}},"gridPos":{"h":8,"w":8,"x":8,"y":0},"id":2,"targets":[{"expr":"sum(trivy_image_vulnerabilities{severity=\"High\"})","refId":"A"}],"title":"High image vulnerabilities","type":"stat"},{"datasource":{"type":"prometheus","uid":"prometheus"},"gridPos":{"h":10,"w":24,"x":0,"y":8},"id":3,"targets":[{"expr":"sum by (namespace, severity) (trivy_image_vulnerabilities{severity=~\"Critical|High\"})","legendFormat":"{{namespace}} {{severity}}","refId":"A"}],"title":"High and critical findings by namespace","type":"timeseries"}],"refresh":"5m","schemaVersion":39,"tags":["homelab","security","trivy"],"templating":{"list":[]},"time":{"from":"now-24h","to":"now"},"title":"Homelab / Security posture","uid":"homelab-security-posture","version":1}'
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homelab-security-findings
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: homelab-security-findings
+    app.kubernetes.io/component: alerting
+    app.kubernetes.io/part-of: homelab-security
+    release: monitoring
+spec:
+  groups:
+    - name: homelab.security
+      rules:
+        - alert: CriticalContainerVulnerabilityDetected
+          expr: sum(trivy_image_vulnerabilities{severity="Critical"}) > 0
+          for: 15m
+          labels:
+            severity: critical
+          annotations:
+            summary: Trivy reports a critical container-image vulnerability
+            description: Review the Trivy report and rebuild or replace the affected image.
+            runbook_url: https://gitlab.com/${CONFIG_GITLAB_PROJECT_PATH}/-/blob/main/docs/runbooks/respond-to-security-findings.md#critical-container-vulnerability-detected

@@ -90,6 +90,20 @@ validate:repository:
       tar --extract --gzip --file "/tmp/${prometheus_archive}" --directory /tmp \
       "${prometheus_directory}/promtool"
     - install --mode 0755 "/tmp/${prometheus_directory}/promtool" "${GOBIN}/promtool"
+    - kyverno_archive="kyverno-cli_${KYVERNO_VERSION}_linux_x86_64.tar.gz"
+    - kyverno_url="https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}"
+    - |-
+      curl --fail --location --silent --show-error --retry 5 --retry-all-errors \
+      --output "/tmp/${kyverno_archive}" "${kyverno_url}/${kyverno_archive}"
+    - |-
+      curl --fail --location --silent --show-error --retry 5 --retry-all-errors \
+      --output /tmp/kyverno-checksums.txt "${kyverno_url}/checksums.txt"
+    - |-
+      grep "  ${kyverno_archive}$" /tmp/kyverno-checksums.txt | \
+      sed "s#${kyverno_archive}#/tmp/${kyverno_archive}#" | \
+      sha256sum --check --strict
+    - tar --extract --gzip --file "/tmp/${kyverno_archive}" --directory /tmp kyverno
+    - install --mode 0755 /tmp/kyverno "${GOBIN}/kyverno"
     - export PATH="${GOBIN}:${PATH}"
   script:
     - scripts/check-forbidden-files.sh
@@ -102,6 +116,7 @@ validate:repository:
     - scripts/validate-storage.sh
     - scripts/validate-secrets.sh
     - scripts/validate-observability.sh
+    - scripts/validate-policy.sh
 
 security:gitleaks:
   stage: security

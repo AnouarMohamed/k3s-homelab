@@ -29,10 +29,21 @@ and warning against restricted violations. This exception does not permit other
 monitoring workloads to add host access or privileges. Phase 8 binds the policy
 exception to the exact node-exporter controller and image.
 
+## Policy and scanning controllers
+
+| Workload | Required exception | Reason | Compensating controls |
+| --- | --- | --- | --- |
+| Kyverno controllers | Cluster-scoped read and admission RBAC | Admission and background evaluation require observing protected resources | Dedicated restricted namespace, HA replicas, digest pins, NetworkPolicy, Audit-first rollout |
+| Trivy Operator | Cluster-scoped report and workload read RBAC | The operator discovers workloads and writes security-report CRs | Dedicated restricted namespace, digest pins, two-job concurrency cap, host collector disabled |
+
+Neither controller is exempt from resource bounds, probes, container hardening, image
+pinning, or namespace network isolation.
+
 ## Review and expiry
 
 Re-check these exceptions on every Longhorn or kube-prometheus-stack upgrade with
 `helm show values`, rendered
 manifests, and the pinned CRDs. Remove an exception when upstream supports the baseline.
-Phase 8 must bind Kyverno exclusions to exact namespace, controller, and image patterns;
-a wildcard exemption for `longhorn-system` is not acceptable.
+Application policies use positive namespace profile labels rather than wildcard
+infrastructure exclusions. A namespace must opt into the application profile, while
+the stricter signature policy requires a separate supply-chain label.

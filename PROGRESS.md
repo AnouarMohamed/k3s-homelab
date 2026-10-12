@@ -13,7 +13,7 @@ checks against the three physical nodes are tracked separately as `PENDING HARDW
 - [x] Phase 5 — Storage and backups (offline validation complete; pending hardware)
 - [x] Phase 6 — Runtime secrets (offline validation complete; pending hardware)
 - [x] Phase 7 — Observability (offline validation complete; pending hardware)
-- [ ] Phase 8 — Policy and supply chain
+- [x] Phase 8 — Policy and supply chain (offline validation complete; pending hardware)
 - [ ] Phase 9 — Homelab Sentinel and delivery
 - [ ] Phase 10 — Identity and self-hosted applications
 - [ ] Phase 11 — Chaos and disaster recovery
@@ -356,6 +356,56 @@ explicitly because that release has no checksum-list asset.
   ingestion, retention under real load, dashboard queries, SLO rule generation,
   blackbox checks, and notification delivery remain `PENDING HARDWARE`.
 
+## Phase 8 validation — 2026-10-12
+
+- Official chart archives matched the recorded SHA-256 values for Kyverno `3.9.1`
+  (application `v1.19.1`) and Trivy Operator `0.37.0` (application `0.35.0`).
+  Controller, scanner, checks, and readiness-checker images use the immutable OCI
+  digests recorded in `policies/dependencies.env`.
+- `make validate-policy` returned exit 0. Helm lint reported one chart and zero
+  failures for both Kyverno and Trivy Operator, and two independent renders of every
+  Phase 8 component compared byte-for-byte equal.
+- Strict built-in kubeconform passes reported 2 valid namespace resources; 57 valid
+  Kyverno built-ins with 26 custom resources skipped; 17 valid Trivy built-ins with
+  17 custom resources skipped; 8 audit and 8 enforcement custom resources skipped;
+  and 3 valid posture resources with 1 custom resource skipped. Separate schema passes
+  validated 4 Kyverno, 5 Trivy, 8 audit, 8 enforcement, and 1 posture custom resources
+  with no invalid, errored, or skipped objects.
+- `kyverno test` reported all 10 expected CEL policy outcomes as passing. The valid
+  fixture passed five baseline controls and the intentionally invalid fixture failed
+  the same five controls as expected. The intentionally invalid image tag is excluded
+  only from the repository pin scanner's fixture path.
+- `promtool check rules` reported success for the critical-vulnerability alerting
+  rule. The security dashboard parsed as valid JSON, workload and digest assertions
+  passed, namespace PSA label assertions passed, and kube-linter reported no findings.
+- The audit and enforcement overlays render from the same policy sources. Six
+  `policies.kyverno.io/v1` CEL validating policies and one CEL image-verification
+  policy move from `Audit` to `Deny` through explicit patches. The NetworkPolicy
+  inventory rule remains a legacy `ClusterPolicy` because the pinned CEL API has no
+  API-call context; this migration debt is documented before Kyverno 1.20.
+- `make validate-gitops` returned exit 0 after adding the five Phase 8 applications
+  and restricted policy project. Its GitOps resource pass reported 45 valid objects
+  with no errors or skips, and kube-linter reported no findings.
+- `make lint` returned exit 0. Markdownlint checked 105 files with no issues;
+  yamllint and ShellCheck reported no findings; ansible-lint again reported zero
+  failures and warnings across 28 processed files.
+- The staged `make validate` returned exit 0 across every Phase 1–8 gate and repository
+  policy check. The final generic kubeconform pass validated 25 resources from 17 files
+  with no invalid, errored, or skipped objects, and kube-linter reported no findings.
+- `make security` returned exit 0. Gitleaks scanned approximately 602 KB of the staged
+  working tree and 2.55 MB across 18 existing commits, finding no leaks.
+- The skeptical review repaired earlier namespace manifests with explicit PSA
+  `enforce`, `audit`, and `warn` labels pinned to Kubernetes `v1.36`. It also made the
+  whoami NetworkPolicy precede its workload and documented required infrastructure
+  exceptions instead of claiming privileged controllers satisfy application policy.
+- Trivy node collection and infrastructure assessment are deliberately disabled;
+  kube-bench remains a documented human-run node check, and Kubescape is not installed
+  because its controls overlap the selected Kyverno/Trivy/PSA stack.
+- No cluster, registry, transparency log, or Git remote was contacted. Admission and
+  background reports, Trivy scan jobs and metrics, keyless signature verification,
+  audit latency, exception handling, and the eventual Audit-to-Deny promotion remain
+  `PENDING HARDWARE`.
+
 ## Unverified
 
 - All real-hardware behavior.
@@ -365,6 +415,9 @@ explicitly because that release has no checksum-list asset.
 - OpenBao HCL startup and the declarative audit device on the real cluster.
 - Phase 7 signal ingestion, storage sizing, scrape selectors, alert delivery, and the
   pinned deprecated Tempo chart's behavior on the real cluster.
+- Kyverno and Trivy Operator runtime compatibility with k3s `v1.36.5+k3s1`, policy
+  report generation, admission latency, scanner execution, metrics freshness, and
+  GitLab OIDC signature verification against the transparency log.
 
 ## Not done
 
@@ -373,3 +426,6 @@ explicitly because that release has no checksum-list asset.
   not been selected; creating and versioning the bucket is a documented human task.
 - Automatic OpenBao unseal is intentionally not implemented because no external KMS or
   HSM has been selected; the manual Shamir boundary is documented and pending exercise.
+- Phase 8 enforcement is intentionally not enabled before Anouar reviews real audit
+  reports. Kubescape is deliberately omitted, and kube-bench has not been run because
+  node execution is hardware-only.

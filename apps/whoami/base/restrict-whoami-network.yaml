@@ -3,6 +3,12 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: whoami
+  labels:
+    app.kubernetes.io/name: whoami
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: homelab-applications
+  annotations:
+    argocd.argoproj.io/sync-wave: '-1'
 spec:
   podSelector:
     matchLabels:

@@ -487,6 +487,40 @@
         "[A-Z0-9_]+_IMAGE=(?<depName>(?:docker\\.io|quay\\.io|ghcr\\.io|registry\\.k8s\\.io)/[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
       ],
       "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^policies/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "KYVERNO_CHART_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "kyverno/kyverno",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^kyverno-chart-(?<version>.*)$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^policies/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "TRIVY_OPERATOR_CHART_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "aquasecurity/helm-charts",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^trivy-operator-(?<version>.*)$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^policies/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "[A-Z0-9_]+_(?:IMAGE|BUNDLE)=(?<depName>(?:reg\\.kyverno\\.io|mirror\\.gcr\\.io|ghcr\\.io)/[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
     }
   ],
   "packageRules": [

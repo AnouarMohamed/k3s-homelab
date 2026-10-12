@@ -9,7 +9,8 @@ patterns=(
 
 failed=0
 for pattern in "${patterns[@]}"; do
-  matches="$(git grep -nE "${pattern}" -- '*.yaml' '*.yml' '*.json' 'Dockerfile*' 'scripts/*' || true)"
+  matches="$(git grep -nE "${pattern}" -- '*.yaml' '*.yml' '*.json' 'Dockerfile*' 'scripts/*' \
+    ':!policies/tests/resources/invalid-pod.yaml' || true)"
   if [[ -n "${matches}" ]]; then
     printf 'Unpinned dependency reference:\n%s\n' "${matches}" >&2
     failed=1
@@ -18,7 +19,8 @@ done
 
 image_matches="$(
   git grep -nE '(^|[[:space:]])image:[[:space:]]*[^[:space:]]+' -- \
-    '*.yaml' '*.yml' ':!platform/snapshot-controller/upstream/**' | \
+    '*.yaml' '*.yml' ':!platform/snapshot-controller/upstream/**' \
+    ':!policies/tests/resources/invalid-pod.yaml' | \
     grep -v '@sha256:[a-f0-9]\{64\}' | \
     grep -vE 'image:[[:space:]]*\$\{[A-Z0-9_]+_IMAGE\}' || true
 )"

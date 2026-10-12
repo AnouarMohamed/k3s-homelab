@@ -1,0 +1,45 @@
+---
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: require-container-resources
+  annotations:
+    policies.kyverno.io/title: Require container requests and limits
+    policies.kyverno.io/category: Homelab workload baseline
+    policies.kyverno.io/severity: medium
+spec:
+  failurePolicy: Fail
+  evaluation:
+    background:
+      enabled: true
+  validationActions:
+    - Audit
+  matchConstraints:
+    namespaceSelector:
+      matchLabels:
+        policy.homelab.dev/profile: application
+    resourceRules:
+      - apiGroups:
+          - ''
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+  variables:
+    - name: allContainers
+      expression: >-
+        object.spec.containers + object.spec.?initContainers.orValue([]) +
+        object.spec.?ephemeralContainers.orValue([])
+  validations:
+    - expression: >-
+        variables.allContainers.all(container,
+        has(container.resources) && has(container.resources.requests) &&
+        has(container.resources.requests.cpu) && container.resources.requests.cpu != '' &&
+        has(container.resources.requests.memory) && container.resources.requests.memory != '' &&
+        has(container.resources.limits) && has(container.resources.limits.cpu) &&
+        container.resources.limits.cpu != '' && has(container.resources.limits.memory) &&
+        container.resources.limits.memory != '')
+      message: Every container requires CPU and memory requests and limits.

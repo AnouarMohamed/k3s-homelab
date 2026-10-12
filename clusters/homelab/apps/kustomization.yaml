@@ -31,4 +31,9 @@ resources:
   - deploy-sloth.yaml
   - deploy-observability-resources.yaml
   - deploy-argocd-notifications.yaml
+  - establish-policy-namespaces.yaml
+  - deploy-kyverno.yaml
+  - audit-workload-standards.yaml
+  - deploy-trivy-operator.yaml
+  - expose-security-posture.yaml
   - generate-applications.yaml

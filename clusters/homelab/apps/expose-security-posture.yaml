@@ -1,0 +1,32 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: security-posture
+  namespace: argocd
+  labels:
+    app.kubernetes.io/name: security-posture
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: homelab-security
+  annotations:
+    argocd.argoproj.io/sync-wave: '-9'
+spec:
+  project: policy
+  source:
+    repoURL: ${CONFIG_GITLAB_REPOSITORY_URL}
+    targetRevision: main
+    path: policies/resources
+    plugin:
+      name: homelab-renderer-v1
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+      allowEmpty: false
+    syncOptions:
+      - CreateNamespace=false
+      - PruneLast=true
+  revisionHistoryLimit: 10

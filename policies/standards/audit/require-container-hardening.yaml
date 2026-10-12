@@ -1,0 +1,59 @@
+---
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: require-container-hardening
+  annotations:
+    policies.kyverno.io/title: Require restricted container security
+    policies.kyverno.io/category: Homelab workload baseline
+    policies.kyverno.io/severity: high
+spec:
+  failurePolicy: Fail
+  evaluation:
+    background:
+      enabled: true
+  validationActions:
+    - Audit
+  matchConstraints:
+    namespaceSelector:
+      matchLabels:
+        policy.homelab.dev/profile: application
+    resourceRules:
+      - apiGroups:
+          - ''
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+  variables:
+    - name: allContainers
+      expression: >-
+        object.spec.containers + object.spec.?initContainers.orValue([]) +
+        object.spec.?ephemeralContainers.orValue([])
+  validations:
+    - expression: >-
+        object.spec.?securityContext.?runAsNonRoot.orValue(false) ||
+        variables.allContainers.all(container,
+        container.?securityContext.?runAsNonRoot.orValue(false))
+      message: Pods or every container must set runAsNonRoot to true.
+    - expression: >-
+        variables.allContainers.all(container,
+        container.?securityContext.?allowPrivilegeEscalation.orValue(true) == false &&
+        container.?securityContext.?privileged.orValue(false) == false &&
+        container.?securityContext.?readOnlyRootFilesystem.orValue(false) == true &&
+        container.?securityContext.?capabilities.?drop.orValue([]).exists(capability,
+        capability.upperAscii() == 'ALL'))
+      message: >-
+        Containers must deny privilege escalation, avoid privileged mode, use a
+        read-only root filesystem, and drop ALL capabilities.
+    - expression: >-
+        object.spec.?securityContext.?seccompProfile.?type.orValue('') in
+        ['RuntimeDefault', 'Localhost'] || variables.allContainers.all(container,
+        container.?securityContext.?seccompProfile.?type.orValue('') in
+        ['RuntimeDefault', 'Localhost'])
+      message: Pods or every container must set seccomp to RuntimeDefault or Localhost.
+    - expression: object.spec.?volumes.orValue([]).all(volume, !has(volume.hostPath))
+      message: Application Pods may not use hostPath volumes.

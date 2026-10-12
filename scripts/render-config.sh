@@ -11,6 +11,8 @@ export CONFIG_ACME_EMAIL
 export CONFIG_TIMEZONE
 export CONFIG_GITLAB_PROJECT_PATH
 export CONFIG_GITLAB_REPOSITORY_URL
+export CONFIG_GITLAB_REGISTRY_PATH
+export CONFIG_GITLAB_CI_IDENTITY
 export CONFIG_CONTROL_PLANE_VIP
 export CONFIG_LOAD_BALANCER_START
 export CONFIG_LOAD_BALANCER_STOP
@@ -29,6 +31,8 @@ CONFIG_ACME_EMAIL="$(yq --unwrapScalar '.spec.acmeEmail' "${config_file}")"
 CONFIG_TIMEZONE="$(yq --unwrapScalar '.spec.timezone' "${config_file}")"
 CONFIG_GITLAB_PROJECT_PATH="$(yq --unwrapScalar '.spec.gitlab.projectPath' "${config_file}")"
 CONFIG_GITLAB_REPOSITORY_URL="https://gitlab.com/${CONFIG_GITLAB_PROJECT_PATH}.git"
+CONFIG_GITLAB_REGISTRY_PATH="registry.gitlab.com/${CONFIG_GITLAB_PROJECT_PATH}"
+CONFIG_GITLAB_CI_IDENTITY="https://gitlab.com/${CONFIG_GITLAB_PROJECT_PATH}//.gitlab-ci.yml@refs/heads/main"
 CONFIG_CONTROL_PLANE_VIP="$(yq --unwrapScalar '.spec.network.controlPlaneVip' "${config_file}")"
 CONFIG_LOAD_BALANCER_START="$(yq --unwrapScalar '.spec.network.loadBalancerPool.start' "${config_file}")"
 CONFIG_LOAD_BALANCER_STOP="$(yq --unwrapScalar '.spec.network.loadBalancerPool.stop' "${config_file}")"

@@ -4,7 +4,9 @@ This directory contains sequential architecture decisions. Current decisions cov
 k3s, Cilium, Argo CD, Cloudflare access, Cilium WireGuard encryption, and the
 SOPS/KSOPS bootstrap boundary, Cloudflare/OpenTofu state handling, layered storage and
 backup, the boundary between bootstrap and runtime secrets, and the bounded telemetry
-stack. Phase 12 adds the final indexed decision map and verifies links.
+stack, plus staged application admission policy. Phase 12 adds the final indexed
+decision map and verifies links.
 
 - [ADR 0010: Separate bootstrap and runtime secrets](0010-bootstrap-and-runtime-secrets.md)
 - [ADR 0011: Use a bounded LGTM observability stack](0011-bounded-observability-stack.md)
+- [ADR 0012: Audit application policy before denial](0012-audit-before-policy-denial.md)

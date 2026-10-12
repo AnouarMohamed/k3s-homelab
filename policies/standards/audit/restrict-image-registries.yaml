@@ -1,0 +1,40 @@
+---
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: restrict-image-registries
+  annotations:
+    policies.kyverno.io/title: Restrict signed application registries
+    policies.kyverno.io/category: Software supply chain
+    policies.kyverno.io/severity: high
+spec:
+  failurePolicy: Fail
+  evaluation:
+    background:
+      enabled: true
+  validationActions:
+    - Audit
+  matchConstraints:
+    namespaceSelector:
+      matchLabels:
+        policy.homelab.dev/supply-chain: signed
+    resourceRules:
+      - apiGroups:
+          - ''
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+  variables:
+    - name: allContainers
+      expression: >-
+        object.spec.containers + object.spec.?initContainers.orValue([]) +
+        object.spec.?ephemeralContainers.orValue([])
+  validations:
+    - expression: >-
+        variables.allContainers.all(container,
+        container.image.startsWith('${CONFIG_GITLAB_REGISTRY_PATH}/'))
+      message: Signed application namespaces may pull only from the configured GitLab registry.

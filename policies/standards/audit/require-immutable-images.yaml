@@ -1,0 +1,40 @@
+---
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: require-immutable-images
+  annotations:
+    policies.kyverno.io/title: Require digest-pinned images
+    policies.kyverno.io/category: Software supply chain
+    policies.kyverno.io/severity: high
+spec:
+  failurePolicy: Fail
+  evaluation:
+    background:
+      enabled: true
+  validationActions:
+    - Audit
+  matchConstraints:
+    namespaceSelector:
+      matchLabels:
+        policy.homelab.dev/profile: application
+    resourceRules:
+      - apiGroups:
+          - ''
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+  variables:
+    - name: allContainers
+      expression: >-
+        object.spec.containers + object.spec.?initContainers.orValue([]) +
+        object.spec.?ephemeralContainers.orValue([])
+  validations:
+    - expression: >-
+        variables.allContainers.all(container,
+        container.image.contains('@sha256:') && !container.image.endsWith(':latest'))
+      message: Images must use a sha256 digest and may not use the latest tag.

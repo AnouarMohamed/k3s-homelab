@@ -1,0 +1,76 @@
+---
+apiVersion: cli.kyverno.io/v1alpha1
+kind: Test
+metadata:
+  name: application-workload-baseline
+policies:
+  - ../standards/audit/require-workload-labels.yaml
+  - ../standards/audit/require-container-resources.yaml
+  - ../standards/audit/require-health-probes.yaml
+  - ../standards/audit/require-container-hardening.yaml
+  - ../standards/audit/require-immutable-images.yaml
+resources:
+  - resources/valid-pod.yaml
+  - resources/invalid-pod.yaml
+variables: values.yaml
+results:
+  - policy: require-workload-labels
+    isValidatingPolicy: true
+    kind: Pod
+    resources:
+      - apps-valid/valid-app
+    result: pass
+  - policy: require-workload-labels
+    isValidatingPolicy: true
+    kind: Pod
+    resources:
+      - apps-invalid/invalid-app
+    result: fail
+  - policy: require-container-resources
+    isValidatingPolicy: true
+    kind: Pod
+    resources:
+      - apps-valid/valid-app
+    result: pass
+  - policy: require-container-resources
+    isValidatingPolicy: true
+    kind: Pod
+    resources:
+      - apps-invalid/invalid-app
+    result: fail
+  - policy: require-health-probes
+    isValidatingPolicy: true
+    kind: Pod
+    resources:
+      - apps-valid/valid-app
+    result: pass
+  - policy: require-health-probes
+    isValidatingPolicy: true
+    kind: Pod
+    resources:
+      - apps-invalid/invalid-app
+    result: fail
+  - policy: require-container-hardening
+    isValidatingPolicy: true
+    kind: Pod
+    resources:
+      - apps-valid/valid-app
+    result: pass
+  - policy: require-container-hardening
+    isValidatingPolicy: true
+    kind: Pod
+    resources:
+      - apps-invalid/invalid-app
+    result: fail
+  - policy: require-immutable-images
+    isValidatingPolicy: true
+    kind: Pod
+    resources:
+      - apps-valid/valid-app
+    result: pass
+  - policy: require-immutable-images
+    isValidatingPolicy: true
+    kind: Pod
+    resources:
+      - apps-invalid/invalid-app
+    result: fail

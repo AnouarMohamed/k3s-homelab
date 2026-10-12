@@ -1,0 +1,38 @@
+---
+apiVersion: policies.kyverno.io/v1
+kind: ValidatingPolicy
+metadata:
+  name: require-workload-labels
+  annotations:
+    policies.kyverno.io/title: Require workload identity labels
+    policies.kyverno.io/category: Homelab workload baseline
+    policies.kyverno.io/severity: medium
+spec:
+  failurePolicy: Fail
+  evaluation:
+    background:
+      enabled: true
+  validationActions:
+    - Audit
+  matchConstraints:
+    namespaceSelector:
+      matchLabels:
+        policy.homelab.dev/profile: application
+    resourceRules:
+      - apiGroups:
+          - ''
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+  validations:
+    - expression: >-
+        has(object.metadata.labels) &&
+        ['app.kubernetes.io/name', 'app.kubernetes.io/component',
+        'app.kubernetes.io/part-of'].all(label,
+        label in object.metadata.labels && object.metadata.labels[label] != '')
+      message: >-
+        Pods require non-empty app.kubernetes.io/name, component, and part-of labels.

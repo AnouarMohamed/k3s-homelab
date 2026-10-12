@@ -1,0 +1,48 @@
+---
+apiVersion: policies.kyverno.io/v1
+kind: ImageValidatingPolicy
+metadata:
+  name: verify-signed-images
+  annotations:
+    policies.kyverno.io/title: Verify GitLab keyless image signatures
+    policies.kyverno.io/category: Software supply chain
+    policies.kyverno.io/severity: high
+spec:
+  failurePolicy: Fail
+  webhookConfiguration:
+    timeoutSeconds: 30
+  evaluation:
+    background:
+      enabled: false
+  validationActions:
+    - Audit
+  matchConstraints:
+    namespaceSelector:
+      matchLabels:
+        policy.homelab.dev/supply-chain: signed
+    resourceRules:
+      - apiGroups:
+          - ''
+        apiVersions:
+          - v1
+        operations:
+          - CREATE
+          - UPDATE
+        resources:
+          - pods
+  matchImageReferences:
+    - glob: '${CONFIG_GITLAB_REGISTRY_PATH}/homelab-sentinel-*'
+  attestors:
+    - name: gitlab-main
+      cosign:
+        keyless:
+          identities:
+            - subject: '${CONFIG_GITLAB_CI_IDENTITY}'
+              issuer: https://gitlab.com
+        ctlog:
+          url: https://rekor.sigstore.dev
+  validations:
+    - expression: >-
+        images.containers.map(image,
+        verifyImageSignatures(image, [attestors.gitlab-main])).all(result, result > 0)
+      message: The image must have a valid GitLab main-branch keyless signature.
