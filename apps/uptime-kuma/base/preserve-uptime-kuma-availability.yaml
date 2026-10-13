@@ -3,8 +3,13 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: uptime-kuma
-  labels: {'app.kubernetes.io/name': uptime-kuma, 'app.kubernetes.io/component': availability, 'app.kubernetes.io/part-of': uptime-kuma}
+  labels:
+    app.kubernetes.io/name: uptime-kuma
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: uptime-kuma
 spec:
   maxUnavailable: 1
   unhealthyPodEvictionPolicy: AlwaysAllow
-  selector: {matchLabels: {'app.kubernetes.io/name': uptime-kuma}}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: uptime-kuma

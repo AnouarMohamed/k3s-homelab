@@ -3,17 +3,40 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: uptime-kuma
-  labels: {'app.kubernetes.io/name': uptime-kuma, 'app.kubernetes.io/component': network-policy, 'app.kubernetes.io/part-of': uptime-kuma}
+  labels:
+    app.kubernetes.io/name: uptime-kuma
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: uptime-kuma
 spec:
-  podSelector: {matchLabels: {'app.kubernetes.io/name': uptime-kuma}}
-  policyTypes: [Ingress, Egress]
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: uptime-kuma
+  policyTypes:
+    - Ingress
+    - Egress
   ingress:
     - from:
-        - namespaceSelector: {matchLabels: {'kubernetes.io/metadata.name': gateways}}
-      ports: [{port: 3001, protocol: TCP}]
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: gateways
+      ports:
+        - port: 3001
+          protocol: TCP
   egress:
     - to:
-        - namespaceSelector: {matchLabels: {'kubernetes.io/metadata.name': kube-system}}
-      ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
-    - to: [{ipBlock: {cidr: 0.0.0.0/0}}]
-      ports: [{port: 80, protocol: TCP}, {port: 443, protocol: TCP}]
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - port: 80
+          protocol: TCP
+        - port: 443
+          protocol: TCP

@@ -3,47 +3,103 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: vaultwarden
-  labels: {'app.kubernetes.io/name': vaultwarden, 'app.kubernetes.io/component': network-policy, 'app.kubernetes.io/part-of': vaultwarden}
+  labels:
+    app.kubernetes.io/name: vaultwarden
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: vaultwarden
 spec:
-  podSelector: {matchLabels: {'app.kubernetes.io/name': vaultwarden}}
-  policyTypes: [Ingress, Egress]
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: vaultwarden
+  policyTypes:
+    - Ingress
+    - Egress
   ingress:
     - from:
-        - namespaceSelector: {matchLabels: {'kubernetes.io/metadata.name': gateways}}
-      ports: [{port: 8080, protocol: TCP}]
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: gateways
+      ports:
+        - port: 8080
+          protocol: TCP
   egress:
     - to:
-        - namespaceSelector: {matchLabels: {'kubernetes.io/metadata.name': kube-system}}
-      ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
     - to:
-        - podSelector: {matchLabels: {'cnpg.io/cluster': vaultwarden-database}}
-      ports: [{port: 5432, protocol: TCP}]
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: vaultwarden-database
+      ports:
+        - port: 5432
+          protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: vaultwarden-database
-  labels: {'app.kubernetes.io/name': vaultwarden-database, 'app.kubernetes.io/component': network-policy, 'app.kubernetes.io/part-of': vaultwarden}
+  labels:
+    app.kubernetes.io/name: vaultwarden-database
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: vaultwarden
 spec:
-  podSelector: {matchLabels: {'cnpg.io/cluster': vaultwarden-database}}
-  policyTypes: [Ingress, Egress]
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: vaultwarden-database
+  policyTypes:
+    - Ingress
+    - Egress
   ingress:
     - from:
-        - podSelector: {matchLabels: {'app.kubernetes.io/name': vaultwarden}}
-        - podSelector: {matchLabels: {'cnpg.io/cluster': vaultwarden-database}}
-      ports: [{port: 5432, protocol: TCP}]
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: vaultwarden
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: vaultwarden-database
+      ports:
+        - port: 5432
+          protocol: TCP
     - from:
-        - namespaceSelector: {matchLabels: {'kubernetes.io/metadata.name': cnpg-system}}
-      ports: [{port: 8000, protocol: TCP}]
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cnpg-system
+      ports:
+        - port: 8000
+          protocol: TCP
     - from:
-        - namespaceSelector: {matchLabels: {'kubernetes.io/metadata.name': monitoring}}
-      ports: [{port: 9187, protocol: TCP}]
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - port: 9187
+          protocol: TCP
   egress:
     - to:
-        - namespaceSelector: {matchLabels: {'kubernetes.io/metadata.name': kube-system}}
-      ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
     - to:
-        - podSelector: {matchLabels: {'cnpg.io/cluster': vaultwarden-database}}
-      ports: [{port: 5432, protocol: TCP}]
-    - to: [{ipBlock: {cidr: 0.0.0.0/0}}]
-      ports: [{port: 443, protocol: TCP}]
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: vaultwarden-database
+      ports:
+        - port: 5432
+          protocol: TCP
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - port: 443
+          protocol: TCP

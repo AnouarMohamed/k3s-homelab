@@ -4,13 +4,15 @@ kind: ScheduledBackup
 metadata:
   name: daily-keycloak
   labels:
-    'app.kubernetes.io/name': keycloak-database
-    'app.kubernetes.io/component': database-backup
-    'app.kubernetes.io/part-of': homelab-platform
+    app.kubernetes.io/name: keycloak-database
+    app.kubernetes.io/component: database-backup
+    app.kubernetes.io/part-of: homelab-platform
 spec:
   schedule: 0 15 3 * * *
   backupOwnerReference: self
   immediate: false
-  cluster: {name: keycloak-database}
+  cluster:
+    name: keycloak-database
   method: plugin
-  pluginConfiguration: {name: barman-cloud.cloudnative-pg.io}
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io

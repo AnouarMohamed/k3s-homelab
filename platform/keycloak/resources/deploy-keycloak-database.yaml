@@ -4,9 +4,9 @@ kind: Cluster
 metadata:
   name: keycloak-database
   labels:
-    'app.kubernetes.io/name': keycloak-database
-    'app.kubernetes.io/component': database
-    'app.kubernetes.io/part-of': homelab-platform
+    app.kubernetes.io/name: keycloak-database
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: homelab-platform
 spec:
   instances: 3
   imageName: ${CNPG_POSTGRES_IMAGE}
@@ -14,40 +14,53 @@ spec:
   enableSuperuserAccess: false
   inheritedMetadata:
     labels:
-      'app.kubernetes.io/name': keycloak-database
-      'app.kubernetes.io/component': database
-      'app.kubernetes.io/part-of': homelab-platform
+      app.kubernetes.io/name: keycloak-database
+      app.kubernetes.io/component: database
+      app.kubernetes.io/part-of: homelab-platform
   bootstrap:
     initdb:
       database: keycloak
       owner: keycloak
-      secret: {name: keycloak-database-owner}
+      secret:
+        name: keycloak-database-owner
   resources:
-    requests: {cpu: 100m, memory: 256Mi}
-    limits: {cpu: '1', memory: 1Gi}
-  storage: {size: 10Gi, storageClass: longhorn}
-  walStorage: {size: 2Gi, storageClass: longhorn}
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+  walStorage:
+    size: 2Gi
+    storageClass: longhorn
   affinity:
     enablePodAntiAffinity: true
     topologyKey: kubernetes.io/hostname
     podAntiAffinityType: required
-  monitoring: {enablePodMonitor: true}
+  monitoring:
+    enablePodMonitor: true
   plugins:
     - name: barman-cloud.cloudnative-pg.io
       isWALArchiver: true
-      parameters: {barmanObjectName: keycloak-backups}
+      parameters:
+        barmanObjectName: keycloak-backups
 ---
 apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: keycloak-database-owner
   labels:
-    'app.kubernetes.io/name': keycloak-database-owner
-    'app.kubernetes.io/component': database-credentials
-    'app.kubernetes.io/part-of': homelab-platform
+    app.kubernetes.io/name: keycloak-database-owner
+    app.kubernetes.io/component: database-credentials
+    app.kubernetes.io/part-of: homelab-platform
 spec:
   refreshInterval: 1h
-  secretStoreRef: {kind: SecretStore, name: openbao}
+  secretStoreRef:
+    kind: SecretStore
+    name: openbao
   target:
     name: keycloak-database-owner
     creationPolicy: Owner
@@ -59,6 +72,10 @@ spec:
         password: '{{ .password }}'
   data:
     - secretKey: username
-      remoteRef: {key: keycloak/runtime, property: database-username}
+      remoteRef:
+        key: keycloak/runtime
+        property: database-username
     - secretKey: password
-      remoteRef: {key: keycloak/runtime, property: database-password}
+      remoteRef:
+        key: keycloak/runtime
+        property: database-password

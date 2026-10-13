@@ -4,9 +4,9 @@ kind: ServiceAccount
 metadata:
   name: openbao-auth
   labels:
-    'app.kubernetes.io/name': keycloak-openbao-auth
-    'app.kubernetes.io/component': authentication
-    'app.kubernetes.io/part-of': homelab-platform
+    app.kubernetes.io/name: keycloak-openbao-auth
+    app.kubernetes.io/component: authentication
+    app.kubernetes.io/part-of: homelab-platform
 automountServiceAccountToken: false
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -14,23 +14,27 @@ kind: Role
 metadata:
   name: mint-openbao-auth-token
   labels:
-    'app.kubernetes.io/name': keycloak-openbao-auth
-    'app.kubernetes.io/component': authorization
-    'app.kubernetes.io/part-of': homelab-platform
+    app.kubernetes.io/name: keycloak-openbao-auth
+    app.kubernetes.io/component: authorization
+    app.kubernetes.io/part-of: homelab-platform
 rules:
-  - apiGroups: ['']
-    resources: [serviceaccounts/token]
-    resourceNames: [openbao-auth]
-    verbs: [create]
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts/token
+    resourceNames:
+      - openbao-auth
+    verbs:
+      - create
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: allow-external-secrets-to-mint-openbao-token
   labels:
-    'app.kubernetes.io/name': keycloak-openbao-auth
-    'app.kubernetes.io/component': authorization
-    'app.kubernetes.io/part-of': homelab-platform
+    app.kubernetes.io/name: keycloak-openbao-auth
+    app.kubernetes.io/component: authorization
+    app.kubernetes.io/part-of: homelab-platform
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -45,9 +49,9 @@ kind: SecretStore
 metadata:
   name: openbao
   labels:
-    'app.kubernetes.io/name': keycloak-openbao-store
-    'app.kubernetes.io/component': secret-store
-    'app.kubernetes.io/part-of': homelab-platform
+    app.kubernetes.io/name: keycloak-openbao-store
+    app.kubernetes.io/component: secret-store
+    app.kubernetes.io/part-of: homelab-platform
 spec:
   provider:
     vault:
@@ -65,4 +69,5 @@ spec:
           role: runtime-keycloak
           serviceAccountRef:
             name: openbao-auth
-            audiences: [openbao]
+            audiences:
+              - openbao

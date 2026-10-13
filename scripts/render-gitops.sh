@@ -177,11 +177,13 @@ case "${relative_path}" in
       bash "${repository_root}/scripts/harden-runtime-secret-render.sh"
     ;;
   observability/prometheus-stack)
+    bash "${repository_root}/scripts/render-config.sh" \
+      "${repository_root}/observability/prometheus-stack/configure-prometheus-stack.yaml" | \
     helm template monitoring "${repository_root}/.cache/phase7/kube-prometheus-stack" \
       --namespace monitoring \
       --include-crds \
       --skip-tests \
-      --values "${repository_root}/observability/prometheus-stack/configure-prometheus-stack.yaml" | \
+      --values - | \
       bash "${repository_root}/scripts/harden-observability-render.sh"
     ;;
   observability/blackbox)

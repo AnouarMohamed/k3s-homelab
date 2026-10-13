@@ -4,9 +4,9 @@ kind: ConfigMap
 metadata:
   name: keycloak-homelab-realm
   labels:
-    'app.kubernetes.io/name': keycloak
-    'app.kubernetes.io/component': realm-configuration
-    'app.kubernetes.io/part-of': homelab-platform
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: realm-configuration
+    app.kubernetes.io/part-of: homelab-platform
 data:
   homelab-realm.json: |
     {

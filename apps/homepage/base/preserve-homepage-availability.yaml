@@ -3,8 +3,13 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: homepage
-  labels: {'app.kubernetes.io/name': homepage, 'app.kubernetes.io/component': availability, 'app.kubernetes.io/part-of': homepage}
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: homepage
 spec:
   minAvailable: 1
   unhealthyPodEvictionPolicy: AlwaysAllow
-  selector: {matchLabels: {'app.kubernetes.io/name': homepage}}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: homepage

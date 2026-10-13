@@ -4,12 +4,13 @@ kind: ServiceMonitor
 metadata:
   name: keycloak
   labels:
-    'app.kubernetes.io/name': keycloak
-    'app.kubernetes.io/component': monitoring
-    'app.kubernetes.io/part-of': homelab-platform
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: homelab-platform
 spec:
   selector:
-    matchLabels: {'app.kubernetes.io/name': keycloak}
+    matchLabels:
+      app.kubernetes.io/name: keycloak
   endpoints:
     - port: management
       path: /metrics
@@ -20,9 +21,9 @@ kind: PrometheusRule
 metadata:
   name: keycloak
   labels:
-    'app.kubernetes.io/name': keycloak
-    'app.kubernetes.io/component': alerting
-    'app.kubernetes.io/part-of': homelab-platform
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: alerting
+    app.kubernetes.io/part-of: homelab-platform
 spec:
   groups:
     - name: keycloak.rules
@@ -30,7 +31,9 @@ spec:
         - alert: KeycloakUnavailable
           expr: kube_deployment_status_replicas_available{namespace="keycloak",deployment="keycloak"} < 1
           for: 10m
-          labels: {severity: critical}
+          labels:
+            severity: critical
           annotations:
             summary: Keycloak has no available replica
-            runbook_url: https://gitlab.${CONFIG_DOMAIN}/${CONFIG_GITLAB_PROJECT_PATH}/-/blob/main/docs/runbooks/recover-sso.md
+            runbook_url: >-
+              https://gitlab.${CONFIG_DOMAIN}/${CONFIG_GITLAB_PROJECT_PATH}/-/blob/main/docs/runbooks/recover-sso.md

@@ -4,11 +4,12 @@ kind: PodDisruptionBudget
 metadata:
   name: keycloak
   labels:
-    'app.kubernetes.io/name': keycloak
-    'app.kubernetes.io/component': availability
-    'app.kubernetes.io/part-of': homelab-platform
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: homelab-platform
 spec:
   minAvailable: 1
   unhealthyPodEvictionPolicy: AlwaysAllow
   selector:
-    matchLabels: {'app.kubernetes.io/name': keycloak}
+    matchLabels:
+      app.kubernetes.io/name: keycloak

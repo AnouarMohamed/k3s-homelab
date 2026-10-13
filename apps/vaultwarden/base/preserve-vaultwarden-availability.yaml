@@ -3,8 +3,13 @@ apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
   name: vaultwarden
-  labels: {'app.kubernetes.io/name': vaultwarden, 'app.kubernetes.io/component': availability, 'app.kubernetes.io/part-of': vaultwarden}
+  labels:
+    app.kubernetes.io/name: vaultwarden
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: vaultwarden
 spec:
   maxUnavailable: 1
   unhealthyPodEvictionPolicy: AlwaysAllow
-  selector: {matchLabels: {'app.kubernetes.io/name': vaultwarden}}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vaultwarden

@@ -3,12 +3,23 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: homepage
-  labels: {'app.kubernetes.io/name': homepage, 'app.kubernetes.io/component': network-policy, 'app.kubernetes.io/part-of': homepage}
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: homepage
 spec:
-  podSelector: {matchLabels: {'app.kubernetes.io/name': homepage}}
-  policyTypes: [Ingress, Egress]
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: homepage
+  policyTypes:
+    - Ingress
+    - Egress
   ingress:
     - from:
-        - namespaceSelector: {matchLabels: {'kubernetes.io/metadata.name': gateways}}
-      ports: [{port: 3000, protocol: TCP}]
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: gateways
+      ports:
+        - port: 3000
+          protocol: TCP
   egress: []

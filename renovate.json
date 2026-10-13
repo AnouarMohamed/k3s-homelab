@@ -572,6 +572,16 @@
         "[A-Z0-9_]+_IMAGE=(?<depName>(?:docker\\.io|gcr\\.io)/[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
       ],
       "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^(?:platform/keycloak|apps/(?:vaultwarden|homepage|uptime-kuma))/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "[A-Z0-9_]+_IMAGE=(?<depName>(?:docker\\.io|quay\\.io|ghcr\\.io)/[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
     }
   ],
   "packageRules": [

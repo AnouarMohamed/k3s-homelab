@@ -4,19 +4,20 @@ kind: Deployment
 metadata:
   name: keycloak
   labels:
-    'app.kubernetes.io/name': keycloak
-    'app.kubernetes.io/component': identity
-    'app.kubernetes.io/part-of': homelab-platform
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: identity
+    app.kubernetes.io/part-of: homelab-platform
 spec:
   replicas: 2
   selector:
-    matchLabels: {'app.kubernetes.io/name': keycloak}
+    matchLabels:
+      app.kubernetes.io/name: keycloak
   template:
     metadata:
       labels:
-        'app.kubernetes.io/name': keycloak
-        'app.kubernetes.io/component': identity
-        'app.kubernetes.io/part-of': homelab-platform
+        app.kubernetes.io/name: keycloak
+        app.kubernetes.io/component: identity
+        app.kubernetes.io/part-of: homelab-platform
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -24,19 +25,22 @@ spec:
         runAsUser: 1000
         runAsGroup: 1000
         fsGroup: 1000
-        seccompProfile: {type: RuntimeDefault}
+        seccompProfile:
+          type: RuntimeDefault
       topologySpreadConstraints:
         - maxSkew: 1
           topologyKey: kubernetes.io/hostname
           whenUnsatisfiable: DoNotSchedule
           labelSelector:
-            matchLabels: {'app.kubernetes.io/name': keycloak}
+            matchLabels:
+              app.kubernetes.io/name: keycloak
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             - topologyKey: kubernetes.io/hostname
               labelSelector:
-                matchLabels: {'app.kubernetes.io/name': keycloak}
+                matchLabels:
+                  app.kubernetes.io/name: keycloak
       containers:
         - name: keycloak
           image: ${KEYCLOAK_IMAGE}
@@ -50,41 +54,67 @@ spec:
             - --health-enabled=true
             - --metrics-enabled=true
           env:
-            - {name: KC_DB, value: postgres}
-            - {name: KC_DB_URL_HOST, value: keycloak-database-rw}
-            - {name: KC_DB_URL_DATABASE, value: keycloak}
-            - {name: KC_CACHE, value: ispn}
+            - name: KC_DB
+              value: postgres
+            - name: KC_DB_URL_HOST
+              value: keycloak-database-rw
+            - name: KC_DB_URL_DATABASE
+              value: keycloak
+            - name: KC_CACHE
+              value: ispn
           envFrom:
-            - secretRef: {name: keycloak-runtime}
+            - secretRef:
+                name: keycloak-runtime
           ports:
-            - {name: http, containerPort: 8080, protocol: TCP}
-            - {name: management, containerPort: 9000, protocol: TCP}
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: management
+              containerPort: 9000
+              protocol: TCP
           readinessProbe:
-            httpGet: {path: /health/ready, port: management}
+            httpGet:
+              path: /health/ready
+              port: management
             initialDelaySeconds: 20
             periodSeconds: 10
           livenessProbe:
-            httpGet: {path: /health/live, port: management}
+            httpGet:
+              path: /health/live
+              port: management
             initialDelaySeconds: 30
             periodSeconds: 20
           startupProbe:
-            httpGet: {path: /health/started, port: management}
+            httpGet:
+              path: /health/started
+              port: management
             failureThreshold: 30
             periodSeconds: 10
           resources:
-            requests: {cpu: 250m, memory: 768Mi}
-            limits: {cpu: '2', memory: 2Gi}
+            requests:
+              cpu: 250m
+              memory: 768Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
           securityContext:
             allowPrivilegeEscalation: false
-            capabilities: {drop: [ALL]}
+            capabilities:
+              drop:
+                - ALL
             readOnlyRootFilesystem: true
             runAsNonRoot: true
-            seccompProfile: {type: RuntimeDefault}
+            seccompProfile:
+              type: RuntimeDefault
           volumeMounts:
-            - {name: realm, mountPath: /opt/keycloak/data/import, readOnly: true}
-            - {name: cache, mountPath: /opt/keycloak/data/tmp}
+            - name: realm
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
+            - name: cache
+              mountPath: /opt/keycloak/data/tmp
       volumes:
         - name: realm
-          configMap: {name: keycloak-homelab-realm}
+          configMap:
+            name: keycloak-homelab-realm
         - name: cache
           emptyDir: {}

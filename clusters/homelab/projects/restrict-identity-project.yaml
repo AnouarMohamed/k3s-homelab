@@ -10,26 +10,47 @@ metadata:
     app.kubernetes.io/part-of: argocd
 spec:
   description: Keycloak identity resources only.
-  sourceRepos: ['${CONFIG_GITLAB_REPOSITORY_URL}']
+  sourceRepos:
+    - ${CONFIG_GITLAB_REPOSITORY_URL}
   destinations:
-    - {namespace: keycloak, server: https://kubernetes.default.svc}
+    - namespace: keycloak
+      server: https://kubernetes.default.svc
   clusterResourceWhitelist:
-    - {group: '', kind: Namespace, name: keycloak}
+    - group: ""
+      kind: Namespace
+      name: keycloak
   namespaceResourceWhitelist:
-    - {group: '', kind: ConfigMap}
-    - {group: '', kind: Service}
-    - {group: '', kind: ServiceAccount}
-    - {group: apps, kind: Deployment}
-    - {group: barmancloud.cnpg.io, kind: ObjectStore}
-    - {group: external-secrets.io, kind: ExternalSecret}
-    - {group: external-secrets.io, kind: SecretStore}
-    - {group: gateway.networking.k8s.io, kind: HTTPRoute}
-    - {group: monitoring.coreos.com, kind: PrometheusRule}
-    - {group: monitoring.coreos.com, kind: ServiceMonitor}
-    - {group: networking.k8s.io, kind: NetworkPolicy}
-    - {group: policy, kind: PodDisruptionBudget}
-    - {group: postgresql.cnpg.io, kind: Cluster}
-    - {group: postgresql.cnpg.io, kind: ScheduledBackup}
-    - {group: rbac.authorization.k8s.io, kind: Role}
-    - {group: rbac.authorization.k8s.io, kind: RoleBinding}
-  orphanedResources: {warn: true}
+    - group: ""
+      kind: ConfigMap
+    - group: ""
+      kind: Service
+    - group: ""
+      kind: ServiceAccount
+    - group: apps
+      kind: Deployment
+    - group: barmancloud.cnpg.io
+      kind: ObjectStore
+    - group: external-secrets.io
+      kind: ExternalSecret
+    - group: external-secrets.io
+      kind: SecretStore
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+    - group: monitoring.coreos.com
+      kind: PrometheusRule
+    - group: monitoring.coreos.com
+      kind: ServiceMonitor
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+    - group: policy
+      kind: PodDisruptionBudget
+    - group: postgresql.cnpg.io
+      kind: Cluster
+    - group: postgresql.cnpg.io
+      kind: ScheduledBackup
+    - group: rbac.authorization.k8s.io
+      kind: Role
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
+  orphanedResources:
+    warn: true

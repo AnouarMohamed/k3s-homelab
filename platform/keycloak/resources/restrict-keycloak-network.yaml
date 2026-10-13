@@ -4,76 +4,123 @@ kind: NetworkPolicy
 metadata:
   name: keycloak
   labels:
-    'app.kubernetes.io/name': keycloak
-    'app.kubernetes.io/component': network-policy
-    'app.kubernetes.io/part-of': homelab-platform
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: homelab-platform
 spec:
   podSelector:
-    matchLabels: {'app.kubernetes.io/name': keycloak}
-  policyTypes: [Ingress, Egress]
+    matchLabels:
+      app.kubernetes.io/name: keycloak
+  policyTypes:
+    - Ingress
+    - Egress
   ingress:
     - from:
         - namespaceSelector:
-            matchLabels: {'kubernetes.io/metadata.name': gateways}
-      ports: [{port: 8080, protocol: TCP}]
+            matchLabels:
+              kubernetes.io/metadata.name: gateways
+      ports:
+        - port: 8080
+          protocol: TCP
     - from:
         - namespaceSelector:
-            matchLabels: {'kubernetes.io/metadata.name': monitoring}
-      ports: [{port: 9000, protocol: TCP}]
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - port: 9000
+          protocol: TCP
     - from:
         - podSelector:
-            matchLabels: {'app.kubernetes.io/name': keycloak}
-      ports: [{port: 7800, protocol: TCP}]
+            matchLabels:
+              app.kubernetes.io/name: keycloak
+      ports:
+        - port: 7800
+          protocol: TCP
   egress:
     - to:
         - namespaceSelector:
-            matchLabels: {'kubernetes.io/metadata.name': kube-system}
-      ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
     - to:
         - podSelector:
-            matchLabels: {'cnpg.io/cluster': keycloak-database}
-      ports: [{port: 5432, protocol: TCP}]
+            matchLabels:
+              cnpg.io/cluster: keycloak-database
+      ports:
+        - port: 5432
+          protocol: TCP
     - to:
         - podSelector:
-            matchLabels: {'app.kubernetes.io/name': keycloak}
-      ports: [{port: 7800, protocol: TCP}]
+            matchLabels:
+              app.kubernetes.io/name: keycloak
+      ports:
+        - port: 7800
+          protocol: TCP
 ---
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: keycloak-database
   labels:
-    'app.kubernetes.io/name': keycloak-database
-    'app.kubernetes.io/component': network-policy
-    'app.kubernetes.io/part-of': homelab-platform
+    app.kubernetes.io/name: keycloak-database
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: homelab-platform
 spec:
   podSelector:
-    matchLabels: {'cnpg.io/cluster': keycloak-database}
-  policyTypes: [Ingress, Egress]
+    matchLabels:
+      cnpg.io/cluster: keycloak-database
+  policyTypes:
+    - Ingress
+    - Egress
   ingress:
     - from:
         - podSelector:
-            matchLabels: {'app.kubernetes.io/name': keycloak}
+            matchLabels:
+              app.kubernetes.io/name: keycloak
         - podSelector:
-            matchLabels: {'cnpg.io/cluster': keycloak-database}
-      ports: [{port: 5432, protocol: TCP}]
+            matchLabels:
+              cnpg.io/cluster: keycloak-database
+      ports:
+        - port: 5432
+          protocol: TCP
     - from:
         - namespaceSelector:
-            matchLabels: {'kubernetes.io/metadata.name': cnpg-system}
-      ports: [{port: 8000, protocol: TCP}]
+            matchLabels:
+              kubernetes.io/metadata.name: cnpg-system
+      ports:
+        - port: 8000
+          protocol: TCP
     - from:
         - namespaceSelector:
-            matchLabels: {'kubernetes.io/metadata.name': monitoring}
-      ports: [{port: 9187, protocol: TCP}]
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - port: 9187
+          protocol: TCP
   egress:
     - to:
         - namespaceSelector:
-            matchLabels: {'kubernetes.io/metadata.name': kube-system}
-      ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
     - to:
         - podSelector:
-            matchLabels: {'cnpg.io/cluster': keycloak-database}
-      ports: [{port: 5432, protocol: TCP}]
+            matchLabels:
+              cnpg.io/cluster: keycloak-database
+      ports:
+        - port: 5432
+          protocol: TCP
     - to:
-        - ipBlock: {cidr: 0.0.0.0/0}
-      ports: [{port: 443, protocol: TCP}]
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - port: 443
+          protocol: TCP

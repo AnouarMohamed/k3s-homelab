@@ -14,6 +14,9 @@ for root in "${manifest_roots[@]}"; do
     fi
     case "${file}" in
       "${repository_root}/apps/sentinel/"* | \
+        "${repository_root}/apps/vaultwarden/"* | \
+        "${repository_root}/apps/homepage/"* | \
+        "${repository_root}/apps/uptime-kuma/"* | \
         "${repository_root}/platform/argo-rollouts/"* | \
         "${repository_root}/platform/longhorn/"* | \
         "${repository_root}/platform/cloudnative-pg/"* | \
@@ -21,6 +24,7 @@ for root in "${manifest_roots[@]}"; do
         "${repository_root}/platform/velero/"* | \
         "${repository_root}/platform/openbao/"* | \
         "${repository_root}/platform/external-secrets/"* | \
+        "${repository_root}/platform/keycloak/"* | \
         "${repository_root}/platform/runtime-secrets/"* | \
         "${repository_root}/clusters/homelab/bootstrap/runtime-secrets/"* | \
         "${repository_root}/observability/"* | \

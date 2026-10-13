@@ -31,8 +31,12 @@ export KEYCLOAK_IMAGE
 export VAULTWARDEN_IMAGE
 export HOMEPAGE_IMAGE
 export UPTIME_KUMA_IMAGE
+# shellcheck disable=SC2016
 export ARGOCD_CLIENT_SECRET='${ARGOCD_CLIENT_SECRET}'
+# shellcheck disable=SC2016
 export GRAFANA_CLIENT_SECRET='${GRAFANA_CLIENT_SECRET}'
+# shellcheck disable=SC2016
+export argocd='$argocd'
 
 CONFIG_DOMAIN="$(yq --unwrapScalar '.spec.domain' "${config_file}")"
 CONFIG_ACME_EMAIL="$(yq --unwrapScalar '.spec.acmeEmail' "${config_file}")"

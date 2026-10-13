@@ -3,7 +3,10 @@ apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
   name: uptime-kuma
-  labels: {'app.kubernetes.io/name': uptime-kuma, 'app.kubernetes.io/component': alerting, 'app.kubernetes.io/part-of': uptime-kuma}
+  labels:
+    app.kubernetes.io/name: uptime-kuma
+    app.kubernetes.io/component: alerting
+    app.kubernetes.io/part-of: uptime-kuma
 spec:
   groups:
     - name: uptime-kuma.rules
@@ -11,5 +14,9 @@ spec:
         - alert: UptimeKumaUnavailable
           expr: kube_deployment_status_replicas_available{namespace="apps-uptime-kuma",deployment="uptime-kuma"} < 1
           for: 10m
-          labels: {severity: warning}
-          annotations: {summary: Uptime Kuma is unavailable, runbook_url: 'https://gitlab.${CONFIG_DOMAIN}/${CONFIG_GITLAB_PROJECT_PATH}/-/blob/main/docs/runbooks/operate-self-hosted-apps.md'}
+          labels:
+            severity: warning
+          annotations:
+            summary: Uptime Kuma is unavailable
+            runbook_url: >-
+              https://gitlab.${CONFIG_DOMAIN}/${CONFIG_GITLAB_PROJECT_PATH}/-/blob/main/docs/runbooks/operate-self-hosted-apps.md

@@ -4,9 +4,9 @@ kind: Namespace
 metadata:
   name: keycloak
   labels:
-    'app.kubernetes.io/name': keycloak
-    'app.kubernetes.io/component': identity
-    'app.kubernetes.io/part-of': homelab-platform
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: identity
+    app.kubernetes.io/part-of: homelab-platform
     policy.homelab.dev/profile: application
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/enforce-version: v1.36
