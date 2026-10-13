@@ -4,6 +4,15 @@ set -euo pipefail
 repository_root="$(git rev-parse --show-toplevel)"
 export PATH="${repository_root}/.tools/bin:${PATH}"
 schema_cache_dir="${repository_root}/.cache/kubeconform"
+ci_command_type_query='[.. | select(tag == "!!map") |
+  (.script[]?, .before_script[]?, .after_script[]?) |
+  select(tag != "!!str")] | length'
+
+for pipeline_file in \
+  "${repository_root}/.gitlab-ci.yml" \
+  "${repository_root}/ci/sentinel.gitlab-ci.yml"; do
+  test "$(yq "${ci_command_type_query}" "${pipeline_file}")" = 0
+done
 
 "${repository_root}/scripts/fetch-phase2-dependencies.sh" >/dev/null
 "${repository_root}/scripts/fetch-phase5-dependencies.sh" >/dev/null

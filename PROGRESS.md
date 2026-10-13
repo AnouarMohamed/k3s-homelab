@@ -591,6 +591,18 @@ explicitly because that release has no checksum-list asset.
   tree and 3.62 MB across all 33 existing commits and found no leaks.
 - No node, cluster, cloud account, registry, Git remote, or public endpoint was changed.
 
+## GitLab CI repair — 2026-10-13
+
+- The first pipeline after publishing the completed repository failed before creating
+  jobs. GitLab's CI linter reported that the inherited Sentinel promotion scripts were
+  not strings because YAML interpreted an unquoted colon followed by a space in the
+  commit message as a mapping.
+- Quoted the complete promotion command and added a local regression assertion that
+  every `script`, `before_script`, and `after_script` entry is a YAML string.
+- GitLab's project CI lint API then returned `valid: true` with no errors or warnings.
+  `make validate-sentinel`, `make lint`, and `make security` also returned exit 0;
+  Gitleaks found no leaks in the working tree or all 34 commits.
+
 ## Unverified
 
 - All real-hardware behavior.

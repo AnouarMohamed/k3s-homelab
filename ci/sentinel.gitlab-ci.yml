@@ -203,7 +203,7 @@ sign:sentinel-gitlab:
     - scripts/promote-sentinel-images.sh "$PROMOTION_ENVIRONMENT" "$api_digest" "$worker_digest"
     - git add "apps/sentinel/overlays/${PROMOTION_ENVIRONMENT}/image-lock.env"
     - git diff --cached --quiet && exit 0
-    - git commit -m "chore(sentinel): promote ${PROMOTION_ENVIRONMENT} images [skip ci]"
+    - 'git commit -m "chore(sentinel): promote ${PROMOTION_ENVIRONMENT} images [skip ci]"'
     - git push origin "HEAD:${CI_DEFAULT_BRANCH}"
 
 promote:sentinel-staging:
