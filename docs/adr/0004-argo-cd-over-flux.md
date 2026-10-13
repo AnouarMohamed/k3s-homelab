@@ -13,7 +13,7 @@ portfolio demonstration.
 ## Decision
 
 Use the pinned Argo CD Helm chart, bootstrap it once, and then let Argo CD manage the
-same release. A root Application owns explicit platform Applications and a constrained
+same release. A root Application owns specific platform Applications and a constrained
 Git-directory ApplicationSet owns application entries. AppProjects use exact GitLab
 sources, namespaces, and resource allowlists; generated applications cannot choose
 their own project.

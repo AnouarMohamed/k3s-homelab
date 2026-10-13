@@ -15,7 +15,7 @@ publicly.
 ## Grafana break glass
 
 Port-forward `service/monitoring-grafana` in `monitoring` and use the local credential
-held in `grafana-admin`. Local form login is intentionally retained. Repair the
+held in `grafana-admin`. Local form login is by design retained. Repair the
 `monitoring/grafana-oidc` secret or Keycloak client, verify group mapping, then rotate
 the emergency password if it was disclosed.
 
@@ -32,4 +32,4 @@ kubectl -n keycloak logs deploy/keycloak --since=15m
 If the realm is damaged, stop and follow the PostgreSQL PITR drill; do not re-import over
 the only copy. If only the bootstrap administrator secret is wrong, update
 `secret/keycloak/runtime` in OpenBao, refresh the ExternalSecret, and restart Keycloak.
-Realm login, TOTP, group claims, failover, and this procedure are `PENDING HARDWARE`.
+Realm login, TOTP, group claims, failover, and this procedure are `not run yet`.

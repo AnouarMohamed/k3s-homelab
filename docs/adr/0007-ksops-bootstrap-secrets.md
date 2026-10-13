@@ -32,4 +32,4 @@ repository paths.
 
 The administration host must supply the age identity during bootstrap, and loss of that
 identity requires re-encrypting bootstrap material. OpenBao replaces this mechanism for
-runtime application secrets in Phase 6.
+runtime application secrets in Runtime secrets.

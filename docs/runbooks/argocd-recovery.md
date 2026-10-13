@@ -26,7 +26,7 @@ argocd login localhost:8443 --username admin
 
 The built-in `admin` account is the preserved local break-glass administrator.
 `platform-reader` maps to the built-in read-only role. Rotate both passwords after first
-login and keep recovery material outside the repository. Phase 10 adds Keycloak while
+login and keep recovery material outside the repository. Identity and apps adds Keycloak while
 retaining this local path.
 
 ## Reconcile from Git

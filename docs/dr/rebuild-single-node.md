@@ -1,6 +1,6 @@
 # Rebuild one node
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ## Preconditions
 

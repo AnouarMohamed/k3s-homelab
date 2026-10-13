@@ -1,6 +1,6 @@
 # Disaster Recovery
 
-Drills are procedures, not claims. Result tables remain empty until Anouar runs them on
+Drills are procedures, not claims. Result tables remain empty until I runs them on
 hardware.
 
 - [Restore storage and database backups](restore-drill-storage.md)

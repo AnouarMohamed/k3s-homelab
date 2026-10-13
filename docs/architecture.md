@@ -25,7 +25,7 @@ flowchart LR
   Platform --> Storage
 ```
 
-Runtime proof remains linked from the [evidence map](evidence.md); diagrams describe
+Runtime checks remain in the [bring-up checklist](bring-up-checklist.md); diagrams describe
 intended flow and are not proof that hardware is healthy.
 
 ## GitOps reconciliation flow
@@ -46,7 +46,7 @@ flowchart LR
   Argo --> Git
 ```
 
-## Phase 4 edge traffic
+## Edge traffic edge traffic
 
 ```mermaid
 flowchart LR
@@ -65,7 +65,7 @@ The public and administrative paths share no router port. OpenTofu owns the temp
 public Tunnel CNAME. Internal names resolve only through split DNS and the internal
 Gateway's centrally configured load-balancer address.
 
-## Phase 5 storage and recovery
+## Storage and backups storage and recovery
 
 ```mermaid
 flowchart LR
@@ -85,7 +85,7 @@ flowchart LR
 Local replicas provide availability, not disaster recovery. Longhorn, CNPG, and Velero
 use separate prefixes and scoped credentials in the same centrally configured bucket.
 
-## Phase 6 secret flow
+## Runtime secrets secret flow
 
 ```mermaid
 flowchart LR
@@ -101,9 +101,9 @@ flowchart LR
 
 SOPS cannot depend on OpenBao because it establishes the services needed to start and
 recover OpenBao. Runtime consumers receive short-lived identities and cannot write
-secret data. Manual unseal remains an explicit availability tradeoff.
+secret data. Manual unseal remains an specific availability tradeoff.
 
-## Phase 7 telemetry flow
+## Observability telemetry flow
 
 ```mermaid
 flowchart LR
@@ -126,7 +126,7 @@ The telemetry backends are internal only. Their Longhorn volumes improve local
 availability, but telemetry remains disposable relative to application and backup data.
 Alertmanager and Argo CD receive distinct notification destinations from OpenBao.
 
-## Phase 8 policy and supply-chain flow
+## Policy and supply chain policy and supply-chain flow
 
 ```mermaid
 flowchart LR
@@ -142,9 +142,9 @@ flowchart LR
   Prometheus --> Dashboard[Grafana security posture]
 ```
 
-Phase 8 installs the admission and detection layers in Audit mode. Phase 9 supplies the
+Policy and supply chain installs the admission and detection layers in Audit mode. Sentinel supplies the
 owned, keylessly signed images and digest-only promotion path. Deny promotion requires
-clean reports and the explicit enforcement runbook.
+clean reports and the specific enforcement runbook.
 
 ## CI/CD and package flow
 

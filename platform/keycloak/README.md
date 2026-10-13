@@ -7,4 +7,4 @@ the internal Gateway.
 
 Argo CD applies `resources/`. Operate and recover it with
 [`docs/runbooks/recover-sso.md`](../../docs/runbooks/recover-sso.md). Validate the
-complete Phase 10 surface with `make validate-identity-apps`.
+complete Identity and apps surface with `make validate-identity-apps`.

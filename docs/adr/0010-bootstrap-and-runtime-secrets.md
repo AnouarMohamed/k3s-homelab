@@ -38,7 +38,7 @@ Kubernetes manifests.
 
 ## Tradeoffs
 
-The boundary is intentionally not a complete SOPS migration. Bootstrap credentials
+The boundary is by design not a complete SOPS migration. Bootstrap credentials
 still need disciplined age-key custody and periodic rotation. After a total power loss,
 an operator must unseal enough Raft members before runtime secrets can refresh. Existing
 Kubernetes Secrets can keep workloads running during a short OpenBao outage, so their

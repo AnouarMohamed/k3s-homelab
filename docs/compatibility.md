@@ -1,6 +1,6 @@
 # Compatibility and upgrade order
 
-`PLAN.md` records every exact version and digest. This table captures the compatibility
+The dependency files record every exact version and digest. This table captures the compatibility
 boundaries that matter during an upgrade.
 
 | Layer | Current baseline | Compatibility boundary |

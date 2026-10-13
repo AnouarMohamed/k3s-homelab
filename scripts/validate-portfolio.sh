@@ -6,14 +6,14 @@ export PATH="${repository_root}/.tools/bin:${PATH}"
 
 required_files=(
   README.md LICENSE CODEOWNERS SECURITY.md docs/architecture.md docs/compatibility.md
-  docs/evidence.md docs/skills-demonstrated.md docs/adr/README.md docs/runbooks/README.md
-  docs/img/README.md docs/experimental-phone-workers.md
+  docs/status.md docs/setup.md docs/bring-up-checklist.md docs/capacity.md
+  docs/adr/README.md docs/runbooks/README.md docs/dr/README.md
 )
 for file in "${required_files[@]}"; do
   test -s "${repository_root}/${file}"
 done
 
-test "$(wc -l <"${repository_root}/README.md")" -lt 150
+test "$(wc -l <"${repository_root}/README.md")" -le 70
 test "$(grep -c '^```mermaid$' "${repository_root}/docs/architecture.md")" -ge 6
 test ! -e "${repository_root}/CONTRIBUTING.md"
 test -z "$(find "${repository_root}" \
@@ -46,4 +46,4 @@ for phase in 2 3 4 5 6 7 8 9 11; do
     "${repository_root}/scripts/fetch-phase${phase}-dependencies.sh"
 done
 
-printf 'Phase 12 portfolio, evidence, governance, and operations indexes validated.\n'
+printf 'Portfolio documentation and operations indexes validated.\n'

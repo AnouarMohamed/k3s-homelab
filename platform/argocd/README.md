@@ -8,7 +8,7 @@ The `homelab-renderer-v1` sidecar renders only known repository paths through
 `scripts/render-gitops.sh`. It supplies pinned yq, Kustomize, and KSOPS binaries,
 mounts the age identity read-only, and uses its own temporary volume. Pinned chart
 archives are downloaded into that volume, checksum-verified, and cached behind a
-per-phase file lock. It never writes rendered private addresses, dependency archives,
+per-component file lock. It never writes rendered private addresses, dependency archives,
 or decrypted secrets into Git.
 
 The server remains a ClusterIP with no Ingress, HTTPRoute, or public tunnel. Follow

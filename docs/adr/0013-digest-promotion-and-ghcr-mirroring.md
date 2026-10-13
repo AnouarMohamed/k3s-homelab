@@ -3,7 +3,7 @@
 ## Context
 
 I need staging to update automatically after a successful build while production
-remains an explicit decision. GitLab is the deployment and CI source, but I also want
+remains an specific decision. GitLab is the deployment and CI source, but I also want
 the public release artifacts to be easy to inspect through GHCR. Rebuilding an image
 for each environment or registry would make the tested bytes differ from the deployed
 bytes.

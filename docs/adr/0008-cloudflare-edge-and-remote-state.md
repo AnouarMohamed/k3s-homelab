@@ -34,6 +34,6 @@ immediately SOPS-encrypting it.
 
 I do not open a home-router port. OpenTofu owns public DNS and the limited test CNAME,
 which prevents two controllers fighting over a tunnel record. I deploy external-dns
-for explicit, annotation-selected Gateway routes, but it owns no Phase 4 record. The
+for specific, annotation-selected Gateway routes, but it owns no Edge traffic record. The
 tradeoff is that a Cloudflare outage removes remote entry while LAN administration
 continues to work.

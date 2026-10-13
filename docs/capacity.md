@@ -1,7 +1,7 @@
-# Phase 10 capacity budget
+# Application capacity budget
 
 These are Kubernetes limits, not observed consumption. Hardware utilization remains
-`PENDING HARDWARE`.
+`not run yet`.
 
 | Component | Replicas | CPU requests | Memory requests | Persistent data |
 | --- | ---: | ---: | ---: | ---: |
@@ -13,4 +13,4 @@ These are Kubernetes limits, not observed consumption. Hardware utilization rema
 The two CNPG clusters request six database pods at 100m CPU and 256 MiB each. Before I
 enable an optional app, I will record 30 days of node CPU, memory, and Longhorn capacity
 and keep at least one node's requested capacity free. Optional apps remain choices in
-`HUMAN_TODO.md`, not planned deployments.
+`setup.md`, not planned deployments.

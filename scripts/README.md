@@ -2,7 +2,7 @@
 
 Scripts provide deterministic tool installation, validation, rendering, bootstrap, and
 test entry points. Every script is non-interactive unless a destructive operation
-requires an explicit confirmation value.
+requires an specific confirmation value.
 
 `render-config.sh` is the common in-memory substitution boundary for Kubernetes
 sources. `fetch-phase2-dependencies.sh` caches only artifacts whose upstream digest or

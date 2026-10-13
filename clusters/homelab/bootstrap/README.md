@@ -8,10 +8,10 @@ the initially seeded credential through KSOPS after Argo CD can clone the reposi
 
 The checked-in repository-credential Secret is valid SOPS ciphertext containing only
 placeholder strings. It uses the disposable public recipient in `.sops.yaml`; the
-corresponding private identity is intentionally not committed, so this fixture cannot
+corresponding private identity is by design not committed, so this fixture cannot
 be mistaken for usable credentials.
 
-Before GitOps bootstrap, Anouar replaces the recipient in `.sops.yaml`, creates a
+Before GitOps bootstrap, I replaces the recipient in `.sops.yaml`, creates a
 scratch plaintext Secret containing the real least-privilege GitLab deploy credentials,
 and encrypts it directly to the tracked path:
 

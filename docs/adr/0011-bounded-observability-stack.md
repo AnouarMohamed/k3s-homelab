@@ -12,7 +12,7 @@ in Git.
 I use kube-prometheus-stack for Prometheus, Alertmanager, Grafana, node-exporter, and
 kube-state-metrics. Alloy sends pod logs to a single-binary Loki instance. Applications
 send OTLP traces to two OpenTelemetry Collector replicas, which forward to a
-single-binary Tempo instance. Blackbox exporter performs only explicitly configured
+single-binary Tempo instance. Blackbox exporter performs only directly configured
 internal probes, and Sloth turns SLO resources into Prometheus rules.
 
 Prometheus keeps 15 days with an 18 GB limit, Loki keeps seven days, and Tempo keeps
@@ -38,5 +38,5 @@ Single-replica Loki and Tempo can lose recent telemetry during failure or resche
 The selected upstream Tempo chart is deprecated, so it must move to the supported
 distributed chart before scaling beyond this bounded deployment. Node-exporter needs
 host namespaces and read-only host mounts, requiring the exact security exception in
-the infrastructure ledger. Retention must be tuned from measured ingestion on hardware,
+the infrastructure checklist. Retention must be tuned from measured ingestion on hardware,
 not assumed from offline rendering.

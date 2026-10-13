@@ -9,9 +9,9 @@ The platform uses layered controls rather than treating one scanner as a boundar
   not an untested flag flip.
 - Trivy Operator continuously creates vulnerability, SBOM, configuration, and RBAC
   reports. Node collection is disabled to avoid unnecessary host access.
-- CI scans source and images before promotion; Phase 9 connects signing and digest-based
+- CI scans source and images before promotion; Sentinel connects signing and digest-based
   delivery to the admission rule.
-- Infrastructure exceptions are explicit, narrow, and separate from application policy.
+- Infrastructure exceptions are specific, limited, and separate from application policy.
 
 Runtime report freshness, admission latency, signature verification, and finding counts
-remain `PENDING HARDWARE` until Anouar completes the Phase 8 verification ledger.
+remain `not run yet` until I complete the Policy and supply chain verification checklist.

@@ -1,84 +1,70 @@
 # Three-node k3s homelab
 
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Offline validation](https://img.shields.io/badge/offline%20validation-phases%200--11-success.svg)](PROGRESS.md)
-[![Hardware](https://img.shields.io/badge/hardware-PENDING-orange.svg)](docs/VERIFY_ON_HARDWARE.md)
-
-I built this repository to practice the platform engineering work behind a small,
-defensible production system: Linux automation, highly available Kubernetes, GitOps,
-zero-inbound-port access, supply-chain controls, observability, and recovery. It models
-my three physical PCs; it is not presented as a generic cluster template.
+This repository describes the k3s cluster I run on three x86-64 PCs. All three nodes
+run the control plane, embedded etcd, and workloads. Git holds the node setup, cluster
+resources, policy, and application delivery. Cloudflare Tunnel and WARP provide access,
+so I do not open inbound ports on the router.
 
 ```mermaid
 flowchart LR
-  Commit[GitLab commit] --> CI[Test, scan, sign]
-  CI --> Registry[GitLab registry + GHCR mirror]
+  Git[GitLab] --> CI[CI]
+  CI --> Images[Container registry]
   CI --> Argo[Argo CD]
-  Public[Public users] --> CF[Cloudflare Tunnel]
-  Admin[Administrator via WARP] --> CF
-  CF --> Gateway[Cilium Gateway API]
+  Users[Public users] --> Tunnel[Cloudflare Tunnel]
+  Admin[Private admin access] --> WARP[Cloudflare WARP]
+  Tunnel --> Gateway[Cilium Gateway]
+  WARP --> Gateway
   Argo --> Cluster
-  Registry --> Cluster
-  subgraph Cluster[Three schedulable k3s servers]
-    VIP[kube-vip API VIP]
-    Network[Cilium, Hubble, WireGuard]
-    Data[Longhorn, CNPG, Velero]
-    Signals[Prometheus, Loki, Tempo]
-    Apps[Sentinel + private apps]
+  Images --> Cluster
+  subgraph Cluster[Three k3s servers]
+    API[kube-vip API address]
+    Network[Cilium network]
+    Data[Longhorn and PostgreSQL]
+    Signals[Metrics logs and traces]
+    Apps[Applications]
   end
   Gateway --> Apps
-  Apps --> Data
-  Cluster --> Signals
+  Apps --> Data; Cluster --> Signals
 ```
 
-## What it demonstrates
+## What runs on it
 
-| Capability | Repository evidence | Runtime evidence |
-| --- | --- | --- |
-| Three-server HA | [Ansible and k3s design](docs/architecture.md) | [Pending node/VIP/quorum checks](docs/VERIFY_ON_HARDWARE.md) |
-| GitOps reconciliation | [Restricted projects and sync waves](clusters/homelab/apps/) | Argo CD screenshot pending |
-| Zero inbound router ports | [Public-surface boundary](docs/security/public-surface.md) | Tunnel/WARP checks pending |
-| Backup and recovery | [Seven DR drills](docs/dr/README.md) | Result tables intentionally empty |
-| Supply-chain security | [Policy and delivery flow](docs/architecture.md#phase-8-policy-and-supply-chain-flow) | App bundles signed; Sentinel images pending GitLab CI |
-| Full-stack telemetry | [Observability stack](observability/) | Dashboards and alerts pending hardware |
-| Canary delivery | [Sentinel Rollout](apps/sentinel/) | Canary analysis pending hardware |
-| Failure testing | [Bounded Chaos Mesh experiments](platform/chaos-mesh/) | Experiments pending hardware |
+- Cilium, Hubble, Argo CD, and Argo Rollouts
+- Longhorn, CloudNativePG, and Velero
+- OpenBao and External Secrets
+- Prometheus, Grafana, Loki, Alloy, Tempo, and OpenTelemetry
+- Kyverno and Trivy Operator
+- Homelab Sentinel, Keycloak, and Vaultwarden
+- Homepage and Uptime Kuma
+- Chaos Mesh
 
-## Hardware and access
+## Layout
 
-| Node | Architecture | Role | Scheduling |
-| --- | --- | --- | --- |
-| `pc-1` | x86-64 | k3s server + embedded etcd | Enabled |
-| `pc-2` | x86-64 | k3s server + embedded etcd | Enabled |
-| `pc-3` | x86-64 | k3s server + embedded etcd | Enabled |
+```text
+apps/           application source and Kubernetes resources
+clusters/       Argo CD entry points for the homelab cluster
+config/         values that belong to this installation
+infra/          Ansible node setup and OpenTofu cloud resources
+observability/  metrics, logs, traces, dashboards, and alerts
+platform/       shared cluster services
+policies/       admission and supply-chain policy
+scripts/        local validation and guarded operations
+docs/           design decisions, runbooks, and recovery drills
+```
 
-The Kubernetes API floats behind kube-vip. Cilium replaces kube-proxy, announces LAN
-service addresses, and encrypts cross-node pod traffic. Cloudflare Tunnel is the only
-external ingress path; WARP carries private administration traffic. No router port is
-opened. Environment-specific values appear only in
-[`config/homelab.yaml`](config/homelab.yaml).
+## Using it
 
-## Current state
+Run `make help` for the available checks and guarded operations. Before the first
+bring-up, work through [the setup list](docs/setup.md), then follow the
+[bring-up checklist](docs/bring-up-checklist.md).
 
-Phases 0–11 pass the applicable offline lint, render, schema, policy, security, and
-application gates. Nothing in this repository proves the physical cluster or external
-accounts work yet. Only I can change `PENDING HARDWARE` to `Verified` after running the
-recorded commands and capturing evidence.
+## State
 
-- [Component status and evidence](docs/STATUS.md)
-- [Observed validation output](PROGRESS.md)
-- [Hardware verification ledger](docs/VERIFY_ON_HARDWARE.md)
-- [Human-only account and recovery tasks](HUMAN_TODO.md)
+The repository is written and passes offline validation.
+It has not run on my PCs yet.
+I track that work in [the status table](docs/status.md).
 
-## Explore
+[Architecture](docs/architecture.md) · [ADRs](docs/adr/README.md) ·
+[Runbooks](docs/runbooks/README.md) · [DR drills](docs/dr/README.md)
 
-- [Architecture and data flows](docs/architecture.md)
-- [Architecture decisions](docs/adr/README.md)
-- [Operations runbooks](docs/runbooks/README.md)
-- [Compatibility and upgrade order](docs/compatibility.md)
-- [Evidence map](docs/evidence.md)
-- [Skills demonstrated](docs/skills-demonstrated.md)
-- [Screenshot checklist](docs/img/README.md)
-
-Run `make help` to see the supported offline validation and guarded operational entry
-points. Bootstrap and recovery commands are for my private administration session only.
+Licensed under the [MIT License](LICENSE).

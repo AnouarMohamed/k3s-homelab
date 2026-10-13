@@ -1,6 +1,6 @@
 # Storage restore drill
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ## Objective
 

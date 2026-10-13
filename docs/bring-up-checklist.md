@@ -1,11 +1,11 @@
-# Verify on hardware
+# Bring-up checklist
 
-Automation cannot mark any item in this document as passed. Run commands from a trusted
-administration session after replacing the central configuration placeholders.
+I run these commands from a trusted administration session after replacing the central
+configuration placeholders. I record only results I observe on the three PCs.
 
-## Phase 1 — Nodes and k3s
+## Node provisioning: Nodes and k3s
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ```bash
 ANSIBLE_CONFIG=infra/ansible/ansible.cfg \
@@ -22,11 +22,11 @@ sudo journalctl -u k3s --since '30 minutes ago' --no-pager
 
 Expected: the second playbook run reports no changes; the VIP answers; all three server
 nodes exist; auditd, fail2ban, UFW, chrony, and k3s are active; an S3 snapshot is
-listed. Before Phase 2, `NotReady` because no CNI is expected.
+listed. Before Cilium, `NotReady` because no CNI is expected.
 
-## Phase 2 — Cilium
+## Cilium: Cilium
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ```bash
 make bootstrap-cni
@@ -44,9 +44,9 @@ Expected: Cilium is healthy, all nodes become Ready, connectivity tests pass, an
 conflicts, L2 announcement leases exist, and encryption status reports WireGuard on
 all three nodes.
 
-## Phase 3 — Argo CD
+## Argo CD: Argo CD
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ```bash
 export SOPS_AGE_KEY_FILE=/secure/path/to/keys.txt
@@ -67,9 +67,9 @@ no sources or destinations; repo-server token automount is `false`; and local `a
 plus `platform-reader` accounts exist. Test a drift correction only on a harmless
 ConfigMap and record the observed reconciliation before marking self-heal verified.
 
-## Phase 4 — Certificates, DNS, Tunnel, and WARP
+## Edge traffic: Certificates, DNS, Tunnel, and WARP
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ```bash
 tofu -chdir=infra/tofu plan -refresh=false
@@ -91,9 +91,9 @@ From an enrolled WARP client, verify the private CIDR and split-DNS internal hos
 repeat from an unenrolled client and confirm administration endpoints are unreachable.
 Delete or disable the temporary whoami route after capturing redacted evidence.
 
-## Phase 5 — Storage and backups
+## Storage and backups: Storage and backups
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ```bash
 kubectl get storageclass
@@ -114,9 +114,9 @@ location is Available; and the marker survives movement to a different node. The
 `docs/dr/restore-drill-storage.md`. Scheduled backups, restores, replica recovery, and
 measured recovery time remain unverified until that empty results table is filled.
 
-## Phase 6 — Runtime secrets
+## Runtime secrets: Runtime secrets
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 Follow `docs/runbooks/initialize-and-unseal-openbao.md`; never copy recovery values into
 the verification log. Then run only the non-secret status checks below.
@@ -143,11 +143,11 @@ are spread across the three nodes. The exact TokenRequest is allowed and the req
 for `default` is denied. Perform a test rotation, confirm ESO refresh and an audit-log
 entry without recording the value, then restart voters one at a time and manually
 unseal each. Initialization, unseal, Raft failover, audit persistence, authentication,
-rotation, revocation, and recovery remain unverified until Anouar records those results.
+rotation, revocation, and recovery remain unverified until I records those results.
 
-## Phase 7 — Observability
+## Observability: Observability
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ```bash
 kubectl -n monitoring get pods,pvc -o wide
@@ -174,12 +174,12 @@ are Ready without exposing their values; Loki and Tempo return ready; Alloy send
 logs to Loki; an OTLP test trace reaches Tempo; all seven dashboards load with working
 data sources; and blackbox probes succeed. Measure storage growth for one week before
 changing retention. Notification delivery, dashboard content, log collection, trace
-delivery, probe results, and SLO evaluation remain unverified until Anouar records the
+delivery, probe results, and SLO evaluation remain unverified until I records the
 observations.
 
-## Phase 8 — Policy and supply chain
+## Policy and supply chain: Policy and supply chain
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ```bash
 kubectl -n kyverno get deploy,pod,pdb,networkpolicy
@@ -210,13 +210,13 @@ operator has two Ready replicas and produces fresh reports without node-collecto
 both service-account authorization checks return `no`; the dashboard loads and the
 critical-finding alert evaluates from Trivy metrics. The invalid dry-run is admitted
 with Audit findings before promotion and denied only after the enforcement runbook is
-completed. GitLab OIDC signature acceptance remains pending the Phase 9 signed image.
+completed. GitLab OIDC signature acceptance remains pending the Sentinel signed image.
 
-## Phase 9 — Homelab Sentinel and delivery
+## Sentinel: Homelab Sentinel and delivery
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
-After the GitLab variables in `HUMAN_TODO.md` are protected and populated, run a
+After the GitLab variables in `setup.md` are protected and populated, run a
 default-branch pipeline and retain links to every job. Verify that the image indexes
 contain both target platforms, all security gates passed, and the GHCR references are
 digest-addressable:
@@ -259,12 +259,12 @@ the selected service status fields. Replace the diagnostic image placeholder wit
 reviewed immutable digest before running it.
 
 Exercise a canary abort, node reschedule, database failover, S3 recovery, and the
-rollback runbook. Record real timestamps and evidence in the Phase 9 result tables;
+rollback runbook. Record real timestamps and evidence in the Sentinel result tables;
 do not copy expected values into results.
 
-## Phase 10 — Identity and self-hosted applications
+## Identity and apps: Identity and self-hosted applications
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ```bash
 kubectl -n keycloak get deploy,cluster,scheduledbackup,servicemonitor,httproute
@@ -279,9 +279,9 @@ Ready. Verify Argo CD and Grafana login for both groups, mandatory TOTP enrollme
 local break-glass login, a Keycloak pod eviction, a CNPG failover, a Vaultwarden backup,
 and a Velero restore. Record real timestamps and observations; do not infer success.
 
-## Phase 11 — Chaos and disaster recovery
+## Chaos and recovery: Chaos and disaster recovery
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ```bash
 kubectl get namespaces -o json | \
@@ -296,11 +296,11 @@ daemon per node are Ready; every experiment remains in `chaos-testing`, finishes
 its declared duration, and the target returns to three Ready replicas. Run the seven DR
 drills separately and leave every results table empty until real measurements exist.
 
-## Phase 12
+## Documentation
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
-After every earlier phase is verified, open the README as a new visitor and follow
+After every earlier check is complete, open the README as a new visitor and follow
 each architecture, evidence, ADR, runbook, status, and security link. Confirm that no
 link exposes an administrative endpoint and that every public URL matches
 `docs/security/public-surface.md`.
@@ -318,6 +318,6 @@ git status --short
 ```
 
 Expected: every command exits zero, the worktree contains only the deliberately added
-redacted evidence, and every status claim points to observed output. Anouar reviews the
+redacted evidence, and every status claim points to observed output. I reviews the
 five-minute walkthrough and is the only person who may change hardware status to
 `Verified`.

@@ -8,4 +8,4 @@ privileged node collection.
 Run `make validate-policy` for checksum verification, deterministic chart and policy
 renders, strict CRD schemas, Kyverno tests, Prometheus rule checks, dashboard parsing,
 workload assertions, and kube-linter. Runtime admission and scan results remain
-`PENDING HARDWARE`.
+`not run yet`.

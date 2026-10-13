@@ -8,5 +8,5 @@ Use separate tokens rather than a global API key.
 - cloudflared connector token: generated for only the homelab Tunnel.
 
 Token values are never committed. Kubernetes copies are SOPS-encrypted to
-Anouar's age recipient. OpenTofu state is sensitive because the connector token
+my age recipient. OpenTofu state is sensitive because the connector token
 is an output; it belongs only in the encrypted, versioned S3 backend.

@@ -5,4 +5,4 @@ deliberately non-compliant Pod. Expected pass and failure outcomes cover labels,
 resources, probes, container hardening, and immutable image references.
 
 Registry and signature policies are schema-validated offline; cryptographic verification
-requires the signed Phase 9 image and remains a hardware/registry acceptance check.
+requires the signed Sentinel image and remains a hardware/registry acceptance check.

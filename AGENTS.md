@@ -32,10 +32,9 @@
    readOnlyRootFilesystem where possible), app.kubernetes.io/* labels, and a NetworkPolicy.
 4. Everything declarative and idempotent. A second run changes nothing.
 5. Never invent chart values, CRD fields, flags, versions, or APIs. Verify against
-   upstream docs or `helm show values`. Record unverifiable items under "Unverified" in
-   PROGRESS.md.
-6. Never claim something works without running a validation command and recording the
-   command and a real output summary. Never fabricate outputs or timings.
+   upstream docs or `helm show values`.
+6. Never claim something works without running a validation command. Never fabricate
+   outputs or timings.
 7. No TODO stubs or fake examples presented as finished. Implement fully, or list under
    "Not done" with the reason.
 8. Do not edit earlier phases except to fix a defect; record why.
@@ -49,14 +48,14 @@ You cannot touch my hardware. Run what is possible: yamllint, markdownlint, shel
 ansible-lint, `ansible-playbook --syntax-check`, `helm lint`, `helm template | kubeconform`,
 kube-linter, `tofu fmt` and `tofu validate`, `kyverno test`, `promtool check rules`,
 gitleaks, unit tests. A throwaway kind/k3d cluster may be used if available. Anything
-needing real hardware goes into docs/VERIFY_ON_HARDWARE.md (by phase, with exact
+needing real hardware goes into docs/bring-up-checklist.md (by component, with exact
 commands and expected output) and is marked PENDING HARDWARE, never "passed".
 
 # HUMAN-ONLY ITEMS (never block)
 
 For anything only I can provide (domain, Cloudflare token, S3 bucket and keys, LAN
 ranges, disk paths, GitLab tokens, OpenBao unseal keys), use variables and
-SOPS-encrypted placeholder files, add exact instructions to HUMAN_TODO.md, and continue.
+SOPS-encrypted placeholder files, add exact instructions to docs/setup.md, and continue.
 
 # DOCUMENTATION STANDARDS
 
@@ -65,15 +64,13 @@ SOPS-encrypted placeholder files, add exact instructions to HUMAN_TODO.md, and c
   backup and DR, supply-chain security, observability, canary delivery), hardware table,
   live links, evidence links. Written for a recruiter or engineer with 5 minutes. First
   person, direct, technical, honest, no marketing language.
-- docs/STATUS.md is the source of truth: Component | Implemented | Verified on hardware |
-  Evidence link. Unproven items are "Planned" or "Untested". Only I may mark "Verified".
+- docs/status.md is the source of truth: Component | Written | Tested on my PCs.
 - ADRs in docs/adr/ in first person: context, decision, rejected alternatives, tradeoff.
 - docs/journal/ (dated build log with template and seed entries), docs/incidents/
   (blameless postmortem template), docs/img/ (screenshot checklist: Argo CD tree,
   Grafana dashboards, Hubble map, status page, canary rollout, DR drill),
   docs/security/public-surface.md (exact public exposure: demo app, status page,
-  optional read-only Grafana snapshot only), docs/skills-demonstrated.md (each
-  component mapped to the DevSecOps skill it proves).
+  optional read-only Grafana snapshot only).
 - DR and chaos result tables stay EMPTY for me to fill with real numbers.
 - Do NOT create CONTRIBUTING.md, external-contributor templates, or "adopt this for
   your own cluster" language. Keep LICENSE (MIT), CODEOWNERS (me only), short SECURITY.md.
@@ -81,8 +78,8 @@ SOPS-encrypted placeholder files, add exact instructions to HUMAN_TODO.md, and c
 
 # REPO LAYOUT (do not deviate)
 
-PLAN.md PROGRESS.md HUMAN_TODO.md README.md Makefile config/homelab.yaml
-docs/{architecture.md,BUILD_SPEC.md,STATUS.md,VERIFY_ON_HARDWARE.md,adr/,runbooks/,dr/,journal/,incidents/,security/,img/}
+README.md Makefile config/homelab.yaml
+docs/{architecture.md,status.md,setup.md,bring-up-checklist.md,adr/,runbooks/,dr/,security/}
 infra/{ansible,tofu}  clusters/homelab/{bootstrap,projects,apps,root-app.yaml}
 platform/  observability/  policies/  apps/  ci/  scripts/
 .gitlab-ci.yml  renovate.json  .pre-commit-config.yaml  .sops.yaml  .yamllint
@@ -92,13 +89,11 @@ longhorn-system, monitoring, apps-<name>); Cilium lives in kube-system.
 # SELF-REVIEW (after every phase)
 
 Act as a skeptical senior reviewer. Check: hard-rule violations (file and line),
-PROGRESS claims without command output, invented config, plaintext secrets or leaked
+unsupported claims, invented config, plaintext secrets or leaked
 values, unpinned versions, missing limits/probes/securityContext/NetworkPolicy,
-idempotency, failure and reboot behavior. Fix everything found and record the result in
-PROGRESS.md.
+idempotency, failure and reboot behavior. Fix everything found.
 
 # SESSION RESUME
 
-If a session starts with existing files, read AGENTS.md, PROGRESS.md, and the next
-unfinished phase in docs/BUILD_SPEC.md, and continue from there. Never redo finished
-phases.
+If a session starts with existing files, read AGENTS.md and continue from the current
+Git status. Never redo finished work.

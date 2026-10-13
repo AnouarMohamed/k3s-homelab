@@ -2,7 +2,7 @@
 
 Homelab Sentinel is the small application I use to demonstrate the complete
 delivery path in this repository. A probe worker records service-state changes
-in PostgreSQL. A separate, read-only API publishes only services explicitly
+in PostgreSQL. A separate, read-only API publishes only services directly
 marked public and serves the status UI.
 
 ## Operate
@@ -27,4 +27,4 @@ test. Run `make validate-sentinel` from the repository root to build, render,
 validate the complete delivery configuration and parse the k6 load scenario. Live
 load execution, registry publication,
 OIDC signing, Argo Rollouts analysis, and database failover remain hardware or
-CI checks documented in `docs/VERIFY_ON_HARDWARE.md`.
+CI checks documented in `docs/bring-up-checklist.md`.

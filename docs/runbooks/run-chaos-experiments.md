@@ -31,4 +31,4 @@ kubectl -n chaos-testing delete -k platform/chaos-mesh/experiments
 Abort immediately if an object selects another namespace, the Kubernetes API or etcd
 degrades, or non-test workloads show injected faults. The delete command removes only
 the experiment CRs; verify target pods recover before ending the window. Record actual
-results in the drill journal. Execution remains `PENDING HARDWARE`.
+results in the drill journal. Execution remains `not run yet`.

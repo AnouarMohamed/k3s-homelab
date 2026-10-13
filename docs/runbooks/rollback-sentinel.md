@@ -8,7 +8,7 @@ kubectl argo rollouts undo sentinel-api -n apps-sentinel
 kubectl argo rollouts get rollout sentinel-api -n apps-sentinel --watch
 ```
 
-These commands affect the cluster and are `PENDING HARDWARE`; do not run them from
+These commands affect the cluster and are `not run yet`; do not run them from
 repository automation.
 
 ## Restore the GitOps source

@@ -25,7 +25,7 @@ The state bucket must have versioning enabled. `AWS_REGION` defaults to
 repository validation uses an isolated temporary copy with its backend disabled;
 it never contacts the configured endpoint.
 
-After an authorized apply, retrieve the sensitive output explicitly and encrypt
+After an authorized apply, retrieve the sensitive output directly and encrypt
 it into `provide-cloudflared-tunnel-token.sops.yaml`. Never redirect a plaintext
 token into the repository or a shell history. Applies and state migrations are
 manual human operations; Make exposes initialization and planning only.

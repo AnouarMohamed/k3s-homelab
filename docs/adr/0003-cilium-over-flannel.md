@@ -24,8 +24,8 @@ same values so adoption cannot silently change networking.
 - Cilium becomes a bootstrap-critical dependency and must be recoverable without Argo
   CD.
 - Kernel, firewall, API VIP, interface-selector, and Kubernetes-version compatibility
-  require explicit validation.
-- Baseline namespace policies deny traffic by default and add narrow DNS and
+  require specific validation.
+- Baseline namespace policies deny traffic by default and add limited DNS and
   same-namespace allowances.
-- Connectivity, L2 failover, and encryption checks remain `PENDING HARDWARE` until
-  Anouar runs them.
+- Connectivity, L2 failover, and encryption checks remain `not run yet` until
+  I runs them.

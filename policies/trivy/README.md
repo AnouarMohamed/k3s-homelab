@@ -5,4 +5,4 @@ The two operator replicas are resource-bounded; scanner jobs are capped at two a
 host collection is disabled. Prometheus scrapes its findings metrics and Grafana loads
 the repository dashboard.
 
-Run `make validate-policy`; verify real reports with the Phase 8 hardware ledger.
+Run `make validate-policy`; verify real reports with the Policy and supply chain hardware checklist.

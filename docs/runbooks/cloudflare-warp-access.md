@@ -28,7 +28,7 @@ curl --fail --show-error https://whoami.example.invalid/health
 
 Replace the documentation hostname for the real check. Verify WARP can reach the
 internal Gateway while a non-enrolled Internet client cannot. Record evidence in
-`docs/VERIFY_ON_HARDWARE.md`; do not mark it complete from repository validation.
+`docs/bring-up-checklist.md`; do not mark it complete from repository validation.
 
 ## Revoke
 

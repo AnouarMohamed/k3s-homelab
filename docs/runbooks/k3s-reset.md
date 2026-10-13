@@ -4,7 +4,7 @@ This operation destroys local cluster state. It is only appropriate for a delibe
 full rebuild after backups and recovery material have been verified.
 
 1. Capture the latest etcd and application backup evidence.
-2. Confirm the explicit target list from the dynamic inventory.
+2. Confirm the specific target list from the dynamic inventory.
 3. Run `make reset CONFIRM_RESET=homelab` from a local trusted session.
 4. Reboot each node before reinstalling so stale mounts and network devices disappear.
 

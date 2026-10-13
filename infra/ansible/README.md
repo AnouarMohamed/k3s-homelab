@@ -21,9 +21,9 @@ the nodes. No secret defaults exist in Git.
 4. join the other two nodes serially through that VIP and add kube-vip to each.
 
 The playbook validates API health and node registration, but deliberately does not wait
-for the Kubernetes Ready condition. `NotReady` is expected until Phase 2 installs
+for the Kubernetes Ready condition. `NotReady` is expected until Cilium installs
 Cilium.
 
 Use `make bootstrap-nodes`, `make upgrade-k3s`, and the doubly guarded `make reset
-CONFIRM_RESET=homelab`. Real execution is reserved for Anouar and remains
-`PENDING HARDWARE`.
+CONFIRM_RESET=homelab`. Real execution is reserved for I and remains
+`not run yet`.

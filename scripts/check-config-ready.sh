@@ -7,7 +7,7 @@ config_file="${repository_root}/config/homelab.yaml"
 
 placeholders="$(yq '.. | select(tag == "!!str") | select(test("^CHANGE_ME_"))' "${config_file}")"
 if [[ -n "${placeholders}" ]]; then
-  printf 'Central configuration still contains CHANGE_ME values. See HUMAN_TODO.md.\n' >&2
+  printf 'Central configuration still contains CHANGE_ME values. See docs/setup.md.\n' >&2
   exit 1
 fi
 

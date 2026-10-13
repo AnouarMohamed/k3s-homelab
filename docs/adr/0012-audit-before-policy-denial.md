@@ -37,5 +37,5 @@ Kyverno 1.20 upgrade.
 ## Tradeoff
 
 Audit mode detects but does not initially block a violation. The staged approach makes
-the transition observable and reversible, while the explicit promotion step remains a
+the transition observable and reversible, while the specific promotion step remains a
 human operational responsibility. One legacy rule adds known upgrade work.

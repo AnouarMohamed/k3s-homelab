@@ -1,6 +1,6 @@
 # whoami edge test
 
-This deliberately small diagnostic application proves the Phase 4 public path:
+This deliberately small diagnostic application proves the Edge traffic public path:
 Cloudflare DNS and edge, outbound-only tunnel, Cilium public Gateway, then a
 namespaced HTTPRoute. It exposes request metadata and must be removed after the
 route is evidenced. It has no storage, credentials, or Kubernetes API access.

@@ -7,4 +7,4 @@ on the pattern; it is not a production application datastore.
 
 Operate both controllers through the `cloudnative-pg` Argo CD Application. Validate
 offline with `make validate-storage`; run backup and restore checks only through the
-hardware ledger and storage restore runbook.
+hardware checklist and storage restore runbook.

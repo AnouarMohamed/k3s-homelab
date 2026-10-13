@@ -3,7 +3,7 @@
 Exceptions are scoped to infrastructure that cannot technically meet an application
 control. Application namespaces do not inherit these exceptions.
 
-| Component | Narrow exception | Reason | Compensating control |
+| Component | Limited exception | Reason | Compensating control |
 | --- | --- | --- | --- |
 | Cilium | Host networking, host mounts, elevated capabilities | CNI and eBPF lifecycle | Pinned image, kube-system only, Cilium policies, audited upgrade |
 | kube-vip | Host networking and NET_ADMIN | ARP control-plane VIP | Static pod, pinned digest, control-plane nodes only |

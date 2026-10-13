@@ -15,5 +15,5 @@ kube-linter. Run `make bootstrap-cni` only against the intended hardware cluster
 installs the checksum-pinned Gateway API standard CRDs before installing Cilium, then
 applies the IPAM and L2 resources.
 
-Hubble UI has no public or internal Gateway route in this phase. Access is local-only
+Hubble UI has no public or internal Gateway route in this setup. Access is local-only
 through an authenticated administration session and temporary port forwarding.

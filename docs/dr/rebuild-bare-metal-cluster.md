@@ -1,6 +1,6 @@
 # Rebuild the bare-metal cluster
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ## Preconditions
 
@@ -25,7 +25,7 @@ Keep original disks offline and unchanged. If a recovery checkpoint fails, stop 
 DNS or tunnel cutover, archive logs, and restart from blank recovery disks.
 
 Expected: the platform is reproducible from Git plus separately protected recovery
-material, with measured recovery time and explicitly measured data loss.
+material, with measured recovery time and directly measured data loss.
 
 ## Results
 

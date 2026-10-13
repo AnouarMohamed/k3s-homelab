@@ -4,8 +4,8 @@ Upgrade one dependency family per change. Never combine a Kubernetes minor upgra
 network, storage, identity, or policy-controller changes.
 
 1. Read upstream release notes and compatibility matrices; update the exact pin,
-   checksum or digest, Renovate rule, `PLAN.md`, and `docs/compatibility.md`.
-2. Fetch from the official source, run the phase validator twice, then run `make lint`,
+   checksum or digest, Renovate rule, and `docs/compatibility.md`.
+2. Fetch from the official source, run the component validator twice, then run `make lint`,
    `make validate`, and `make security`.
 3. Confirm current etcd, CNPG, Longhorn, and Velero backups and test the relevant restore
    path. Record abort thresholds and the previous known-good Git commit.

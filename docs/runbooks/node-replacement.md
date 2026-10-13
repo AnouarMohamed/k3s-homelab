@@ -18,7 +18,7 @@
 4. Install Ubuntu Server, static networking, the automation account, and its SSH key.
 5. Run `make bootstrap-nodes`. The playbook prepares all hosts but changes only drift;
    the joining server is added through the VIP.
-6. Verify the replacement command block in `docs/VERIFY_ON_HARDWARE.md`.
+6. Verify the replacement command block in `docs/bring-up-checklist.md`.
 
 ## Rollback
 

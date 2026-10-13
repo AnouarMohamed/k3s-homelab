@@ -2,7 +2,7 @@
 
 The Audit overlay reports application violations without blocking reconciliation. The
 Enforce overlay changes CEL validation actions to `Deny` and the one legacy
-API-context policy to `Enforce`. Only namespaces explicitly labeled
+API-context policy to `Enforce`. Only namespaces directly labeled
 `policy.homelab.dev/profile: application` enter the workload baseline; signature and
 registry checks additionally require `policy.homelab.dev/supply-chain: signed`.
 

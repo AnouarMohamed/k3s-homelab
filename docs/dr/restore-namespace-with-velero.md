@@ -1,6 +1,6 @@
 # Restore a namespace with Velero
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ## Preconditions
 

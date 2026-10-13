@@ -13,4 +13,4 @@ kubectl get nodes
 
 Do not run during another node drain. If the script exits early, manually run
 `kubectl uncordon <node>` and verify all nodes are schedulable. Record the two node
-names and observed marker result in the hardware ledger; do not invent a duration.
+names and observed marker result in the hardware checklist; do not invent a duration.

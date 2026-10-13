@@ -18,7 +18,7 @@ Do not edit dashboards or alert routes only in the UI because Git remains author
 Grafana reads metrics from Prometheus, logs from Loki, and traces from Tempo. Alloy
 collects Kubernetes pod logs. Applications send OTLP traces to the OpenTelemetry
 Collector, which batches and forwards them to Tempo. Blackbox exporter probes only
-explicit internal health endpoints.
+specific internal health endpoints.
 
 ## Recovery
 

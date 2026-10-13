@@ -11,7 +11,7 @@ kubectl -n apps-uptime-kuma get deploy,pvc,httproute
 
 For Vaultwarden, verify the CNPG cluster and its latest object-store backup before an
 upgrade. Homepage is entirely declarative. Uptime Kuma's SQLite data is on Longhorn and
-covered by the daily Velero schedule. Restore testing remains `PENDING HARDWARE`.
+covered by the daily Velero schedule. Restore testing remains `not run yet`.
 
 Do not enable Vaultwarden signups or its admin endpoint through an ad-hoc manifest.
 Make the change in Git, require an internal route, and revert it after the maintenance

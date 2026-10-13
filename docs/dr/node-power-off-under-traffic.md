@@ -1,6 +1,6 @@
 # Power off one node under traffic
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ## Preconditions
 

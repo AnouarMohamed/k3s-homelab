@@ -2,7 +2,7 @@
 
 ## Preconditions
 
-Complete the S3 and disk-path items in `HUMAN_TODO.md`, re-encrypt the three scoped
+Complete the S3 and disk-path items in `docs/setup.md`, re-encrypt the three scoped
 credential placeholders, and confirm every node has the required Longhorn host
 packages. The default policies allow object-storage traffic only over HTTPS port 443.
 Do not proceed when any disk contains data that may be overwritten.
@@ -26,5 +26,5 @@ rebuild to complete and verify all three replicas before draining another node.
 
 ## Tests
 
-Run `make validate-storage` offline. On hardware, follow the Phase 5 ledger and the
+Run `make validate-storage` offline. On hardware, follow the Storage and backups checklist and the
 restore drill. A green scheduled-backup status is not recovery evidence.

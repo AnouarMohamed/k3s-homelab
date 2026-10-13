@@ -1,6 +1,6 @@
 # PostgreSQL failover and point-in-time recovery
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ## Preconditions
 

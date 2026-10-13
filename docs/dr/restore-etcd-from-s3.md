@@ -1,6 +1,6 @@
 # Restore embedded etcd from S3
 
-Status: **PENDING HARDWARE**
+Status: **not run yet**
 
 ## Preconditions
 

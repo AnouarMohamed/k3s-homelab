@@ -10,4 +10,4 @@ and exposes no general-purpose hosted service.
 
 The intended boundary is documented in
 [`docs/security/public-surface.md`](docs/security/public-surface.md). Runtime status is
-never inferred from manifests; see [`docs/STATUS.md`](docs/STATUS.md).
+never inferred from manifests; see [`docs/status.md`](docs/status.md).
