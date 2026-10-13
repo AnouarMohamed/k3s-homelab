@@ -12,6 +12,8 @@ spec:
   network:
     adminCidr: CHANGE_ME_ADMIN_CIDR
     privateRouteCidr: CHANGE_ME_PRIVATE_ROUTE_CIDR
+    podCidr: 10.42.0.0/16
+    serviceCidr: 10.43.0.0/16
     nodes:
       - name: pc-1
         address: CHANGE_ME_PC_1_LAN_IP

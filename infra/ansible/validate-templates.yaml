@@ -10,6 +10,8 @@
     homelab_spec:
       network:
         controlPlaneVip: 192.0.2.100
+        podCidr: 192.0.2.0/24
+        serviceCidr: 198.51.100.0/24
       storage:
         s3:
           endpoint: https://s3.example.invalid
@@ -35,7 +37,9 @@
           - rendered_k3s_config['flannel-backend'] == 'none'
           - rendered_k3s_config['secrets-encryption']
           - rendered_k3s_config['etcd-s3']
-          - rendered_k3s_config.disable | sort == ['local-storage', 'metrics-server', 'servicelb', 'traefik']
+          - rendered_k3s_config.disable | sort == ['local-storage', 'servicelb', 'traefik']
+          - rendered_k3s_config['cluster-cidr'] == homelab_spec.network.podCidr
+          - rendered_k3s_config['service-cidr'] == homelab_spec.network.serviceCidr
 
     - name: Parse rendered Kubernetes API audit policy
       ansible.builtin.set_fact:

@@ -34,6 +34,37 @@
       changed_when: false
       failed_when: k3s_version not in upgraded_k3s_version.stdout
 
+    - name: Wait for upgraded node readiness
+      ansible.builtin.command: >-
+        k3s kubectl wait --for=condition=Ready
+        node/{{ inventory_hostname }} --timeout=10m
+      delegate_to: "{{ groups.initial_server[0] }}"
+      changed_when: false
+
+    - name: Wait for local etcd readiness
+      ansible.builtin.command: k3s kubectl get --raw=/readyz/etcd
+      delegate_to: "{{ groups.initial_server[0] }}"
+      register: etcd_readiness
+      changed_when: false
+      until: etcd_readiness.stdout | trim == 'ok'
+      retries: 60
+      delay: 10
+
+    - name: Wait for Longhorn volume health
+      ansible.builtin.shell:
+        cmd: >-
+          set -o pipefail;
+          k3s kubectl -n longhorn-system get volumes.longhorn.io
+          -o jsonpath='{range .items[*]}{.status.robustness}{"\n"}{end}' |
+          grep -cv '^healthy$' || true
+        executable: /bin/bash
+      delegate_to: "{{ groups.initial_server[0] }}"
+      register: unhealthy_longhorn_volumes
+      changed_when: false
+      until: unhealthy_longhorn_volumes.stdout | int == 0
+      retries: 60
+      delay: 10
+
   always:
     - name: Uncordon node after upgrade attempt
       ansible.builtin.command:

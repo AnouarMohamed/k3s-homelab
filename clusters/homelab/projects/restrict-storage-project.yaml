@@ -92,6 +92,9 @@ spec:
       name: longhorn
     - group: storage.k8s.io
       kind: StorageClass
+      name: longhorn-database
+    - group: storage.k8s.io
+      kind: StorageClass
       name: local-path
     - group: storage.k8s.io
       kind: CSIDriver

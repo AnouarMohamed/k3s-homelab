@@ -9,9 +9,10 @@ disable-kube-proxy: true
 disable-network-policy: true
 secrets-encryption: true
 protect-kernel-defaults: true
+cluster-cidr: {{ homelab_spec.network.podCidr | to_json }}
+service-cidr: {{ homelab_spec.network.serviceCidr | to_json }}
 disable:
   - local-storage
-  - metrics-server
   - servicelb
   - traefik
 kube-apiserver-arg:

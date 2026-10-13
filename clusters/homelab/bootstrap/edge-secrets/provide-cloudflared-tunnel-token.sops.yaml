@@ -1,26 +1,23 @@
----
 apiVersion: v1
 kind: Secret
 metadata:
-  name: cloudflared-tunnel-token
-  namespace: cloudflare
+    name: cloudflared-tunnel-token
+    namespace: cloudflare
 type: Opaque
 stringData:
-  # yamllint disable-line rule:line-length
-  token: ENC[AES256_GCM,data:UMbwvgQ6aqQ4eK7tvWvhy5N4jK3KXa3lCRxZ8q1GSOl7/e5f,iv:6gcz6YKk9mSfy7cB1Tl+lPyzvi7SYrUcojxAIMxx0Ws=,tag:8zyQvdO1RDcIQ3B63CnVJA==,type:str]
+    token: ENC[AES256_GCM,data:KCkG+yrdFHbHukguC/A26h/bfawBX1WRFTJtQCb82WdACQ==,iv:h9BtoH4+aV+h83lD3r7a3UsWk9dB2RQ0ZKVJBZ5+MXs=,tag:mZkFWW5P5hzMYrOxamrFWQ==,type:str]
 sops:
-  age:
-    - enc: |
-        -----BEGIN AGE ENCRYPTED FILE-----
-        YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSBoTlNxbVhLZjN1WGpqaHJa
-        MUpZdzltT1VvMUpQYmVCa0Q4RGFMOHBIOURvCmMxMkpLL09vcTF2Z1c3TDdOcjB3
-        UXBWb3lLVzVhR0RNOEtOQmVvbnh6bTQKLS0tIGo2ZGI1aGNXblhldXFSbnJXTEM3
-        TFBxcVg3bzdHSWlWWGhlejZQWkZVVEUK/nwWLQMRGyVXC1IT2rjMltc3gWv8s5E+
-        N5FmhVMfcuQ/1p3TMEv+CFnALqtUJiYQ85+8O+59VQ4JRr+UnbZ/9w==
-        -----END AGE ENCRYPTED FILE-----
-      recipient: age17mvgle6026gdpsflmnxtsmrflmwhe0h28kdwpp5jusqaha7f4ufsm2cle5
-  encrypted_regex: ^(data|stringData)$
-  lastmodified: '2026-10-11T20:05:47Z'
-  # yamllint disable-line rule:line-length
-  mac: ENC[AES256_GCM,data:eAYym/AfhU6vxZ4pP4GXBEbe/I+pTG7EjfPCtlzoUMLKFzmaYfhZ6SHAPvb7Mec2Z0FDgvSmbIScf13eqagTkwQHUDaiR9FZAAB0egRtiJvsVs0BNNQg7y0zcQF5rdXhb9L47XhmUacjLZHKMepe2Fdzx4pRTuVGsnJRSUt2ST4=,iv:Tn9c55LddDJ+7ExekfvAW4AT79twEI9qhVOAPDBhtwY=,tag:ymmilX4Xlx36uRIdTAgWuA==,type:str]
-  version: 3.13.3
+    age:
+        - enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA3bE13OHg5eDdBMGZmQ3du
+            S1F3WWZQb3BRYmoyOVZGRFNGbmZpbzFKcjF3ClJRWlZyNW0wWjMvMlp6aUlpRklk
+            dGFHTGlQWlFkYjBCMlNrSmRIcEg2S0kKLS0tIEVoYXdjSVlHMjlBbXBsZlRWdy9T
+            c1JDRE84bXpnQ09ud1FPWWFYS0hFV1kKQL9rZPKp29TIDuScPJRXVxaBGo+Yxpu9
+            U8ZSUPBMbLPWS4lw18suaiTYAhhYOBvgf3VbpvKCXtiDU6TzJxTR1g==
+            -----END AGE ENCRYPTED FILE-----
+          recipient: age1enwvp6e5nv43ddu0wwwmdevff8mt4wlmfjcgamwltn9pnfyr7c2szfhvww
+    encrypted_regex: ^(data|stringData)$
+    lastmodified: "2026-10-13T21:42:36Z"
+    mac: ENC[AES256_GCM,data:6NPHVQeGYtnEHRjZiU8RTlH2/HX8lByX4RLbAQv9gEAazQEL4baGR6JPXw5OlyQ6MNtefDyP6TbXfFwJeuQ9GRgNjqT2FLobuYW15ecMM3tsfkPWoHjIEDTtE0KBeevsht3cJ/kqaW+gB/bJWmn3dvdxI1m5F3XmDg7hSpBKkG8=,iv:sMOB1iqqrQbMwv2LH2pQItyLX80+CtYMSYEohJD3DuI=,tag:XIjKGiIKFiLC5ntBudlzqA==,type:str]
+    version: 3.13.3

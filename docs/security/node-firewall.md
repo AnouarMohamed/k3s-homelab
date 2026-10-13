@@ -15,6 +15,8 @@ addresses are read from the same file.
 | Cluster nodes | TCP 4240, 4244 | Cilium health and Hubble peer traffic |
 | Cluster nodes | UDP 8472 | Cilium VXLAN overlay |
 | Cluster nodes | UDP 51871 | Cilium WireGuard |
+| Pod CIDR (`podCidr`) | All | Pod traffic forwarded through each node |
+| Service CIDR (`serviceCidr`) | All | Cluster service traffic handled on each node |
 
 No rule opens a router port. Later phases must update this table and role before adding
 host-listening services. Public HTTP traffic enters through outbound cloudflared

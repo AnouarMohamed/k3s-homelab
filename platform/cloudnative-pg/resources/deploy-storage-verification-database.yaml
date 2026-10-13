@@ -27,10 +27,10 @@ spec:
       memory: 1Gi
   storage:
     size: 5Gi
-    storageClass: longhorn
+    storageClass: longhorn-database
   walStorage:
     size: 2Gi
-    storageClass: longhorn
+    storageClass: longhorn-database
   affinity:
     enablePodAntiAffinity: true
     topologyKey: kubernetes.io/hostname

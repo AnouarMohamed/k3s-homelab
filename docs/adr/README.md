@@ -16,3 +16,4 @@
 | [0012](0012-audit-before-policy-denial.md) | Audit application policy before denial |
 | [0013](0013-digest-promotion-and-ghcr-mirroring.md) | Promote digests and mirror packages to GHCR |
 | [0014](0014-use-keycloak-for-identity.md) | Use Keycloak with local break glass |
+| [0015](0015-render-plugin-trust.md) | Accept repository render-script trust |

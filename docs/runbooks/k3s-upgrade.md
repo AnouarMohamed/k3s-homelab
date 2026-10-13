@@ -17,6 +17,9 @@
    workloads. Stop on any unexpected state.
 4. Run the hardware verification commands and record the observed versions.
 
+Reboot nodes one at a time. Check `/var/run/reboot-required` before each reboot. Wait
+for etcd and Longhorn to report healthy before moving to the next node.
+
 ## Rollback
 
 Do not downgrade an etcd-backed server in place without confirming upstream downgrade

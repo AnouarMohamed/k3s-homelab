@@ -24,6 +24,9 @@ I work through this list before I touch the three PCs or any external account.
 - [ ] Use a protected GitLab runner that permits the pinned Docker-in-Docker service.
   Do not expose it to untrusted forks.
 - [ ] Limit the manual production promotion job to my GitLab account.
+- [ ] Protect the `main` branch and require merge requests for normal changes.
+- [ ] Disable direct pushes to `main` for users. Allow only the promotion bot token to
+  push digest updates.
 
 ## Cloudflare and S3
 

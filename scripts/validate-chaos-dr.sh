@@ -88,7 +88,7 @@ drills=(
 )
 for drill in "${drills[@]}"; do
   file="${repository_root}/docs/dr/${drill}"
-  grep -q 'Status: \*\*PENDING HARDWARE\*\*' "${file}"
+  grep -q 'Status: \*\*not run yet\*\*' "${file}"
   grep -q '^## Preconditions$' "${file}"
   grep -q '^## Procedure$' "${file}"
   grep -q '^## Rollback$' "${file}"

@@ -31,6 +31,15 @@
     upgrade: safe
     update_cache: false
 
+- name: Disable unattended automatic reboots
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/52homelab-unattended
+    mode: "0644"
+    owner: root
+    group: root
+    content: |
+      Unattended-Upgrade::Automatic-Reboot "false";
+
 - name: Configure timezone from central configuration
   community.general.timezone:
     name: "{{ homelab_spec.timezone }}"
@@ -56,6 +65,7 @@
     - overlay
     - wireguard
 
+# based on https://docs.k3s.io/security/hardening-guide
 - name: Configure Kubernetes kernel parameters
   ansible.builtin.copy:
     dest: /etc/sysctl.d/99-homelab-k3s.conf
@@ -65,10 +75,14 @@
     content: |
       fs.inotify.max_user_instances = 8192
       fs.inotify.max_user_watches = 524288
+      kernel.panic = 10
+      kernel.panic_on_oops = 1
       net.bridge.bridge-nf-call-ip6tables = 1
       net.bridge.bridge-nf-call-iptables = 1
       net.ipv4.ip_forward = 1
       vm.max_map_count = 262144
+      vm.overcommit_memory = 1
+      vm.panic_on_oom = 0
   notify: Apply kernel parameters
 
 - name: Disable configured swap files at boot

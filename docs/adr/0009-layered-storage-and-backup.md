@@ -8,11 +8,12 @@ cluster loss. No one layer provides all three properties.
 
 ## Decision
 
-I use Longhorn V1 volumes with three replicas for local availability, CloudNativePG
-with its CNPG-I Barman Cloud plugin for PostgreSQL WAL archival and physical base
-backups, and Velero for Kubernetes resources plus Longhorn CSI snapshots. Longhorn and
-Velero use separate S3 prefixes and credentials; CNPG uses a third. `local-path`
-remains installed but is directly non-default.
+I use Longhorn V1 volumes with three replicas for general local availability. Database
+volumes use two Longhorn replicas because CloudNativePG already keeps three database
+instances on separate nodes. I use the CNPG-I Barman Cloud plugin for PostgreSQL WAL
+archival and physical base backups, and Velero for Kubernetes resources plus Longhorn
+CSI snapshots. Longhorn and Velero use separate S3 prefixes and credentials; CNPG uses
+a third. `local-path` remains installed but is directly non-default.
 
 ## Rejected alternatives
 
@@ -22,7 +23,7 @@ remains installed but is directly non-default.
 - I rejected Velero filesystem backup for Storage and backups because Longhorn exposes CSI
   snapshots and the extra privileged node agent is unnecessary.
 - I rejected a vendor-specific S3 provider because the central contract identifies
-  only an S3-compatible endpoint and bucket; bucket creation remains human-owned until
+  only an S3-compatible endpoint and bucket; I create the bucket after
   the service is selected.
 
 ## Tradeoffs

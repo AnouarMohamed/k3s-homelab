@@ -18,5 +18,5 @@ spec:
         prometheus:
           address: http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090
           query: |-
-            100 * sum(rate(sentinel_api_requests_total{class="5xx"}[2m]))
+            100 * (sum(rate(sentinel_api_requests_total{class="5xx"}[2m])) or vector(0))
             / clamp_min(sum(rate(sentinel_api_requests_total[2m])), 0.001)

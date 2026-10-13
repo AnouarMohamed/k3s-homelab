@@ -176,10 +176,14 @@ sign:sentinel-gitlab:
       cosign attest --yes --identity-token "$SIGSTORE_ID_TOKEN"
       --predicate sentinel-worker-sbom.spdx.json --type spdx "$worker_ref"
     - >-
-      cosign verify --certificate-identity-regexp "^https://${CI_SERVER_HOST}/.*"
+      cosign verify
+      --certificate-identity
+      "https://${CI_SERVER_HOST}/${CI_PROJECT_PATH}//.gitlab-ci.yml@refs/heads/${CI_DEFAULT_BRANCH}"
       --certificate-oidc-issuer "$CI_SERVER_URL" "$api_ref"
     - >-
-      cosign verify --certificate-identity-regexp "^https://${CI_SERVER_HOST}/.*"
+      cosign verify
+      --certificate-identity
+      "https://${CI_SERVER_HOST}/${CI_PROJECT_PATH}//.gitlab-ci.yml@refs/heads/${CI_DEFAULT_BRANCH}"
       --certificate-oidc-issuer "$CI_SERVER_URL" "$worker_ref"
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'

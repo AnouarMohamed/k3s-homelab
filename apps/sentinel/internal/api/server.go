@@ -32,6 +32,11 @@ func New(store database.Reader, registry *prometheus.Registry) http.Handler {
 		}, []string{"route", "class"}),
 	}
 	registry.MustRegister(server.requests)
+	for _, route := range []string{"healthz", "readyz", "status"} {
+		for _, class := range []string{"2xx", "5xx"} {
+			server.requests.WithLabelValues(route, class).Add(0)
+		}
+	}
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz", server.health)
 	mux.HandleFunc("GET /readyz", server.ready)
