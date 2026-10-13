@@ -17,7 +17,12 @@ block repository implementation.
 - [ ] Re-encrypt bootstrap placeholder secrets with that recipient.
 - [ ] Create a GitLab deploy token with `read_repository` only, encrypt its username
   and token into the tracked repository-credential SOPS document, and configure the
-  separate Phase 9 CI variables when that phase is implemented.
+  Phase 9 protected/masked CI variables: `GITLAB_PROMOTION_TOKEN` with repository-write
+  scope, `GHCR_USERNAME`, a GitHub classic PAT in `GHCR_TOKEN` with only
+  `write:packages`, and the lowercase owner or organization in `GHCR_NAMESPACE`.
+- [ ] Use a protected GitLab runner that permits the pinned Docker-in-Docker service;
+  do not expose that runner to untrusted forks. Protect production deployment approval
+  so only Anouar can run `promote:sentinel-production`.
 - [ ] Create scoped Cloudflare API tokens for DNS and Tunnel management and configure
   WARP private-network access.
 - [ ] Replace and re-encrypt all three Phase 4 SOPS token placeholders, then confirm
@@ -51,6 +56,10 @@ block repository implementation.
   break-glass accounts before enabling SSO-only access.
 - [ ] Review Phase 8 Audit reports, resolve every application violation, and use the
   policy-enforcement runbook before changing the GitOps path to the Deny overlay.
+- [ ] Store Sentinel production database properties `username` and `password` at
+  `secret/apps-sentinel/prod/database`, and S3 properties `access-key-id` and
+  `secret-access-key` at `secret/apps-sentinel/prod/s3`. Repeat under
+  `secret/apps-sentinel-staging/` with separate least-privilege credentials.
 
 ## Hardware verification
 

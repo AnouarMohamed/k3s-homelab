@@ -1,0 +1,15 @@
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: sentinel-api
+  labels:
+    app.kubernetes.io/name: sentinel-api
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: homelab-sentinel
+spec:
+  minAvailable: 2
+  unhealthyPodEvictionPolicy: AlwaysAllow
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sentinel-api

@@ -45,6 +45,7 @@ install_tar_binary() {
 
 install_go_tool github.com/yannh/kubeconform/cmd/kubeconform "${KUBECONFORM_VERSION}"
 install_go_tool golang.stackrox.io/kube-linter/cmd/kube-linter "${KUBE_LINTER_VERSION}"
+install_go_tool go.k6.io/k6 "${K6_VERSION}"
 install_go_tool github.com/zricethezav/gitleaks/v8 "${GITLEAKS_VERSION}"
 install_tar_binary \
   "https://github.com/kyverno/kyverno/releases/download/${KYVERNO_VERSION}/kyverno-cli_${KYVERNO_VERSION}_linux_x86_64.tar.gz" \

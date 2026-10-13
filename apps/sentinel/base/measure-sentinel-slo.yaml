@@ -1,0 +1,29 @@
+---
+# Sloth requires complete PromQL expressions on scalar lines.
+# yamllint disable rule:line-length
+apiVersion: sloth.slok.dev/v1
+kind: PrometheusServiceLevel
+metadata:
+  name: sentinel-api
+  labels:
+    app.kubernetes.io/name: sentinel-api-slo
+    app.kubernetes.io/component: slo
+    app.kubernetes.io/part-of: homelab-sentinel
+spec:
+  service: sentinel-api
+  labels:
+    owner: platform
+  slos:
+    - name: availability
+      objective: 99.9
+      description: Public Sentinel API requests avoid server errors over thirty days.
+      sli:
+        events:
+          errorQuery: sum(rate(sentinel_api_requests_total{class="5xx"}[{{.window}}]))
+          totalQuery: sum(rate(sentinel_api_requests_total[{{.window}}]))
+      alerting:
+        name: SentinelApiAvailabilityBudgetBurn
+        labels:
+          severity: critical
+        annotations:
+          runbook_url: ${CONFIG_GITLAB_REPOSITORY_URL}/-/blob/main/docs/runbooks/operate-sentinel.md#availability-budget-burn

@@ -65,7 +65,7 @@ Addresses, interfaces, domains, and external service identifiers live only in
 | 6 — Runtime secrets | Implemented; pending hardware |
 | 7 — Observability | Planned |
 | 8 — Policy and supply chain | Planned |
-| 9 — Homelab Sentinel | Planned |
+| 9 — Homelab Sentinel | Implemented; hardware verification pending |
 | 10 — Identity and self-hosted apps | Planned |
 | 11 — Chaos and disaster recovery | Planned |
 | 12 — Portfolio polish | Planned |

@@ -1,0 +1,61 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: sentinel-api
+  labels:
+    app.kubernetes.io/name: sentinel-api
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: homelab-sentinel
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sentinel-api
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: sentinel-worker
+  labels:
+    app.kubernetes.io/name: sentinel-worker
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: homelab-sentinel
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sentinel-worker
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+      scrapeTimeout: 10s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: sentinel-alerts
+  labels:
+    app.kubernetes.io/name: sentinel-alerts
+    app.kubernetes.io/component: alerting
+    app.kubernetes.io/part-of: homelab-sentinel
+    release: monitoring
+spec:
+  groups:
+    - name: sentinel.rules
+      rules:
+        - alert: SentinelProbeWorkerMissing
+          expr: absent(up{namespace=~"apps-sentinel.*",service="sentinel-worker"} == 1)
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Homelab Sentinel probe worker is not being scraped.
+            runbook_url: >-
+              ${CONFIG_GITLAB_REPOSITORY_URL}/-/blob/main/docs/runbooks/operate-sentinel.md#probe-worker-missing

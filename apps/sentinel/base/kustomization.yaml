@@ -1,0 +1,20 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - authorize-openbao-authentication.yaml
+  - materialize-runtime-secrets.yaml
+  - configure-probe-targets.yaml
+  - deploy-sentinel-database.yaml
+  - archive-sentinel-database.yaml
+  - schedule-sentinel-database-backups.yaml
+  - analyze-api-canary.yaml
+  - deploy-api-canary.yaml
+  - deploy-probe-worker.yaml
+  - expose-status-api.yaml
+  - scale-status-api.yaml
+  - preserve-api-availability.yaml
+  - monitor-sentinel.yaml
+  - measure-sentinel-slo.yaml
+  - show-sentinel-dashboard.yaml
+  - restrict-sentinel-network.yaml

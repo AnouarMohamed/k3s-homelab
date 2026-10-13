@@ -14,7 +14,7 @@ checks against the three physical nodes are tracked separately as `PENDING HARDW
 - [x] Phase 6 — Runtime secrets (offline validation complete; pending hardware)
 - [x] Phase 7 — Observability (offline validation complete; pending hardware)
 - [x] Phase 8 — Policy and supply chain (offline validation complete; pending hardware)
-- [ ] Phase 9 — Homelab Sentinel and delivery (application code and CI automation complete; Kubernetes delivery resources in progress)
+- [x] Phase 9 — Homelab Sentinel and delivery (offline validation complete; pending CI and hardware)
 - [ ] Phase 10 — Identity and self-hosted applications
 - [ ] Phase 11 — Chaos and disaster recovery
 - [ ] Phase 12 — Portfolio polish
@@ -406,49 +406,78 @@ explicitly because that release has no checksum-list asset.
   audit latency, exception handling, and the eventual Audit-to-Deny promotion remain
   `PENDING HARDWARE`.
 
-## Phase 9 — Sentinel application and CI/CD automation — 2026-10-12
+## Phase 9 validation — 2026-10-13
 
-- Implemented the Sentinel Go microservice under `apps/sentinel` with two distinct
-  binaries: `cmd/api` (REST API server and embedded web status assets) and
-  `cmd/worker` (background probe worker with PostgreSQL state store, OpenTelemetry
-  tracing, and SQL migrations).
-- Created `apps/sentinel/Makefile` supporting `test`, `lint`, and `build` targets,
-  wiring cleanly into the root repository `Makefile`.
-- `make test` executed `go test -v -race -cover ./...` across all packages,
-  confirming unit tests and race detection pass (76.7% API coverage, 64.1% config
-  coverage, 68.2% probe worker coverage).
-- Pinned container image digests for CI runners in `ci/dependencies.env`
-  (Kaniko debug `v1.23.2-debug`, Syft `v1.51.1`, Trivy `0.75.0`, and Cosign `v2.4.3`).
-- Created modular GitLab CI pipeline `ci/sentinel.gitlab-ci.yml` included from
-  `.gitlab-ci.yml`:
-  - `lint:sentinel` and `test:sentinel` running Go static analysis and race detector.
-  - `build:sentinel-api` and `build:sentinel-worker` using rootless Kaniko executor.
-  - `security:sbom-sentinel` generating SPDX JSON SBOMs via Syft.
-  - `security:trivy-sentinel` gating builds against CRITICAL and HIGH CVEs.
-  - `security:sign-sentinel` performing keyless Sigstore Cosign signing via GitLab CI
-    OIDC and attesting the SPDX SBOM.
-  - `promote:sentinel-staging` and manual gated `promote:sentinel-prod`.
-- Created GitHub Actions workflows for dual-remote hosting:
-  - `.github/workflows/ci.yml`: Validates pull requests and pushes using `make test`,
-    `scripts/check-pins.sh`, `scripts/check-forbidden-files.sh`,
-    `scripts/check-private-values.sh`, and Gitleaks secret scanning.
-  - `.github/workflows/sentinel-ghcr.yml`: Multi-architecture container builds
-    (`linux/amd64`, `linux/arm64`) with Docker Buildx, publishing to GitHub Container
-    Registry (`ghcr.io`), generating Syft SPDX SBOMs, Trivy vulnerability gating, and
-    keyless Sigstore Cosign signing and SBOM attestation via GitHub Actions OIDC.
-- Added regex manager in `renovate.json` for automated tracking of `ci/dependencies.env`.
-- `scripts/check-pins.sh` confirmed zero unpinned dependencies or `@latest` references
-  across all workflow files and Dockerfiles.
-- `scripts/check-forbidden-files.sh` and `scripts/check-private-values.sh` passed.
-- Gitleaks scanned the repository and found zero leaks.
+- Repaired the partial Sentinel work forward without rewriting its existing commits.
+  Removed the two GitHub Actions workflows because GitLab is the specified CI and
+  delivery authority; GitHub remains a source mirror.
+- Implemented separate Go API and probe-worker binaries, embedded migrations and UI,
+  PostgreSQL transition storage, read-only public status output, Prometheus metrics,
+  OpenTelemetry, health/readiness endpoints, and unit tests. `make -C apps/sentinel
+  lint test build` returned exit 0; the race-enabled tests reported 76.7% API, 64.1%
+  configuration, and 68.2% probe coverage.
+- `scripts/test-sentinel-integration.sh` returned exit 0 against disposable pinned
+  PostgreSQL `17.6`. It applied the real migration, verified the first observation
+  creates a transition, verified a repeat does not, and read the public status back.
+- The integration test exposed an invalid earlier CloudNativePG PostgreSQL image
+  digest. OCI inspection of the same `17.6-system-trixie` tag reported index digest
+  `sha256:6ae4a22c14bdc66e5feaafd38d12c3956fabf9ce9582189e6aa4ee767d981d1b`;
+  Phase 5 was repaired to use it and `make validate-storage` returned exit 0.
+- Local Docker Buildx produced deterministic multi-platform OCI indexes after the
+  Dockerfiles were corrected to run the compiler on `$BUILDPLATFORM`: API digest
+  `sha256:2d44b692b61e05a8393bdee5229cf8242e89d729a6090f0d431064eb2a6ab495`
+  and worker digest
+  `sha256:2403b35fe59bcc0d05763f521983d5d2e7e1afe7531536166d125f750841db0d`.
+  These local indexes were not pushed and are placeholders until GitLab builds its own
+  signed release digests.
+- Pinned Syft `v1.54.0` generated SPDX JSON documents for both local OCI indexes.
+  Pinned Trivy `0.75.0` scanned their extracted OCI layouts with the downloaded
+  vulnerability database and reported zero high or critical Debian or Go findings for
+  both images. Keyless signing cannot be exercised locally without the protected CI
+  identity and registry.
+- GitLab CI now builds one `linux/amd64,linux/arm64` index per binary, emits SPDX SBOMs,
+  gates high and critical Trivy findings, signs and attests GitLab registry digests with
+  OIDC, automatically commits the staging digest lock, and requires manual production
+  approval. It mirrors the identical API and worker indexes plus an unrendered
+  deployment bundle to three GHCR packages and signs each GHCR digest. The pipeline has
+  not run remotely and no package was pushed during repository validation.
+- Implemented pinned Argo Rollouts, staging and production Kustomize overlays,
+  environment-specific image locks, canary analysis, HPA, PDB, topology spread,
+  CloudNativePG with Barman backups, External Secrets/OpenBao policies, three network
+  policies, ServiceMonitors, alerting, dashboard, and a Sloth SLO. Production publishes
+  only the status route; staging uses the internal Gateway.
+- `scripts/validate-sentinel.sh` returned exit 0. The Argo Rollouts chart linted with
+  zero failures; two renders of every dependency and both application overlays were
+  byte-identical. Built-in kubeconform passes had no invalid resources. Strict pinned
+  schemas validated 13 custom resources in each overlay with no invalid, errored, or
+  skipped objects. Promtool accepted both rule sets, dashboard JSON parsed, k6 parsed
+  the bounded status scenario, kube-linter found no errors, and Go vet/test/build
+  passed.
+- `make validate-gitops`, `make validate-edge`, and `make validate-secrets` returned
+  exit 0 after adding the Rollouts project, Sentinel applications, public status DNS
+  and Tunnel route, and runtime-secret policies. The OpenTofu offline plan reported
+  five resources to add and no changes or destroys.
+- Skeptical review corrected the registry path used by Kubernetes, changed the
+  single-replica staging PDB to permit one unavailable pod, added the missing
+  SecretStore AppProject permission, and made registry authentication explicit for
+  Syft, Trivy, Cosign, and ORAS jobs. It also replaced the public catch-all route with
+  four exact UI/status paths so health and metrics endpoints remain private.
+- `make lint` returned exit 0. Markdownlint checked 111 files with no issues;
+  yamllint and ShellCheck reported no findings; ansible-lint reported zero failures
+  and warnings across 28 processed files.
+- The final `make validate` returned exit 0 across every Phase 1–9 gate and the
+  repository file, private-value, dependency-pin, generic kubeconform, and kube-linter
+  checks. The final generic pass validated 25 resources with no errors or skips.
+- `make security` returned exit 0. Gitleaks scanned approximately 720 KB of the working
+  tree and 3.35 MB across all 28 existing commits and found no leaks.
 
 ## Unverified
 
 - All real-hardware behavior.
 - Every dependency not yet listed with upstream evidence in `PLAN.md`.
-- Live execution of GitLab CI and GitHub Actions pipelines on remote runners.
-- Live Sigstore Rekor transparency log signature verification for published images.
-- The GitLab pipeline, until run by GitLab.
+- Live execution of the GitLab pipeline on a protected, privileged runner.
+- Publication and keyless Sigstore/Rekor verification of the GitLab and GHCR package
+  digests; repository validation did not push any artifact.
 - Compatibility of the selected S3 service with Longhorn, Barman Cloud, and Velero.
 - OpenBao HCL startup and the declarative audit device on the real cluster.
 - Phase 7 signal ingestion, storage sizing, scrape selectors, alert delivery, and the
@@ -456,6 +485,9 @@ explicitly because that release has no checksum-list asset.
 - Kyverno and Trivy Operator runtime compatibility with k3s `v1.36.5+k3s1`, policy
   report generation, admission latency, scanner execution, metrics freshness, and
   GitLab OIDC signature verification against the transparency log.
+- Sentinel canary analysis, HPA behavior, CloudNativePG failover and recovery, S3
+  backups, public routing, probe accuracy, alert delivery, and k6 execution against a
+  deployed environment.
 
 ## Not done
 
@@ -467,3 +499,6 @@ explicitly because that release has no checksum-list asset.
 - Phase 8 enforcement is intentionally not enabled before Anouar reviews real audit
   reports. Kubescape is deliberately omitted, and kube-bench has not been run because
   node execution is hardware-only.
+- The Sentinel GitLab pipeline, digest-promotion commits, GHCR mirrors, OIDC signatures,
+  and live k6 scenario have not run because they require Anouar's protected accounts,
+  runner, and cluster.

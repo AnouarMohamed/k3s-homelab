@@ -1,0 +1,96 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sentinel-worker
+  labels:
+    app.kubernetes.io/name: sentinel-worker
+    app.kubernetes.io/component: probe-worker
+    app.kubernetes.io/part-of: homelab-sentinel
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sentinel-worker
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sentinel-worker
+        app.kubernetes.io/component: probe-worker
+        app.kubernetes.io/part-of: homelab-sentinel
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: worker
+          image: ${SENTINEL_WORKER_IMAGE}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: metrics
+              containerPort: 9090
+              protocol: TCP
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sentinel-database-owner
+                  key: DATABASE_URL
+            - name: SENTINEL_TARGETS_JSON
+              valueFrom:
+                configMapKeyRef:
+                  name: sentinel-probe-targets
+                  key: targets.json
+            - name: PROBE_INTERVAL
+              value: 30s
+            - name: PROBE_TIMEOUT
+              value: 5s
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.monitoring.svc:4318
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: metrics
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: metrics
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: 25m
+              memory: 48Mi
+            limits:
+              cpu: 250m
+              memory: 192Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sentinel-worker
+  labels:
+    app.kubernetes.io/name: sentinel-worker
+    app.kubernetes.io/component: probe-worker
+    app.kubernetes.io/part-of: homelab-sentinel
+spec:
+  selector:
+    app.kubernetes.io/name: sentinel-worker
+  ports:
+    - name: metrics
+      port: 9090
+      targetPort: metrics

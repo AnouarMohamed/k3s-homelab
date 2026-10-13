@@ -1,0 +1,15 @@
+---
+# Dashboard JSON is intentionally stored as one compact scalar.
+# yamllint disable rule:line-length
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sentinel-dashboard
+  labels:
+    app.kubernetes.io/name: sentinel-dashboard
+    app.kubernetes.io/component: dashboard
+    app.kubernetes.io/part-of: homelab-sentinel
+    grafana_dashboard: '1'
+data:
+  sentinel.json: |-
+    {"annotations":{"list":[]},"panels":[{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":0},"id":1,"targets":[{"expr":"sentinel_probe_up","legendFormat":"{{service}}","refId":"A"}],"title":"Probe health","type":"timeseries"},{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{"unit":"s"},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":0},"id":2,"targets":[{"expr":"histogram_quantile(0.95, sum by (le, service) (rate(sentinel_probe_duration_seconds_bucket[5m])))","legendFormat":"{{service}}","refId":"A"}],"title":"Probe latency p95","type":"timeseries"}],"refresh":"30s","schemaVersion":42,"tags":["homelab","sentinel"],"time":{"from":"now-6h","to":"now"},"title":"Homelab / Sentinel","uid":"homelab-sentinel","version":1}

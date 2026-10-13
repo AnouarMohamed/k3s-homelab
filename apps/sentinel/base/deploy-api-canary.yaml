@@ -1,0 +1,138 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: sentinel-api
+  labels:
+    app.kubernetes.io/name: sentinel-api
+    app.kubernetes.io/component: status-api
+    app.kubernetes.io/part-of: homelab-sentinel
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5
+  progressDeadlineSeconds: 600
+  progressDeadlineAbort: true
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sentinel-api
+  strategy:
+    canary:
+      maxSurge: 1
+      maxUnavailable: 0
+      steps:
+        - setWeight: 25
+        - pause:
+            duration: 1m
+        - analysis:
+            templates:
+              - templateName: sentinel-api-health
+        - setWeight: 50
+        - pause:
+            duration: 2m
+        - analysis:
+            templates:
+              - templateName: sentinel-api-health
+        - setWeight: 100
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sentinel-api
+        app.kubernetes.io/component: status-api
+        app.kubernetes.io/part-of: homelab-sentinel
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: sentinel-api
+      initContainers:
+        - name: migrate-database
+          image: ${SENTINEL_API_IMAGE}
+          imagePullPolicy: IfNotPresent
+          args:
+            - -mode=migrate
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sentinel-database-owner
+                  key: DATABASE_URL
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: 20m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+      containers:
+        - name: api
+          image: ${SENTINEL_API_IMAGE}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: sentinel-database-owner
+                  key: DATABASE_URL
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.monitoring.svc:4318
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sentinel-api
+  labels:
+    app.kubernetes.io/name: sentinel-api
+    app.kubernetes.io/component: status-api
+    app.kubernetes.io/part-of: homelab-sentinel
+spec:
+  selector:
+    app.kubernetes.io/name: sentinel-api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

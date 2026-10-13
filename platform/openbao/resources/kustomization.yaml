@@ -14,6 +14,8 @@ configMapGenerator:
       - apply-openbao-configuration.sh
       - operator-write.hcl
       - policy-argocd.hcl=policies/argocd.hcl
+      - policy-apps-sentinel.hcl=policies/apps-sentinel.hcl
+      - policy-apps-sentinel-staging.hcl=policies/apps-sentinel-staging.hcl
       - policy-cert-manager.hcl=policies/cert-manager.hcl
       - policy-cloudflared.hcl=policies/cloudflared.hcl
       - policy-external-dns.hcl=policies/external-dns.hcl

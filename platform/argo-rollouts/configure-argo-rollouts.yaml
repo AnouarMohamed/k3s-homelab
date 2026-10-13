@@ -1,0 +1,47 @@
+---
+installCRDs: true
+keepCRDs: true
+clusterInstall: true
+createClusterAggregateRoles: false
+controller:
+  replicas: 2
+  image:
+    registry: quay.io
+    repository: argoproj/argo-rollouts
+    tag: v1.9.1@sha256:15c0d41f2c69a382d4399bcb28ed4f03ee9f58b56cfc9e6cd55bcbf0f311c06d
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 1
+      memory: 512Mi
+  podSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    runAsGroup: 999
+    seccompProfile:
+      type: RuntimeDefault
+  containerSecurityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+  pdb:
+    enabled: true
+    minAvailable: 1
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+      namespace: monitoring
+      additionalLabels:
+        release: monitoring
+providerRBAC:
+  enabled: false
+dashboard:
+  enabled: false
+notifications:
+  secret:
+    create: false

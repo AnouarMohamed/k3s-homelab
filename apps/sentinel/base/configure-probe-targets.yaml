@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sentinel-probe-targets
+  labels:
+    app.kubernetes.io/name: sentinel-worker
+    app.kubernetes.io/component: probe-configuration
+    app.kubernetes.io/part-of: homelab-sentinel
+data:
+  targets.json: |-
+    [{"id":"whoami","name":"Public edge","url":"https://whoami.${CONFIG_DOMAIN}/health","public":true}]

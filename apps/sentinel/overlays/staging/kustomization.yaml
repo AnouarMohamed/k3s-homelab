@@ -1,0 +1,135 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: apps-sentinel-staging
+resources:
+  - create-sentinel-staging-namespace.yaml
+  - ../../base
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+  - name: sentinel-image-lock
+    envs:
+      - image-lock.env
+replacements:
+  - source:
+      kind: ConfigMap
+      name: sentinel-image-lock
+      fieldPath: data.SENTINEL_API_IMAGE
+    targets:
+      - select:
+          group: argoproj.io
+          version: v1alpha1
+          kind: Rollout
+          name: sentinel-api
+        fieldPaths:
+          - spec.template.spec.containers.0.image
+          - spec.template.spec.initContainers.0.image
+  - source:
+      kind: ConfigMap
+      name: sentinel-image-lock
+      fieldPath: data.SENTINEL_WORKER_IMAGE
+    targets:
+      - select:
+          group: apps
+          version: v1
+          kind: Deployment
+          name: sentinel-worker
+        fieldPaths:
+          - spec.template.spec.containers.0.image
+patches:
+  - target:
+      kind: SecretStore
+      name: openbao
+    patch: |-
+      - op: replace
+        path: /spec/provider/vault/auth/kubernetes/role
+        value: runtime-apps-sentinel-staging
+  - target:
+      kind: ExternalSecret
+      name: sentinel-database-owner
+    patch: |-
+      - op: replace
+        path: /spec/data/0/remoteRef/key
+        value: apps-sentinel-staging/database
+      - op: replace
+        path: /spec/data/1/remoteRef/key
+        value: apps-sentinel-staging/database
+  - target:
+      kind: ExternalSecret
+      name: sentinel-s3-credentials
+    patch: |-
+      - op: replace
+        path: /spec/data/0/remoteRef/key
+        value: apps-sentinel-staging/s3
+      - op: replace
+        path: /spec/data/1/remoteRef/key
+        value: apps-sentinel-staging/s3
+  - target:
+      group: postgresql.cnpg.io
+      version: v1
+      kind: Cluster
+      name: sentinel-database
+    patch: |-
+      - op: replace
+        path: /spec/instances
+        value: 1
+      - op: replace
+        path: /spec/storage/size
+        value: 5Gi
+  - target:
+      group: barmancloud.cnpg.io
+      version: v1
+      kind: ObjectStore
+      name: sentinel-backups
+    patch: |-
+      - op: replace
+        path: /spec/configuration/destinationPath
+        value: s3://${CONFIG_S3_BUCKET}/sentinel-staging
+  - target:
+      group: gateway.networking.k8s.io
+      version: v1
+      kind: HTTPRoute
+      name: sentinel-status
+    patch: |-
+      - op: replace
+        path: /spec/parentRefs/0/name
+        value: internal
+      - op: replace
+        path: /spec/parentRefs/0/sectionName
+        value: https
+      - op: replace
+        path: /spec/hostnames/0
+        value: sentinel-staging.${CONFIG_DOMAIN}
+  - target:
+      group: argoproj.io
+      version: v1alpha1
+      kind: Rollout
+      name: sentinel-api
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target:
+      group: autoscaling
+      version: v2
+      kind: HorizontalPodAutoscaler
+      name: sentinel-api
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+      - op: replace
+        path: /spec/maxReplicas
+        value: 2
+  - target:
+      group: policy
+      version: v1
+      kind: PodDisruptionBudget
+      name: sentinel-api
+    patch: |-
+      - op: remove
+        path: /spec/minAvailable
+      - op: add
+        path: /spec/maxUnavailable
+        value: 1

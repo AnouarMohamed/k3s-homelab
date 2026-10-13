@@ -47,6 +47,7 @@ override.tf.json
 coverage/
 dist/
 build/
+apps/sentinel/bin/
 reports/
 *.out
 *.log

@@ -242,7 +242,16 @@ case "${relative_path}" in
       --skip-tests \
       --values "${repository_root}/policies/trivy/configure-trivy-operator.yaml"
     ;;
-  clusters/homelab/bootstrap | clusters/homelab/bootstrap/* | apps/*/overlays/prod | platform/* | observability/* | policies/*)
+  platform/argo-rollouts)
+    helm template argo-rollouts "${repository_root}/.cache/phase9/argo-rollouts" \
+      --namespace argo-rollouts \
+      --include-crds \
+      --skip-tests \
+      --values "${repository_root}/platform/argo-rollouts/configure-argo-rollouts.yaml"
+    printf '%s\n' '---'
+    kustomize build "${repository_root}/platform/argo-rollouts/resources"
+    ;;
+  clusters/homelab/bootstrap | clusters/homelab/bootstrap/* | apps/*/overlays/prod | apps/*/overlays/staging | platform/* | observability/* | policies/*)
     test -f "${source_path}/kustomization.yaml" || test -f "${source_path}/kustomization.yml"
     kustomize build --enable-alpha-plugins --enable-exec "${source_path}" | \
       bash "${repository_root}/scripts/render-config.sh" -

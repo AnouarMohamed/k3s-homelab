@@ -1,0 +1,18 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: daily-sentinel
+  labels:
+    app.kubernetes.io/name: sentinel-database
+    app.kubernetes.io/component: database-backup
+    app.kubernetes.io/part-of: homelab-sentinel
+spec:
+  schedule: 0 30 3 * * *
+  backupOwnerReference: self
+  immediate: false
+  cluster:
+    name: sentinel-database
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io

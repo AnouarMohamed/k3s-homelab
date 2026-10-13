@@ -54,6 +54,17 @@
         "/^scripts/tool-versions\\.env$/"
       ],
       "matchStrings": [
+        "K6_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "grafana/k6",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^scripts/tool-versions\\.env$/"
+      ],
+      "matchStrings": [
         "GITLEAKS_VERSION=(?<currentValue>[^\\s]+)"
       ],
       "depNameTemplate": "gitleaks/gitleaks",
@@ -529,6 +540,36 @@
       ],
       "matchStrings": [
         "[A-Z0-9_]+_IMAGE=(?<depName>(?:docker\\.io|gcr\\.io|mirror\\.gcr\\.io|quay\\.io|ghcr\\.io)/[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/argo-rollouts/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "ARGO_ROLLOUTS_CHART_VERSION=(?<currentValue>[^\\s]+)\\nARGO_ROLLOUTS_CHART_REF=oci://(?<depName>ghcr\\.io/argoproj/argo-helm/argo-rollouts)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/argo-rollouts/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "ARGO_ROLLOUTS_IMAGE=(?<depName>quay\\.io/argoproj/argo-rollouts):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
+      ],
+      "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^apps/sentinel/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "[A-Z0-9_]+_IMAGE=(?<depName>(?:docker\\.io|gcr\\.io)/[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
       ],
       "datasourceTemplate": "docker"
     }

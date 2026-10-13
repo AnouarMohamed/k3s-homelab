@@ -1,0 +1,22 @@
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: sentinel-api-health
+  labels:
+    app.kubernetes.io/name: sentinel-api
+    app.kubernetes.io/component: rollout-analysis
+    app.kubernetes.io/part-of: homelab-sentinel
+spec:
+  metrics:
+    - name: server-error-percentage
+      interval: 30s
+      count: 3
+      failureLimit: 1
+      successCondition: len(result) == 1 && result[0] < 1
+      provider:
+        prometheus:
+          address: http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090
+          query: |-
+            100 * sum(rate(sentinel_api_requests_total{class="5xx"}[2m]))
+            / clamp_min(sum(rate(sentinel_api_requests_total[2m])), 0.001)

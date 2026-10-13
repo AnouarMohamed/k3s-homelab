@@ -168,7 +168,7 @@ tofu -chdir="${plan_root}/infra/tofu" plan \
   -input=false \
   -out="${validation_dir}/edge.tfplan" \
   >"${validation_dir}/tofu-plan.log"
-grep -q 'Plan: 4 to add, 0 to change, 0 to destroy.' \
+grep -q 'Plan: 5 to add, 0 to change, 0 to destroy.' \
   "${validation_dir}/tofu-plan.log"
 
 printf 'Phase 4 edge resources rendered deterministically and validated.\n'

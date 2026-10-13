@@ -1,0 +1,38 @@
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: sentinel-status
+  labels:
+    app.kubernetes.io/name: sentinel-api
+    app.kubernetes.io/component: public-status
+    app.kubernetes.io/part-of: homelab-sentinel
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: Gateway
+      name: public
+      namespace: gateways
+      sectionName: tunnel-http
+  hostnames:
+    - status.${CONFIG_DOMAIN}
+  rules:
+    - matches:
+        - path:
+            type: Exact
+            value: /
+        - path:
+            type: Exact
+            value: /style.css
+        - path:
+            type: Exact
+            value: /status.js
+        - path:
+            type: Exact
+            value: /api/v1/status
+      backendRefs:
+        - group: ''
+          kind: Service
+          name: sentinel-api
+          port: 8080
+          weight: 1

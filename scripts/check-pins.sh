@@ -36,9 +36,12 @@ image_variables="$(
 while IFS= read -r image_variable; do
   [[ -z "${image_variable}" ]] && continue
   if ! git grep -qE "^${image_variable}=[^[:space:]]+@sha256:[a-f0-9]{64}$" -- '*.env'; then
-    printf 'Rendered image variable lacks a digest-pinned dependency: %s\n' \
-      "${image_variable}" >&2
-    failed=1
+    digest_variable="${image_variable%_IMAGE}_DIGEST"
+    if ! git grep -qE "^${digest_variable}=sha256:[a-f0-9]{64}$" -- '*.env'; then
+      printf 'Rendered image variable lacks a digest-pinned dependency: %s\n' \
+        "${image_variable}" >&2
+      failed=1
+    fi
   fi
 done <<<"${image_variables}"
 

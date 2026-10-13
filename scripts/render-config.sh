@@ -25,6 +25,8 @@ export CONFIG_S3_BUCKET
 export CNPG_POSTGRES_IMAGE
 export SNAPSHOT_CONTROLLER_IMAGE
 export VELERO_AWS_PLUGIN_IMAGE
+export SENTINEL_API_IMAGE
+export SENTINEL_WORKER_IMAGE
 
 CONFIG_DOMAIN="$(yq --unwrapScalar '.spec.domain' "${config_file}")"
 CONFIG_ACME_EMAIL="$(yq --unwrapScalar '.spec.acmeEmail' "${config_file}")"
@@ -48,11 +50,21 @@ CONFIG_NODE_INTERFACE_PATTERN="$(
 CONFIG_S3_ENDPOINT="$(yq --unwrapScalar '.spec.storage.s3.endpoint' "${config_file}")"
 CONFIG_S3_BUCKET="$(yq --unwrapScalar '.spec.storage.s3.bucket' "${config_file}")"
 
+if [[ -f "${repository_root}/apps/sentinel/dependencies.env" ]]; then
+  # shellcheck disable=SC1091
+  source "${repository_root}/apps/sentinel/dependencies.env"
+  # shellcheck disable=SC1091
+  source "${repository_root}/platform/cloudnative-pg/dependencies.env"
+  CNPG_POSTGRES_IMAGE="${POSTGRES_IMAGE}"
+  SENTINEL_API_IMAGE="${CONFIG_GITLAB_REGISTRY_PATH}/homelab-sentinel-api@${SENTINEL_API_DIGEST}"
+  SENTINEL_WORKER_IMAGE="${CONFIG_GITLAB_REGISTRY_PATH}/homelab-sentinel-worker@${SENTINEL_WORKER_DIGEST}"
+fi
+
 yq '(
   .. |
   select(
     tag == "!!str" and
-    test("\\$\\{(CONFIG_[A-Z0-9_]+|ARGOCD_IMAGE|KSOPS_IMAGE|YQ_IMAGE|CNPG_POSTGRES_IMAGE|SNAPSHOT_CONTROLLER_IMAGE|VELERO_AWS_PLUGIN_IMAGE)\\}")
+    test("\\$\\{(CONFIG_[A-Z0-9_]+|ARGOCD_IMAGE|KSOPS_IMAGE|YQ_IMAGE|CNPG_POSTGRES_IMAGE|SNAPSHOT_CONTROLLER_IMAGE|VELERO_AWS_PLUGIN_IMAGE|SENTINEL_API_IMAGE|SENTINEL_WORKER_IMAGE)\\}")
   )
 ) |= envsubst(nu,ff) |
 (

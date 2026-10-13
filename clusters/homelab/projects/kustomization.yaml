@@ -11,3 +11,4 @@ resources:
   - restrict-runtime-secrets-project.yaml
   - restrict-observability-project.yaml
   - restrict-policy-project.yaml
+  - restrict-delivery-project.yaml

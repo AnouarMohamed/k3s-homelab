@@ -212,7 +212,57 @@ critical-finding alert evaluates from Trivy metrics. The invalid dry-run is admi
 with Audit findings before promotion and denied only after the enforcement runbook is
 completed. GitLab OIDC signature acceptance remains pending the Phase 9 signed image.
 
-## Phases 9–12
+## Phase 9 — Homelab Sentinel and delivery
+
+Status: **PENDING HARDWARE**
+
+After the GitLab variables in `HUMAN_TODO.md` are protected and populated, run a
+default-branch pipeline and retain links to every job. Verify that the image indexes
+contain both target platforms, all security gates passed, and the GHCR references are
+digest-addressable:
+
+```bash
+docker buildx imagetools inspect \
+  registry.gitlab.com/<project>/homelab-sentinel-api@sha256:<digest>
+docker buildx imagetools inspect \
+  registry.gitlab.com/<project>/homelab-sentinel-worker@sha256:<digest>
+cosign verify \
+  --certificate-identity 'https://gitlab.com/<project>//.gitlab-ci.yml@refs/heads/main' \
+  --certificate-oidc-issuer https://gitlab.com \
+  registry.gitlab.com/<project>/homelab-sentinel-api@sha256:<digest>
+oras manifest fetch ghcr.io/<namespace>/homelab-sentinel-deploy@sha256:<digest>
+```
+
+Expected: both image indexes list `linux/amd64` and `linux/arm64`; Cosign verifies a
+GitLab OIDC signature and Rekor entry; GHCR contains API, worker, and deployment
+packages copied from the successful pipeline. No result is inferred from the CI
+configuration alone.
+
+After Argo CD syncs staging and the manual production promotion is approved:
+
+```bash
+kubectl argo rollouts get rollout sentinel-api -n apps-sentinel-staging
+kubectl argo rollouts get rollout sentinel-api -n apps-sentinel
+kubectl get analysiruns,pods,pdb,hpa -n apps-sentinel
+kubectl get cluster sentinel-database -n apps-sentinel
+kubectl get scheduledbackup sentinel-database -n apps-sentinel
+kubectl run sentinel-check --rm -i --restart=Never \
+  --image=curlimages/curl@sha256:<reviewed-digest> -- \
+  curl --fail http://sentinel-api.apps-sentinel.svc:8080/readyz
+curl --fail https://status.<configured-domain>/api/v1/status
+```
+
+Expected: staging and production Rollouts are Healthy, analysis runs succeed, the HPA
+and PDB exist, all three production database instances are healthy, scheduled backups
+have successful status, readiness returns 200, and the public endpoint returns only
+the selected service status fields. Replace the diagnostic image placeholder with a
+reviewed immutable digest before running it.
+
+Exercise a canary abort, node reschedule, database failover, S3 recovery, and the
+rollback runbook. Record real timestamps and evidence in the Phase 9 result tables;
+do not copy expected values into results.
+
+## Phases 10–12
 
 Status: **PENDING HARDWARE**
 

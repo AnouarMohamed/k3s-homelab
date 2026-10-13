@@ -96,6 +96,13 @@ server:
           - namespaceSelector:
               matchLabels:
                 kubernetes.io/metadata.name: monitoring
+          - namespaceSelector:
+              matchExpressions:
+                - key: kubernetes.io/metadata.name
+                  operator: In
+                  values:
+                    - apps-sentinel
+                    - apps-sentinel-staging
         ports:
           - protocol: TCP
             port: 8200

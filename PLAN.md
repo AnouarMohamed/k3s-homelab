@@ -92,6 +92,7 @@ before later phases begin.
 | external-snapshotter | `v8.6.0` | Five official manifests are checksum-pinned; controller OCI digest `sha256:0d01d2b374e36437781aa0264809aeacec842b0f378556582601106eff503753` |
 | Longhorn chart | `1.12.1` | Official stable release archive SHA-256 `c8cf4b35a9d872cd5f7e44fd26d8e6ac7c2abaee42f4e2f2a0b0ebbc6e3a6116` |
 | CloudNativePG chart | `0.29.1` | Official archive SHA-256 `b53d3991fe84bcf38767e7702cae78666265427a127a26fff168ab4207d2b1df`; app `1.30.1` |
+| CloudNativePG PostgreSQL | `17.6-system-trixie` | OCI index digest `sha256:6ae4a22c14bdc66e5feaafd38d12c3956fabf9ce9582189e6aa4ee767d981d1b` |
 | Barman Cloud chart | `0.8.1` | Official archive SHA-256 `9ad0b9e56da2777a1a0269feaf7215e18297e9c8b5730e04acb27b5d462e9456`; app `v0.15.1` |
 | Velero chart | `12.2.1` | Official archive SHA-256 `fe4acd70a0123c369e7af7064457b4ffdddebee413e2bb01976a4fe07c471773`; app `1.18.2` |
 | Velero AWS plugin | `v1.14.4` | OCI digest `sha256:e6d328cefcdccecea23510ce361f8979e80a91386a99f21b0055e554259a35ec` |
@@ -108,6 +109,14 @@ before later phases begin.
 | Sloth chart | `0.16.0` | Official release archive SHA-256 `616acb580eefc2e9836cc1b430cac6d424e0e4210130786b6ec883657217c6db` |
 | Kyverno chart | `3.9.1` | Official chart index archive SHA-256 `7b7fe51a431b5b133b0ce7eb9dcb222b6a37fb967c163223cf480054ad14d752`; app `v1.19.1` |
 | Trivy Operator chart | `0.37.0` | Official Aqua chart index archive SHA-256 `6d23f16d950496d17253258ca2e52bd068959041298e66c0652bf0841ccedf69`; app `0.35.0` |
+| Argo Rollouts chart | `2.41.1` | OCI digest `sha256:05d4b889efdca5cdece2d39e4eb94a6313ab6620b05f0ea4597cf274a71e2315`; app `v1.9.1` |
+| Go | `1.26.9` | Build image OCI digest `sha256:d9c68c2c51161e12fd77e4c6320687c9cd86e1af1e3ad6e6cd63ff970641453c` |
+| PostgreSQL integration image | `17.6-bookworm` | OCI index digest `sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3` |
+| Syft | `v1.54.0` | OCI digest `sha256:0356562f495d432056237fbea5cbc2d4839c9c75cd500784a66de2e7cc95ca7c` |
+| Trivy | `0.75.0` | OCI digest `sha256:af6acf9a6b85dfe389a1941505c0ce9efef52a4719635e1a962f022a3d855daa` |
+| Cosign | `v3.0.5` | OCI digest `sha256:be924970ba7438c22e18067dec5637946d6566eac711f5bedd1584e7137008fb` |
+| ORAS | `v1.3.4` | OCI digest `sha256:f7bc056d54d97baa399414ed5048ecc67c3371b750d4bbce1d871827a5758179` |
+| k6 | `v2.3.0` | Go module checksum verified by the pinned local installer |
 
 All remaining later-phase chart, provider, collection, application image, and CI image
 versions are `VERIFY`. Before implementing their phase I will verify them against an

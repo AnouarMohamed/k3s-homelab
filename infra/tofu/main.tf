@@ -21,6 +21,10 @@ resource "cloudflare_zero_trust_tunnel_cloudflared_config" "homelab" {
         service  = "http://cilium-gateway-public.gateways.svc.cluster.local:80"
       },
       {
+        hostname = "status.${local.domain}"
+        service  = "http://cilium-gateway-public.gateways.svc.cluster.local:80"
+      },
+      {
         service = "http_status:404"
       }
     ]
@@ -42,6 +46,16 @@ resource "cloudflare_dns_record" "whoami" {
   proxied = true
   ttl     = 1
   comment = "Managed by OpenTofu for the temporary Phase 4 edge test"
+}
+
+resource "cloudflare_dns_record" "sentinel_status" {
+  zone_id = var.cloudflare_zone_id
+  name    = "status.${local.domain}"
+  type    = "CNAME"
+  content = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
+  proxied = true
+  ttl     = 1
+  comment = "Managed by OpenTofu for the Homelab Sentinel public status page"
 }
 
 data "cloudflare_zero_trust_tunnel_cloudflared_token" "homelab" {

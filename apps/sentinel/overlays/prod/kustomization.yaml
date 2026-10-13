@@ -1,0 +1,39 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: apps-sentinel
+resources:
+  - create-sentinel-namespace.yaml
+  - ../../base
+generatorOptions:
+  disableNameSuffixHash: true
+configMapGenerator:
+  - name: sentinel-image-lock
+    envs:
+      - image-lock.env
+replacements:
+  - source:
+      kind: ConfigMap
+      name: sentinel-image-lock
+      fieldPath: data.SENTINEL_API_IMAGE
+    targets:
+      - select:
+          group: argoproj.io
+          version: v1alpha1
+          kind: Rollout
+          name: sentinel-api
+        fieldPaths:
+          - spec.template.spec.containers.0.image
+          - spec.template.spec.initContainers.0.image
+  - source:
+      kind: ConfigMap
+      name: sentinel-image-lock
+      fieldPath: data.SENTINEL_WORKER_IMAGE
+    targets:
+      - select:
+          group: apps
+          version: v1
+          kind: Deployment
+          name: sentinel-worker
+        fieldPaths:
+          - spec.template.spec.containers.0.image

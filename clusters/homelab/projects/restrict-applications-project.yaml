@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/component: authorization
     app.kubernetes.io/part-of: argocd
 spec:
-  description: Namespaced production applications generated from apps/ only.
+  description: Namespaced applications sourced from apps/ only.
   sourceRepos:
     - ${CONFIG_GITLAB_REPOSITORY_URL}
   destinations:
@@ -40,16 +40,30 @@ spec:
       kind: CiliumNetworkPolicy
     - group: external-secrets.io
       kind: ExternalSecret
+    - group: external-secrets.io
+      kind: SecretStore
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
     - group: monitoring.coreos.com
       kind: PrometheusRule
     - group: monitoring.coreos.com
       kind: ServiceMonitor
+    - group: postgresql.cnpg.io
+      kind: Cluster
+    - group: postgresql.cnpg.io
+      kind: ScheduledBackup
+    - group: barmancloud.cnpg.io
+      kind: ObjectStore
+    - group: sloth.slok.dev
+      kind: PrometheusServiceLevel
     - group: networking.k8s.io
       kind: NetworkPolicy
     - group: policy
       kind: PodDisruptionBudget
+    - group: rbac.authorization.k8s.io
+      kind: Role
+    - group: rbac.authorization.k8s.io
+      kind: RoleBinding
     - group: argoproj.io
       kind: AnalysisTemplate
     - group: argoproj.io

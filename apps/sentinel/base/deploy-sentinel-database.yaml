@@ -1,0 +1,49 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: sentinel-database
+  labels:
+    app.kubernetes.io/name: sentinel-database
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: homelab-sentinel
+spec:
+  instances: 3
+  imageName: ${CNPG_POSTGRES_IMAGE}
+  primaryUpdateStrategy: unsupervised
+  enableSuperuserAccess: false
+  inheritedMetadata:
+    labels:
+      app.kubernetes.io/name: sentinel-database
+      app.kubernetes.io/component: database
+      app.kubernetes.io/part-of: homelab-sentinel
+  bootstrap:
+    initdb:
+      database: sentinel
+      owner: sentinel
+      secret:
+        name: sentinel-database-owner
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: '1'
+      memory: 1Gi
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+  walStorage:
+    size: 2Gi
+    storageClass: longhorn
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
+    podAntiAffinityType: required
+  monitoring:
+    enablePodMonitor: true
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: sentinel-backups

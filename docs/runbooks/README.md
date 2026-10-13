@@ -16,6 +16,9 @@ Implemented runbooks:
 - [Initialize and unseal OpenBao](initialize-and-unseal-openbao.md)
 - [Rotate runtime secrets](rotate-runtime-secrets.md)
 - [Recover runtime secrets](recover-runtime-secrets.md)
+- [Release Homelab Sentinel](release-sentinel.md)
+- [Roll back Homelab Sentinel](rollback-sentinel.md)
+- [Operate Homelab Sentinel](operate-sentinel.md)
 
 Later component runbooks are added with the phase that creates each operational
 responsibility.

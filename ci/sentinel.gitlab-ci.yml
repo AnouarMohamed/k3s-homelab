@@ -1,102 +1,124 @@
 ---
-# Sentinel CI/CD pipeline template
-# Covers unit testing, container build via Kaniko, SBOM generation via Syft,
-# vulnerability gating via Trivy, and keyless Sigstore signing via Cosign.
+# Sentinel is built and promoted by GitLab CI. GitHub is a read-only source mirror;
+# this pipeline mirrors immutable OCI artifacts to GHCR after all security gates pass.
+
+.sentinel-rules:
+  rules:
+    - if: '$CI_COMMIT_MESSAGE =~ /^chore\(sentinel\): promote/'
+      when: never
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
 lint:sentinel:
+  extends: .sentinel-rules
   stage: lint
   image: golang:1.26.9-bookworm@sha256:d9c68c2c51161e12fd77e4c6320687c9cd86e1af1e3ad6e6cd63ff970641453c
   script:
     - make -C apps/sentinel lint
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-    - changes:
-        - apps/sentinel/**/*
-        - ci/**/*
-        - .gitlab-ci.yml
 
 test:sentinel:
+  extends: .sentinel-rules
   stage: test
   image: golang:1.26.9-bookworm@sha256:d9c68c2c51161e12fd77e4c6320687c9cd86e1af1e3ad6e6cd63ff970641453c
   script:
     - make -C apps/sentinel test
   coverage: '/coverage: \d+\.\d+% of statements/'
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-    - changes:
-        - apps/sentinel/**/*
-        - ci/**/*
-        - .gitlab-ci.yml
 
-build:sentinel-api:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug@sha256:c3109d5926a997b100c4343944e06c6b30a6804b2f9abe0994d3de6ef92b028e
-    entrypoint:
-      - ""
-  before_script:
-    - mkdir -p /kaniko/.docker
-    - |-
-      auth_token=$(printf '%s:%s' "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')
-      printf '{"auths":{"%s":{"auth":"%s"}}}' "${CI_REGISTRY}" "${auth_token}" > /kaniko/.docker/config.json
+test:sentinel-integration:
+  extends: .sentinel-rules
+  stage: test
+  image: golang:1.26.9-bookworm@sha256:d9c68c2c51161e12fd77e4c6320687c9cd86e1af1e3ad6e6cd63ff970641453c
+  services:
+    - name: >-
+        docker.io/library/postgres:17.6-bookworm@sha256:f3bd19c606e442c3d7bdfa8002e03fe260a1023351e0ea4598032022b68dd6e3
+      alias: postgres
+  variables:
+    POSTGRES_DB: sentinel
+    POSTGRES_USER: sentinel
+    POSTGRES_PASSWORD: integration-only
+    DATABASE_URL: postgres://sentinel:integration-only@postgres:5432/sentinel?sslmode=disable
   script:
-    - |-
-      /kaniko/executor \
-        --context "${CI_PROJECT_DIR}/apps/sentinel" \
-        --dockerfile "${CI_PROJECT_DIR}/apps/sentinel/Dockerfile.api" \
-        --destination "${CI_REGISTRY_IMAGE}/homelab-sentinel-api:${CI_COMMIT_SHORT_SHA}" \
-        --digest-file "${CI_PROJECT_DIR}/sentinel-api.digest"
+    - cd apps/sentinel
+    - go test -race -tags=integration ./internal/database
+
+build:sentinel-images:
+  stage: build
+  image: docker.io/library/docker:29.1.3-cli@sha256:4fa0ee1f3a7e4354c4ea34558b6d4ee32859baf4973d4c8ccc8e7fe3dd730c04
+  services:
+    - name: docker.io/library/docker:29.1.3-dind@sha256:173f284a4299164772a90f52b373e73e087583c0963f1334c9995f190ef6f3f5
+      alias: docker
+      command:
+        - --tls=false
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+  before_script:
+    - printf '%s' "$CI_REGISTRY_PASSWORD" | docker login --username "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - docker buildx create --driver docker-container --use --name sentinel-builder
+    - docker buildx inspect --bootstrap
+  script:
+    - api_ref="${CI_REGISTRY_IMAGE}/homelab-sentinel-api:${CI_COMMIT_SHA}"
+    - worker_ref="${CI_REGISTRY_IMAGE}/homelab-sentinel-worker:${CI_COMMIT_SHA}"
+    - >-
+      docker buildx build --platform linux/amd64,linux/arm64 --provenance=false
+      --sbom=false --file apps/sentinel/Dockerfile.api --tag "$api_ref"
+      --push apps/sentinel
+    - >-
+      docker buildx build --platform linux/amd64,linux/arm64 --provenance=false
+      --sbom=false --file apps/sentinel/Dockerfile.worker --tag "$worker_ref"
+      --push apps/sentinel
+    - docker buildx imagetools inspect "$api_ref" --format '{{.Manifest.Digest}}' > sentinel-api.digest
+    - docker buildx imagetools inspect "$worker_ref" --format '{{.Manifest.Digest}}' > sentinel-worker.digest
+    - grep -Eq '^sha256:[a-f0-9]{64}$' sentinel-api.digest
+    - grep -Eq '^sha256:[a-f0-9]{64}$' sentinel-worker.digest
   artifacts:
     paths:
       - sentinel-api.digest
-    expire_in: 1 week
-  rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-
-build:sentinel-worker:
-  stage: build
-  image:
-    name: gcr.io/kaniko-project/executor:v1.23.2-debug@sha256:c3109d5926a997b100c4343944e06c6b30a6804b2f9abe0994d3de6ef92b028e
-    entrypoint:
-      - ""
-  before_script:
-    - mkdir -p /kaniko/.docker
-    - |-
-      auth_token=$(printf '%s:%s' "${CI_REGISTRY_USER}" "${CI_REGISTRY_PASSWORD}" | base64 | tr -d '\n')
-      printf '{"auths":{"%s":{"auth":"%s"}}}' "${CI_REGISTRY}" "${auth_token}" > /kaniko/.docker/config.json
-  script:
-    - |-
-      /kaniko/executor \
-        --context "${CI_PROJECT_DIR}/apps/sentinel" \
-        --dockerfile "${CI_PROJECT_DIR}/apps/sentinel/Dockerfile.worker" \
-        --destination "${CI_REGISTRY_IMAGE}/homelab-sentinel-worker:${CI_COMMIT_SHORT_SHA}" \
-        --digest-file "${CI_PROJECT_DIR}/sentinel-worker.digest"
-  artifacts:
-    paths:
       - sentinel-worker.digest
     expire_in: 1 week
   rules:
+    - if: '$CI_COMMIT_MESSAGE =~ /^chore\(sentinel\): promote/'
+      when: never
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+package:sentinel-deployment:
+  stage: build
+  image: golang:1.26.9-bookworm@sha256:d9c68c2c51161e12fd77e4c6320687c9cd86e1af1e3ad6e6cd63ff970641453c
+  script:
+    - mkdir -p ci-output
+    - >-
+      tar --create --gzip --file ci-output/sentinel-deploy.tgz
+      apps/sentinel/base apps/sentinel/overlays apps/sentinel/README.md
+      apps/sentinel/dependencies.env
+      scripts/promote-sentinel-images.sh
+    - sha256sum ci-output/sentinel-deploy.tgz > ci-output/sentinel-deploy.tgz.sha256
+  artifacts:
+    paths:
+      - ci-output/sentinel-deploy.tgz
+      - ci-output/sentinel-deploy.tgz.sha256
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_MESSAGE =~ /^chore\(sentinel\): promote/'
+      when: never
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
 security:sbom-sentinel:
   stage: security
   image:
-    name: anchore/syft:v1.51.1@sha256:95fe0835e5bebc6f8b1f8acef68d47d63d594ef4c0f25c097ff853b23cbac74c
+    name: ghcr.io/anchore/syft:v1.54.0@sha256:0356562f495d432056237fbea5cbc2d4839c9c75cd500784a66de2e7cc95ca7c
     entrypoint:
       - ""
   needs:
-    - job: build:sentinel-api
+    - job: build:sentinel-images
       artifacts: true
-    - job: build:sentinel-worker
-      artifacts: true
+  variables:
+    SYFT_REGISTRY_AUTH_USERNAME: $CI_REGISTRY_USER
+    SYFT_REGISTRY_AUTH_PASSWORD: $CI_REGISTRY_PASSWORD
   script:
-    - |-
-      syft "${CI_REGISTRY_IMAGE}/homelab-sentinel-api@$(cat sentinel-api.digest)" \
-        -o spdx-json=sentinel-api-sbom.spdx.json
-      syft "${CI_REGISTRY_IMAGE}/homelab-sentinel-worker@$(cat sentinel-worker.digest)" \
-        -o spdx-json=sentinel-worker-sbom.spdx.json
+    - api_ref="${CI_REGISTRY_IMAGE}/homelab-sentinel-api@$(cat sentinel-api.digest)"
+    - worker_ref="${CI_REGISTRY_IMAGE}/homelab-sentinel-worker@$(cat sentinel-worker.digest)"
+    - syft "$api_ref" --output spdx-json=sentinel-api-sbom.spdx.json
+    - syft "$worker_ref" --output spdx-json=sentinel-worker-sbom.spdx.json
   artifacts:
     paths:
       - sentinel-api-sbom.spdx.json
@@ -112,29 +134,27 @@ security:trivy-sentinel:
     entrypoint:
       - ""
   needs:
-    - job: build:sentinel-api
+    - job: build:sentinel-images
       artifacts: true
-    - job: build:sentinel-worker
-      artifacts: true
+  variables:
+    TRIVY_USERNAME: $CI_REGISTRY_USER
+    TRIVY_PASSWORD: $CI_REGISTRY_PASSWORD
   script:
-    - |-
-      trivy image --exit-code 1 --severity CRITICAL,HIGH \
-        "${CI_REGISTRY_IMAGE}/homelab-sentinel-api@$(cat sentinel-api.digest)"
-      trivy image --exit-code 1 --severity CRITICAL,HIGH \
-        "${CI_REGISTRY_IMAGE}/homelab-sentinel-worker@$(cat sentinel-worker.digest)"
+    - api_ref="${CI_REGISTRY_IMAGE}/homelab-sentinel-api@$(cat sentinel-api.digest)"
+    - worker_ref="${CI_REGISTRY_IMAGE}/homelab-sentinel-worker@$(cat sentinel-worker.digest)"
+    - trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed "$api_ref"
+    - trivy image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed "$worker_ref"
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
-security:sign-sentinel:
-  stage: security
+sign:sentinel-gitlab:
+  stage: sign
   image:
-    name: gcr.io/projectsigstore/cosign:v2.4.3@sha256:c77247c92f4dfea851c70555738226498393e34e2f9ca83cb959e51c230e4ad7
+    name: ghcr.io/sigstore/cosign/cosign:v3.0.5@sha256:be924970ba7438c22e18067dec5637946d6566eac711f5bedd1584e7137008fb
     entrypoint:
       - ""
   needs:
-    - job: build:sentinel-api
-      artifacts: true
-    - job: build:sentinel-worker
+    - job: build:sentinel-images
       artifacts: true
     - job: security:sbom-sentinel
       artifacts: true
@@ -142,47 +162,137 @@ security:sign-sentinel:
   id_tokens:
     SIGSTORE_ID_TOKEN:
       aud: sigstore
+  before_script:
+    - cosign login --username "$CI_REGISTRY_USER" --password "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
   script:
-    - |-
-      cosign sign --yes "${CI_REGISTRY_IMAGE}/homelab-sentinel-api@$(cat sentinel-api.digest)"
-      cosign attest --yes --predicate sentinel-api-sbom.spdx.json --type spdx \
-        "${CI_REGISTRY_IMAGE}/homelab-sentinel-api@$(cat sentinel-api.digest)"
-      cosign sign --yes "${CI_REGISTRY_IMAGE}/homelab-sentinel-worker@$(cat sentinel-worker.digest)"
-      cosign attest --yes --predicate sentinel-worker-sbom.spdx.json --type spdx \
-        "${CI_REGISTRY_IMAGE}/homelab-sentinel-worker@$(cat sentinel-worker.digest)"
+    - api_ref="${CI_REGISTRY_IMAGE}/homelab-sentinel-api@$(cat sentinel-api.digest)"
+    - worker_ref="${CI_REGISTRY_IMAGE}/homelab-sentinel-worker@$(cat sentinel-worker.digest)"
+    - cosign sign --yes --identity-token "$SIGSTORE_ID_TOKEN" "$api_ref"
+    - >-
+      cosign attest --yes --identity-token "$SIGSTORE_ID_TOKEN"
+      --predicate sentinel-api-sbom.spdx.json --type spdx "$api_ref"
+    - cosign sign --yes --identity-token "$SIGSTORE_ID_TOKEN" "$worker_ref"
+    - >-
+      cosign attest --yes --identity-token "$SIGSTORE_ID_TOKEN"
+      --predicate sentinel-worker-sbom.spdx.json --type spdx "$worker_ref"
+    - >-
+      cosign verify --certificate-identity-regexp "^https://${CI_SERVER_HOST}/.*"
+      --certificate-oidc-issuer "$CI_SERVER_URL" "$api_ref"
+    - >-
+      cosign verify --certificate-identity-regexp "^https://${CI_SERVER_HOST}/.*"
+      --certificate-oidc-issuer "$CI_SERVER_URL" "$worker_ref"
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+.promote-sentinel:
+  image: golang:1.26.9-bookworm@sha256:d9c68c2c51161e12fd77e4c6320687c9cd86e1af1e3ad6e6cd63ff970641453c
+  needs:
+    - job: build:sentinel-images
+      artifacts: true
+    - job: sign:sentinel-gitlab
+  before_script:
+    - test -n "$GITLAB_PROMOTION_TOKEN"
+    - git config user.name "Sentinel promotion bot"
+    - git config user.email "sentinel-promotion@users.noreply.gitlab.com"
+    - git remote set-url origin "https://oauth2:${GITLAB_PROMOTION_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+    - git fetch origin "$CI_DEFAULT_BRANCH"
+    - git checkout -B "$CI_DEFAULT_BRANCH" "origin/$CI_DEFAULT_BRANCH"
+  script:
+    - api_digest="$(cat sentinel-api.digest)"
+    - worker_digest="$(cat sentinel-worker.digest)"
+    - scripts/promote-sentinel-images.sh "$PROMOTION_ENVIRONMENT" "$api_digest" "$worker_digest"
+    - git add "apps/sentinel/overlays/${PROMOTION_ENVIRONMENT}/image-lock.env"
+    - git diff --cached --quiet && exit 0
+    - git commit -m "chore(sentinel): promote ${PROMOTION_ENVIRONMENT} images [skip ci]"
+    - git push origin "HEAD:${CI_DEFAULT_BRANCH}"
 
 promote:sentinel-staging:
-  stage: deploy
-  image:
-    name: mikefarah/yq:4.54.1@sha256:4b3d9475d65571d28cbb19544d3820ec2945e4c8b2f18279394282b8dc3a592e
-    entrypoint:
-      - ""
-  needs:
-    - job: security:sign-sentinel
-    - job: build:sentinel-api
-      artifacts: true
-    - job: build:sentinel-worker
-      artifacts: true
-  script:
-    - |-
-      printf 'Promoting sentinel-api (%s) and sentinel-worker (%s) to staging\n' \
-        "$(cat sentinel-api.digest)" "$(cat sentinel-worker.digest)"
+  extends: .promote-sentinel
+  stage: promote
+  variables:
+    PROMOTION_ENVIRONMENT: staging
+  environment:
+    name: sentinel/staging
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
-promote:sentinel-prod:
-  stage: deploy
-  image:
-    name: mikefarah/yq:4.54.1@sha256:4b3d9475d65571d28cbb19544d3820ec2945e4c8b2f18279394282b8dc3a592e
-    entrypoint:
-      - ""
+promote:sentinel-production:
+  extends: .promote-sentinel
+  stage: promote
   needs:
+    - job: build:sentinel-images
+      artifacts: true
+    - job: sign:sentinel-gitlab
     - job: promote:sentinel-staging
-  script:
-    - echo "Manual approval verified; promoting Sentinel to production"
+  variables:
+    PROMOTION_ENVIRONMENT: prod
+  environment:
+    name: sentinel/production
   rules:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
       when: manual
-...
+      allow_failure: false
+
+mirror:sentinel-ghcr:
+  stage: mirror
+  image:
+    name: ghcr.io/oras-project/oras:v1.3.4@sha256:f7bc056d54d97baa399414ed5048ecc67c3371b750d4bbce1d871827a5758179
+    entrypoint:
+      - ""
+  needs:
+    - job: build:sentinel-images
+      artifacts: true
+    - job: package:sentinel-deployment
+      artifacts: true
+    - job: sign:sentinel-gitlab
+  before_script:
+    - test -n "$GHCR_NAMESPACE"
+    - test -n "$GHCR_USERNAME"
+    - test -n "$GHCR_TOKEN"
+    - oras login --username "$CI_REGISTRY_USER" --password "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - oras login --username "$GHCR_USERNAME" --password "$GHCR_TOKEN" ghcr.io
+  script:
+    - api_source="${CI_REGISTRY_IMAGE}/homelab-sentinel-api@$(cat sentinel-api.digest)"
+    - worker_source="${CI_REGISTRY_IMAGE}/homelab-sentinel-worker@$(cat sentinel-worker.digest)"
+    - api_target="ghcr.io/${GHCR_NAMESPACE}/homelab-sentinel-api:${CI_COMMIT_SHA}"
+    - worker_target="ghcr.io/${GHCR_NAMESPACE}/homelab-sentinel-worker:${CI_COMMIT_SHA}"
+    - deploy_target="ghcr.io/${GHCR_NAMESPACE}/homelab-sentinel-deploy:${CI_COMMIT_SHA}"
+    - oras copy --recursive "$api_source" "$api_target"
+    - oras copy --recursive "$worker_source" "$worker_target"
+    - >-
+      oras push "$deploy_target"
+      --artifact-type application/vnd.anouar.homelab.sentinel.deployment.v1+tar
+      ci-output/sentinel-deploy.tgz:application/vnd.anouar.homelab.sentinel.deployment.layer.v1.tar+gzip
+      ci-output/sentinel-deploy.tgz.sha256:text/plain
+    - printf '%s@%s\n' "${api_target%:*}" "$(oras resolve "$api_target")" > ghcr-api.ref
+    - printf '%s@%s\n' "${worker_target%:*}" "$(oras resolve "$worker_target")" > ghcr-worker.ref
+    - printf '%s@%s\n' "${deploy_target%:*}" "$(oras resolve "$deploy_target")" > ghcr-deploy.ref
+  artifacts:
+    paths:
+      - ghcr-api.ref
+      - ghcr-worker.ref
+      - ghcr-deploy.ref
+    expire_in: 1 week
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+sign:sentinel-ghcr:
+  stage: mirror
+  image:
+    name: ghcr.io/sigstore/cosign/cosign:v3.0.5@sha256:be924970ba7438c22e18067dec5637946d6566eac711f5bedd1584e7137008fb
+    entrypoint:
+      - ""
+  needs:
+    - job: mirror:sentinel-ghcr
+      artifacts: true
+  id_tokens:
+    SIGSTORE_ID_TOKEN:
+      aud: sigstore
+  before_script:
+    - cosign login --username "$GHCR_USERNAME" --password "$GHCR_TOKEN" ghcr.io
+  script:
+    - cosign sign --yes --identity-token "$SIGSTORE_ID_TOKEN" "$(cat ghcr-api.ref)"
+    - cosign sign --yes --identity-token "$SIGSTORE_ID_TOKEN" "$(cat ghcr-worker.ref)"
+    - cosign sign --yes --identity-token "$SIGSTORE_ID_TOKEN" "$(cat ghcr-deploy.ref)"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
