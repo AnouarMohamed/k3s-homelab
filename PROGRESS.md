@@ -610,7 +610,14 @@ explicitly because that release has no checksum-list asset.
   `go install go.k6.io/k6/v2@v2.3.0` completed successfully and reported
   `k6 v2.3.0`; `make lint` returned exit 0, and GitLab's project CI lint API again
   returned `valid: true` with no errors or warnings. Replacement-pipeline execution
-  is not recorded until the repair commit is pushed.
+  then passed all four lint jobs and reached repository validation.
+- Pipeline 8 exposed a second clean-run defect: Helm names a chart pulled by an OCI
+  digest `cilium@sha256-<digest>.tgz`, while the Phase 2 fetcher expected the
+  version-based archive name that happened to exist in the local warm cache. The
+  fetcher now derives Helm's digest-based archive name from the pinned chart reference.
+  A fetch into an empty temporary cache produced that archive, verified all four
+  downloaded manifests, and confirmed chart version `1.20.2`. Replacement-pipeline
+  execution is not recorded until this repair is pushed.
 
 ## GitHub application packages — 2026-10-13
 

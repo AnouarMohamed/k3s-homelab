@@ -11,10 +11,12 @@ source "${repository_root}/platform/cilium/dependencies.env"
 
 mkdir -p "${cache_dir}"
 
-if [[ ! -f "${cache_dir}/cilium-${CILIUM_VERSION}.tgz" ]]; then
+chart_digest="${CILIUM_CHART_REF##*@sha256:}"
+chart_archive="${cache_dir}/cilium@sha256-${chart_digest}.tgz"
+if [[ ! -f "${chart_archive}" ]]; then
   helm pull "${CILIUM_CHART_REF}" --destination "${cache_dir}"
 fi
-tar --extract --gzip --file "${cache_dir}/cilium-${CILIUM_VERSION}.tgz" \
+tar --extract --gzip --file "${chart_archive}" \
   --directory "${cache_dir}"
 
 gateway_file="${cache_dir}/gateway-api-standard-${GATEWAY_API_VERSION}.yaml"
