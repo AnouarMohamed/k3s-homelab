@@ -45,9 +45,9 @@ age, gitleaks, kyverno, promtool, kustomize.
 installer pins kubeconform `v0.8.0`, kube-linter `v0.8.3`, gitleaks `v8.30.1`, Kyverno
 CLI `v1.19.1`, Kustomize `v5.7.1`, age `v1.3.2`, yq `v4.54.1`, SOPS `v3.13.3`,
 OpenTofu `v1.13.1`, promtool `3.15.0`, markdownlint-cli2 `0.23.3`, and ShellCheck
-`0.11.0`. Go module sums, npm integrity metadata, or upstream release checksums are
-verified according to the distribution method. ShellCheck's release digest is pinned
-explicitly because that release has no checksum-list asset.
+`0.11.0`, and ripgrep `15.2.0`. Go module sums, npm integrity metadata, or upstream
+release checksums are verified according to the distribution method. ShellCheck's
+release digest is pinned explicitly because that release has no checksum-list asset.
 
 ## Phase 0 validation — 2026-10-11
 
@@ -623,7 +623,14 @@ explicitly because that release has no checksum-list asset.
   local binary selected a newer default. Every Helm render now explicitly targets the
   pinned Kubernetes version `1.36.5`, including the shared GitOps renderer. A complete
   `make validate` returned exit 0 across all Phase 1–12 gates after this change.
-  Replacement-pipeline execution is not recorded until the repair is pushed.
+  Pipeline 10 then validated through Phase 7 with this repair.
+- Pipeline 10 exposed one more undocumented workstation dependency: the minimal Go CI
+  image does not provide ripgrep, which the Phase 8 and portfolio validators use.
+  Added pinned ripgrep `15.2.0` to the central tool inventory, local installer, and CI;
+  the official release checksum accepted the downloaded archive and the binary reported
+  `ripgrep 15.2.0`. Phase 8 and portfolio validation returned exit 0, and GitLab's CI
+  lint API returned `valid: true`. Replacement-pipeline execution is not recorded until
+  the repair is pushed.
 
 ## GitHub application packages — 2026-10-13
 

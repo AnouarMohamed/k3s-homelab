@@ -108,6 +108,31 @@ rm -rf \
   "${download_dir:?}/${shellcheck_archive}" \
   "${download_dir:?}/${shellcheck_directory}"
 
+ripgrep_archive="ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+ripgrep_directory="ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl"
+ripgrep_url="https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}"
+curl --fail --location --silent --show-error \
+  --output "${download_dir}/${ripgrep_archive}" \
+  "${ripgrep_url}/${ripgrep_archive}"
+curl --fail --location --silent --show-error \
+  --output "${download_dir}/${ripgrep_archive}.sha256" \
+  "${ripgrep_url}/${ripgrep_archive}.sha256"
+(
+  cd "${download_dir}"
+  sha256sum --check --strict "${ripgrep_archive}.sha256"
+)
+tar --extract --gzip \
+  --file "${download_dir}/${ripgrep_archive}" \
+  --directory "${download_dir}" \
+  "${ripgrep_directory}/rg"
+install --mode 0755 \
+  "${download_dir}/${ripgrep_directory}/rg" \
+  "${tool_bin}/rg"
+rm -rf \
+  "${download_dir:?}/${ripgrep_archive}" \
+  "${download_dir}/${ripgrep_archive}.sha256" \
+  "${download_dir:?}/${ripgrep_directory}"
+
 npm install \
   --no-audit \
   --no-fund \

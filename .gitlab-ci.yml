@@ -113,6 +113,23 @@ validate:repository:
       sha256sum --check --strict
     - tar --extract --gzip --file "/tmp/${kyverno_archive}" --directory /tmp kyverno
     - install --mode 0755 /tmp/kyverno "${GOBIN}/kyverno"
+    - ripgrep_archive="ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl.tar.gz"
+    - ripgrep_directory="ripgrep-${RIPGREP_VERSION}-x86_64-unknown-linux-musl"
+    - ripgrep_url="https://github.com/BurntSushi/ripgrep/releases/download/${RIPGREP_VERSION}"
+    - |-
+      curl --fail --location --silent --show-error --retry 5 --retry-all-errors \
+      --output "/tmp/${ripgrep_archive}" "${ripgrep_url}/${ripgrep_archive}"
+    - |-
+      curl --fail --location --silent --show-error --retry 5 --retry-all-errors \
+      --output "/tmp/${ripgrep_archive}.sha256" \
+      "${ripgrep_url}/${ripgrep_archive}.sha256"
+    - |-
+      sed "s#${ripgrep_archive}#/tmp/${ripgrep_archive}#" \
+      "/tmp/${ripgrep_archive}.sha256" | sha256sum --check --strict
+    - |-
+      tar --extract --gzip --file "/tmp/${ripgrep_archive}" --directory /tmp \
+      "${ripgrep_directory}/rg"
+    - install --mode 0755 "/tmp/${ripgrep_directory}/rg" "${GOBIN}/rg"
     - export PATH="${GOBIN}:${PATH}"
   script:
     - scripts/check-forbidden-files.sh
