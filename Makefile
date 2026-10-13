@@ -7,7 +7,7 @@ ANSIBLE_INVENTORY := $(REPOSITORY_ROOT)/infra/ansible/inventory/homelab.py
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools lint ansible-syntax ansible-templates phase2-deps validate-cni phase3-deps validate-gitops phase4-deps validate-edge phase5-deps validate-storage phase6-deps validate-secrets phase7-deps validate-observability phase8-deps validate-policy phase9-deps validate-sentinel phase10-deps validate-identity-apps phase11-deps validate-chaos-dr validate-portfolio test-chaos test-sentinel-integration build-sentinel validate security bootstrap bootstrap-nodes upgrade-k3s reset \
+.PHONY: help tools lint ansible-syntax ansible-templates phase2-deps validate-cni phase3-deps validate-gitops phase4-deps validate-edge phase5-deps validate-storage phase6-deps validate-secrets phase7-deps validate-observability phase8-deps validate-policy phase9-deps validate-sentinel phase10-deps validate-identity-apps phase11-deps validate-chaos-dr validate-portfolio validate-ghcr-packages test-chaos test-sentinel-integration build-sentinel validate security bootstrap bootstrap-nodes upgrade-k3s reset \
 	bootstrap-cni bootstrap-gitops bootstrap-platform test test-storage-reschedule tofu-init tofu-plan teardown
 
 help: ## Show all supported targets
@@ -98,6 +98,9 @@ validate-chaos-dr: ## Validate Chaos Mesh, bounded experiments, load tests, and 
 validate-portfolio: ## Validate portfolio docs, evidence links, indexes, and governance
 	@scripts/validate-portfolio.sh
 
+validate-ghcr-packages: ## Validate the GitHub-to-GHCR application package workflow
+	@scripts/validate-ghcr-packages.sh
+
 test-chaos: ## Run test-namespace experiments only with CONFIRM_CHAOS=homelab
 	@scripts/run-chaos-experiments.sh
 
@@ -107,7 +110,7 @@ test-sentinel-integration: ## Run Sentinel against a disposable pinned PostgreSQ
 build-sentinel: ## Build Sentinel API and worker binaries locally
 	@$(MAKE) -C apps/sentinel build
 
-validate: ansible-syntax ansible-templates validate-cni validate-gitops validate-edge validate-storage validate-secrets validate-observability validate-policy validate-sentinel validate-identity-apps validate-chaos-dr validate-portfolio ## Validate repository policy and Kubernetes manifests
+validate: ansible-syntax ansible-templates validate-cni validate-gitops validate-edge validate-storage validate-secrets validate-observability validate-policy validate-sentinel validate-identity-apps validate-chaos-dr validate-portfolio validate-ghcr-packages ## Validate repository policy and Kubernetes manifests
 	@scripts/check-forbidden-files.sh
 	@scripts/check-private-values.sh
 	@scripts/check-pins.sh

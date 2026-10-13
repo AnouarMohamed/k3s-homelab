@@ -127,6 +127,7 @@ validate:repository:
     - scripts/validate-observability.sh
     - scripts/validate-policy.sh
     - scripts/validate-sentinel.sh
+    - scripts/validate-ghcr-packages.sh
 
 security:gitleaks:
   stage: security

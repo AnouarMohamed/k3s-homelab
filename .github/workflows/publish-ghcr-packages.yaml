@@ -1,0 +1,108 @@
+---
+name: Publish application packages to GHCR
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/publish-ghcr-packages.yaml
+      - apps/**
+      - platform/keycloak/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+concurrency:
+  group: publish-ghcr-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish-deployment-packages:
+    name: Publish ${{ matrix.package }} deployment package
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - package: homepage
+            path: apps/homepage
+          - package: keycloak
+            path: platform/keycloak
+          - package: sentinel
+            path: apps/sentinel
+          - package: uptime-kuma
+            path: apps/uptime-kuma
+          - package: vaultwarden
+            path: apps/vaultwarden
+          - package: whoami
+            path: apps/whoami
+    steps:
+      - name: Check out the exact source revision
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+
+      - name: Install checksum-verified ORAS
+        env:
+          ORAS_VERSION: 1.3.4
+        run: |
+          set -euo pipefail
+          archive="oras_${ORAS_VERSION}_linux_amd64.tar.gz"
+          checksums="oras_${ORAS_VERSION}_checksums.txt"
+          release_url="https://github.com/oras-project/oras/releases/download/v${ORAS_VERSION}"
+          curl --fail --location --silent --show-error \
+            --output "${RUNNER_TEMP}/${archive}" "${release_url}/${archive}"
+          curl --fail --location --silent --show-error \
+            --output "${RUNNER_TEMP}/${checksums}" "${release_url}/${checksums}"
+          grep "  ${archive}$" "${RUNNER_TEMP}/${checksums}" | \
+            sed "s#${archive}#${RUNNER_TEMP}/${archive}#" | \
+            sha256sum --check --strict
+          tar --extract --gzip --file "${RUNNER_TEMP}/${archive}" \
+            --directory "${RUNNER_TEMP}" oras
+          sudo install --mode 0755 "${RUNNER_TEMP}/oras" /usr/local/bin/oras
+
+      - name: Authenticate to GHCR
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "${GHCR_TOKEN}" | \
+            oras login ghcr.io --username "${GITHUB_ACTOR}" --password-stdin
+
+      - name: Package and publish declarative source
+        id: publish
+        env:
+          PACKAGE_NAME: ${{ matrix.package }}
+          PACKAGE_PATH: ${{ matrix.path }}
+        run: |
+          set -euo pipefail
+          owner="${GITHUB_REPOSITORY_OWNER,,}"
+          archive="${RUNNER_TEMP}/homelab-${PACKAGE_NAME}-deploy.tgz"
+          checksum="${archive}.sha256"
+          repository="ghcr.io/${owner}/homelab-${PACKAGE_NAME}-deploy"
+          target="${repository}:${GITHUB_SHA}"
+
+          tar --create --gzip --file "${archive}" \
+            --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 \
+            --numeric-owner --directory "${PACKAGE_PATH}" .
+          sha256sum "${archive}" > "${checksum}"
+          oras push "${target}" \
+            --artifact-type application/vnd.anouar.homelab.deployment.v1+tar \
+            --annotation "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+            --annotation "org.opencontainers.image.revision=${GITHUB_SHA}" \
+            "${archive}:application/vnd.anouar.homelab.deployment.layer.v1.tar+gzip" \
+            "${checksum}:text/plain"
+          digest="$(oras resolve "${target}")"
+          oras copy "${target}" "${repository}:main"
+          printf 'reference=%s@%s\n' "${repository}" "${digest}" >> "${GITHUB_OUTPUT}"
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+        with:
+          cosign-release: v3.0.5
+
+      - name: Sign the immutable package digest
+        env:
+          PACKAGE_REFERENCE: ${{ steps.publish.outputs.reference }}
+        run: cosign sign --yes "${PACKAGE_REFERENCE}"

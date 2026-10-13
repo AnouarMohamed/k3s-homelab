@@ -55,4 +55,15 @@ if [[ -n "${dockerfile_matches}" ]]; then
   failed=1
 fi
 
+action_matches="$(
+  git grep -nE '^[[:space:]]*uses:[[:space:]]*[^[:space:]]+' -- \
+    '.github/workflows/*.yaml' '.github/workflows/*.yml' 2>/dev/null | \
+    grep -vE '@[a-f0-9]{40}([[:space:]]|$)' || true
+)"
+if [[ -n "${action_matches}" ]]; then
+  printf 'GitHub Action is not pinned to a commit:\n%s\n' \
+    "${action_matches}" >&2
+  failed=1
+fi
+
 exit "${failed}"
