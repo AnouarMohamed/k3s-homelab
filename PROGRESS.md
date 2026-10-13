@@ -617,9 +617,12 @@ explicitly because that release has no checksum-list asset.
   signing. The recorded manifest digests begin `2ad12737` (Keycloak), `da39c8b9`
   (Homepage), `d1494b4f` (Vaultwarden), `afee6cf5` (Sentinel), `28bda5ed` (whoami),
   and `168440a5` (Uptime Kuma).
+- Anonymous OCI manifest requests returned HTTP 200 for every `main` package tag.
+  `cosign verify` accepted every immutable digest for the exact workflow identity and
+  GitHub Actions OIDC issuer, including offline transparency-log inclusion checks.
 - `make validate-ghcr-packages`, `actionlint`, `make lint`, the pin check, portfolio
-  validation, and `make security` returned exit 0. The final secret scan covered all
-  36 commits and found no leaks.
+  validation, and `make security` returned exit 0. The pre-publication secret scan
+  covered the then-existing 36 commits and found no leaks.
 
 ## Unverified
 
@@ -627,8 +630,8 @@ explicitly because that release has no checksum-list asset.
 - Every dependency not yet listed with upstream evidence in `PLAN.md`.
 - Live execution of the GitLab pipeline on a protected, privileged runner.
 - Publication and keyless verification of the GitLab-built Sentinel image mirrors
-  remain pending. GitHub published and signed the six deployment-source packages, but
-  their public visibility still requires the documented package-settings review.
+  remain pending. GitHub publicly published and verified the six signed
+  deployment-source packages.
 - Compatibility of the selected S3 service with Longhorn, Barman Cloud, and Velero.
 - OpenBao HCL startup and the declarative audit device on the real cluster.
 - Phase 7 signal ingestion, storage sizing, scrape selectors, alert delivery, and the

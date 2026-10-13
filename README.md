@@ -39,7 +39,7 @@ flowchart LR
 | GitOps reconciliation | [Restricted projects and sync waves](clusters/homelab/apps/) | Argo CD screenshot pending |
 | Zero inbound router ports | [Public-surface boundary](docs/security/public-surface.md) | Tunnel/WARP checks pending |
 | Backup and recovery | [Seven DR drills](docs/dr/README.md) | Result tables intentionally empty |
-| Supply-chain security | [Policy and delivery flow](docs/architecture.md#phase-8-policy-and-supply-chain-flow) | GitLab/GHCR signatures pending CI |
+| Supply-chain security | [Policy and delivery flow](docs/architecture.md#phase-8-policy-and-supply-chain-flow) | App bundles signed; Sentinel images pending GitLab CI |
 | Full-stack telemetry | [Observability stack](observability/) | Dashboards and alerts pending hardware |
 | Canary delivery | [Sentinel Rollout](apps/sentinel/) | Canary analysis pending hardware |
 | Failure testing | [Bounded Chaos Mesh experiments](platform/chaos-mesh/) | Experiments pending hardware |

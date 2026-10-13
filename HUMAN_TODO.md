@@ -20,9 +20,6 @@ block repository implementation.
   Phase 9 protected/masked CI variables: `GITLAB_PROMOTION_TOKEN` with repository-write
   scope, `GHCR_USERNAME`, a GitHub classic PAT in `GHCR_TOKEN` with only
   `write:packages`, and the lowercase owner or organization in `GHCR_NAMESPACE`.
-- [ ] After the first GitHub package workflow succeeds, set all six
-  `homelab-<name>-deploy` GHCR packages to Public and confirm that they remain linked
-  to this repository. GitHub does not let the workflow choose initial visibility.
 - [ ] Use a protected GitLab runner that permits the pinned Docker-in-Docker service;
   do not expose that runner to untrusted forks. Protect production deployment approval
   so only Anouar can run `promote:sentinel-production`.
