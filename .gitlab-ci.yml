@@ -62,7 +62,7 @@ validate:repository:
     - mkdir -p "${GOBIN}"
     - go install github.com/yannh/kubeconform/cmd/kubeconform@v0.8.0
     - go install golang.stackrox.io/kube-linter/cmd/kube-linter@v0.8.3
-    - go install go.k6.io/k6@"${K6_VERSION}"
+    - go install go.k6.io/k6/v2@"${K6_VERSION}"
     - go install sigs.k8s.io/kustomize/kustomize/v5@"${KUSTOMIZE_VERSION}"
     - go install github.com/mikefarah/yq/v4@"${YQ_VERSION}"
     - go install helm.sh/helm/v3/cmd/helm@"${HELM_VERSION}"

@@ -602,6 +602,15 @@ explicitly because that release has no checksum-list asset.
 - GitLab's project CI lint API then returned `valid: true` with no errors or warnings.
   `make validate-sentinel`, `make lint`, and `make security` also returned exit 0;
   Gitleaks found no leaks in the working tree or all 34 commits.
+- After account verification and shared-runner assignment, pipeline 7 ran its four
+  lint jobs successfully but `validate:repository` failed while installing k6. The
+  runner reported that `go.k6.io/k6@v2.3.0` declares the post-v2 module path
+  `go.k6.io/k6/v2`.
+- Corrected the k6 package path in both GitLab CI and the local installer. An isolated
+  `go install go.k6.io/k6/v2@v2.3.0` completed successfully and reported
+  `k6 v2.3.0`; `make lint` returned exit 0, and GitLab's project CI lint API again
+  returned `valid: true` with no errors or warnings. Replacement-pipeline execution
+  is not recorded until the repair commit is pushed.
 
 ## GitHub application packages — 2026-10-13
 
