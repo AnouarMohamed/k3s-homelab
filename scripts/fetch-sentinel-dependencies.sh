@@ -3,7 +3,7 @@ set -euo pipefail
 
 repository_root="${HOMELAB_REPOSITORY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 cache_root="${HOMELAB_CACHE_ROOT:-${repository_root}/.cache}"
-cache_dir="${cache_root}/phase9"
+cache_dir="${cache_root}/sentinel"
 # shellcheck disable=SC1091
 source "${repository_root}/platform/argo-rollouts/dependencies.env"
 
@@ -19,4 +19,4 @@ mkdir -p "${cache_dir}/argo-rollouts"
 tar --extract --gzip --file "${archive}" --strip-components=1 \
   --directory "${cache_dir}/argo-rollouts"
 
-printf 'Cached verified Phase 9 dependencies in %s\n' "${cache_dir}"
+printf 'Cached verified Sentinel dependencies in %s\n' "${cache_dir}"

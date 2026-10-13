@@ -11,7 +11,7 @@ must settle before the next wave proceeds.
 | `-30` | Certificate and DNS controllers | Added in Edge traffic |
 | `-20` | Storage and database operators | Added in Storage and backups |
 | `-10` | Runtime secret controllers | Added in Runtime secrets |
-| `0` | Observability and policy controllers | Added in Phases 7–8 |
+| `0` | Observability and policy controllers | Added with their controllers |
 | `10` | Application discovery | `production-applications` ApplicationSet |
 | `20` | Namespaced applications | Generated production Applications |
 

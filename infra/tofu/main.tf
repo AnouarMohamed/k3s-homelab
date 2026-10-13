@@ -45,7 +45,7 @@ resource "cloudflare_dns_record" "whoami" {
   content = "${cloudflare_zero_trust_tunnel_cloudflared.homelab.id}.cfargotunnel.com"
   proxied = true
   ttl     = 1
-  comment = "Managed by OpenTofu for the temporary Phase 4 edge test"
+  comment = "Managed by OpenTofu for the temporary edge test"
 }
 
 resource "cloudflare_dns_record" "sentinel_status" {

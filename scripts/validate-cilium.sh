@@ -3,14 +3,14 @@ set -euo pipefail
 
 repository_root="$(git rev-parse --show-toplevel)"
 export PATH="${repository_root}/.tools/bin:${PATH}"
-cache_dir="${repository_root}/.cache/phase2"
+cache_dir="${repository_root}/.cache/cilium"
 schema_cache_dir="${repository_root}/.cache/kubeconform"
 mkdir -p "${schema_cache_dir}"
 
 # shellcheck disable=SC1091
 source "${repository_root}/platform/cilium/dependencies.env"
 
-"${repository_root}/scripts/fetch-phase2-dependencies.sh"
+"${repository_root}/scripts/fetch-cilium-dependencies.sh"
 
 validation_dir="$(mktemp -d)"
 trap 'rm -rf "${validation_dir}"' EXIT

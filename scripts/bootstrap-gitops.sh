@@ -32,7 +32,7 @@ set -a
 # shellcheck disable=SC1091
 source "${repository_root}/platform/argocd/dependencies.env"
 set +a
-"${repository_root}/scripts/fetch-phase3-dependencies.sh"
+"${repository_root}/scripts/fetch-argocd-dependencies.sh"
 
 kubectl create namespace argocd --dry-run=client --output=yaml | kubectl apply -f -
 kubectl create secret generic sops-age \
@@ -51,7 +51,7 @@ sops --decrypt "${credential_file}" | \
 
 "${repository_root}/scripts/render-config.sh" \
   "${repository_root}/platform/argocd/configure-argocd.yaml" | \
-  helm upgrade --install argocd "${repository_root}/.cache/phase3/argo-cd" \
+  helm upgrade --install argocd "${repository_root}/.cache/argocd/argo-cd" \
     --namespace argocd \
     --values - \
     --wait \

@@ -14,11 +14,11 @@ for pipeline_file in \
   test "$(yq "${ci_command_type_query}" "${pipeline_file}")" = 0
 done
 
-"${repository_root}/scripts/fetch-phase2-dependencies.sh" >/dev/null
-"${repository_root}/scripts/fetch-phase5-dependencies.sh" >/dev/null
-"${repository_root}/scripts/fetch-phase6-dependencies.sh" >/dev/null
-"${repository_root}/scripts/fetch-phase7-dependencies.sh" >/dev/null
-"${repository_root}/scripts/fetch-phase9-dependencies.sh" >/dev/null
+"${repository_root}/scripts/fetch-cilium-dependencies.sh" >/dev/null
+"${repository_root}/scripts/fetch-storage-dependencies.sh" >/dev/null
+"${repository_root}/scripts/fetch-secrets-dependencies.sh" >/dev/null
+"${repository_root}/scripts/fetch-observability-dependencies.sh" >/dev/null
+"${repository_root}/scripts/fetch-sentinel-dependencies.sh" >/dev/null
 mkdir -p "${schema_cache_dir}"
 
 validation_dir="$(mktemp -d)"
@@ -45,7 +45,7 @@ render_twice "${repository_root}/observability/sloth" sloth
 render_twice "${repository_root}/apps/sentinel/overlays/prod" sentinel-prod
 render_twice "${repository_root}/apps/sentinel/overlays/staging" sentinel-staging
 
-helm lint "${repository_root}/.cache/phase9/argo-rollouts" \
+helm lint "${repository_root}/.cache/sentinel/argo-rollouts" \
   --values "${repository_root}/platform/argo-rollouts/configure-argo-rollouts.yaml"
 
 for manifest in argo-rollouts sentinel-prod sentinel-staging; do
@@ -78,7 +78,7 @@ extract_schema ServiceMonitor v1 "${validation_dir}/prometheus-stack-first.yaml"
 extract_schema PrometheusRule v1 "${validation_dir}/prometheus-stack-first.yaml"
 extract_schema PrometheusServiceLevel v1 "${validation_dir}/sloth-first.yaml"
 extract_schema HTTPRoute v1 \
-  "${repository_root}/.cache/phase2/gateway-api-standard-v1.6.1.yaml"
+  "${repository_root}/.cache/cilium/gateway-api-standard-v1.6.1.yaml"
 
 for environment in prod staging; do
   yq eval-all '
@@ -150,4 +150,4 @@ k6 inspect "${repository_root}/apps/sentinel/tests/load/test-status-api.js" >/de
   go build ./cmd/api ./cmd/worker
 )
 
-printf 'Phase 9 Sentinel application, delivery resources, and rollout controls validated.\n'
+printf 'Sentinel application, delivery resources, and rollout controls validated.\n'

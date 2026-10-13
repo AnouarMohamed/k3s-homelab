@@ -5,8 +5,8 @@ repository_root="$(git rev-parse --show-toplevel)"
 export PATH="${repository_root}/.tools/bin:${PATH}"
 schema_cache_dir="${repository_root}/.cache/kubeconform"
 
-"${repository_root}/scripts/fetch-phase4-dependencies.sh" >/dev/null
-"${repository_root}/scripts/fetch-phase11-dependencies.sh" >/dev/null
+"${repository_root}/scripts/fetch-edge-dependencies.sh" >/dev/null
+"${repository_root}/scripts/fetch-chaos-dependencies.sh" >/dev/null
 mkdir -p "${schema_cache_dir}"
 
 validation_dir="$(mktemp -d)"
@@ -27,7 +27,7 @@ kustomize build "${repository_root}/platform/chaos-mesh/experiments" \
   >"${validation_dir}/experiments-second.yaml"
 cmp "${validation_dir}/experiments-first.yaml" "${validation_dir}/experiments-second.yaml"
 
-helm lint "${repository_root}/.cache/phase11/chaos-mesh" \
+helm lint "${repository_root}/.cache/chaos/chaos-mesh" \
   --values <("${repository_root}/scripts/render-config.sh" \
     "${repository_root}/platform/chaos-mesh/configure-chaos-mesh.yaml")
 
@@ -95,4 +95,4 @@ for drill in "${drills[@]}"; do
   grep -q '^## Results$' "${file}"
 done
 
-printf 'Phase 11 Chaos Mesh boundaries, experiments, load scenarios, and DR drills validated.\n'
+printf 'Chaos Mesh boundaries, experiments, load scenarios, and DR drills validated.\n'

@@ -3,7 +3,7 @@ set -euo pipefail
 
 repository_root="$(git rev-parse --show-toplevel)"
 export PATH="${repository_root}/.tools/bin:${PATH}"
-cache_dir="${repository_root}/.cache/phase3"
+cache_dir="${repository_root}/.cache/argocd"
 schema_cache_dir="${repository_root}/.cache/kubeconform"
 
 set -a
@@ -11,7 +11,7 @@ set -a
 source "${repository_root}/platform/argocd/dependencies.env"
 set +a
 
-"${repository_root}/scripts/fetch-phase3-dependencies.sh"
+"${repository_root}/scripts/fetch-argocd-dependencies.sh"
 mkdir -p "${schema_cache_dir}"
 
 validation_dir="$(mktemp -d)"

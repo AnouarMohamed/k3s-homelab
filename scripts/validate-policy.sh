@@ -7,8 +7,8 @@ schema_cache_dir="${repository_root}/.cache/kubeconform"
 # shellcheck disable=SC1091
 source "${repository_root}/policies/dependencies.env"
 
-"${repository_root}/scripts/fetch-phase7-dependencies.sh"
-"${repository_root}/scripts/fetch-phase8-dependencies.sh"
+"${repository_root}/scripts/fetch-observability-dependencies.sh"
+"${repository_root}/scripts/fetch-policy-dependencies.sh"
 mkdir -p "${schema_cache_dir}"
 
 validation_dir="$(mktemp -d)"
@@ -35,9 +35,9 @@ render_twice "${repository_root}/policies/standards/enforce" enforce
 render_twice "${repository_root}/policies/resources" resources
 render_twice "${repository_root}/observability/prometheus-stack" prometheus-stack
 
-helm lint "${repository_root}/.cache/phase8/kyverno" \
+helm lint "${repository_root}/.cache/policy/kyverno" \
   --values "${repository_root}/policies/kyverno/configure-kyverno.yaml"
-helm lint "${repository_root}/.cache/phase8/trivy-operator" \
+helm lint "${repository_root}/.cache/policy/trivy-operator" \
   --values "${repository_root}/policies/trivy/configure-trivy-operator.yaml"
 
 for manifest in bootstrap kyverno trivy audit enforce resources; do
@@ -141,7 +141,10 @@ test "$(yq eval-all '[select(.kind == "ValidatingPolicy" and .spec.matchConstrai
   "${validation_dir}/audit-first.yaml")" = 5
 test "$(yq eval-all '[select(.kind == "ValidatingPolicy" and .metadata.name == "restrict-image-registries" and .spec.matchConstraints.namespaceSelector.matchLabels."policy.homelab.dev/supply-chain" == "signed")] | length' \
   "${validation_dir}/audit-first.yaml")" = 1
-test "$(yq eval-all '[select(.kind == "ImageValidatingPolicy" and .spec.attestors[0].cosign.keyless.identities[0].issuer == "https://gitlab.com" and .spec.matchImageReferences[0].glob == "registry.gitlab.com/CHANGE_ME_GITLAB_PROJECT_PATH/homelab-sentinel-*")] | length' \
+EXPECTED_SENTINEL_GLOB="registry.gitlab.com/$(yq --unwrapScalar \
+  '.spec.gitlab.projectPath' "${repository_root}/config/homelab.yaml")/homelab-sentinel-*"
+export EXPECTED_SENTINEL_GLOB
+test "$(yq eval-all '[select(.kind == "ImageValidatingPolicy" and .spec.attestors[0].cosign.keyless.identities[0].issuer == "https://gitlab.com" and .spec.matchImageReferences[0].glob == strenv(EXPECTED_SENTINEL_GLOB))] | length' \
   "${validation_dir}/audit-first.yaml")" = 1
 
 test "$(yq eval-all --unwrapScalar 'select(.kind == "ConfigMap" and .metadata.name == "trivy-operator-trivy-config") | .data."trivy.repository" + ":" + .data."trivy.tag"' \
@@ -167,4 +170,4 @@ kube-linter lint --exclude minimum-three-replicas \
   "${validation_dir}/trivy-first.yaml" \
   "${validation_dir}/resources-first.yaml"
 
-printf 'Phase 8 admission policy, supply-chain checks, and posture resources validated.\n'
+printf 'Policy controls, supply-chain checks, and posture resources validated.\n'

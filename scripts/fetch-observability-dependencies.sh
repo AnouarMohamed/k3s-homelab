@@ -3,9 +3,9 @@ set -euo pipefail
 
 repository_root="${HOMELAB_REPOSITORY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 cache_root="${HOMELAB_CACHE_ROOT:-${repository_root}/.cache}"
-cache_dir="${cache_root}/phase8"
+cache_dir="${cache_root}/observability"
 # shellcheck disable=SC1091
-source "${repository_root}/policies/dependencies.env"
+source "${repository_root}/observability/dependencies.env"
 
 mkdir -p "${cache_dir}"
 
@@ -25,8 +25,15 @@ fetch_chart() {
     --directory "${cache_dir}/${name}"
 }
 
-fetch_chart kyverno "${KYVERNO_CHART_URL}" "${KYVERNO_CHART_SHA256}"
-fetch_chart trivy-operator "${TRIVY_OPERATOR_CHART_URL}" \
-  "${TRIVY_OPERATOR_CHART_SHA256}"
+fetch_chart kube-prometheus-stack "${KUBE_PROMETHEUS_STACK_CHART_URL}" \
+  "${KUBE_PROMETHEUS_STACK_CHART_SHA256}"
+fetch_chart blackbox-exporter "${BLACKBOX_EXPORTER_CHART_URL}" \
+  "${BLACKBOX_EXPORTER_CHART_SHA256}"
+fetch_chart loki "${LOKI_CHART_URL}" "${LOKI_CHART_SHA256}"
+fetch_chart alloy "${ALLOY_CHART_URL}" "${ALLOY_CHART_SHA256}"
+fetch_chart tempo "${TEMPO_CHART_URL}" "${TEMPO_CHART_SHA256}"
+fetch_chart otel-collector "${OTEL_COLLECTOR_CHART_URL}" \
+  "${OTEL_COLLECTOR_CHART_SHA256}"
+fetch_chart sloth "${SLOTH_CHART_URL}" "${SLOTH_CHART_SHA256}"
 
-printf 'Cached verified Phase 8 dependencies in %s\n' "${cache_dir}"
+printf 'Cached verified Observability dependencies in %s\n' "${cache_dir}"

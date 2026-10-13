@@ -5,8 +5,8 @@ repository_root="$(git rev-parse --show-toplevel)"
 export PATH="${repository_root}/.tools/bin:${PATH}"
 schema_cache_dir="${repository_root}/.cache/kubeconform"
 
-"${repository_root}/scripts/fetch-phase4-dependencies.sh"
-"${repository_root}/scripts/fetch-phase6-dependencies.sh"
+"${repository_root}/scripts/fetch-edge-dependencies.sh"
+"${repository_root}/scripts/fetch-secrets-dependencies.sh"
 mkdir -p "${schema_cache_dir}"
 
 validation_dir="$(mktemp -d)"
@@ -32,9 +32,9 @@ render_twice "${repository_root}/platform/runtime-secrets" runtime-secrets
 "${repository_root}/scripts/render-gitops.sh" \
   "${repository_root}/platform/cert-manager" >"${validation_dir}/cert-manager.yaml"
 
-helm lint "${repository_root}/.cache/phase6/openbao" \
+helm lint "${repository_root}/.cache/secrets/openbao" \
   --values "${repository_root}/platform/openbao/configure-openbao.yaml"
-helm lint "${repository_root}/.cache/phase6/external-secrets" \
+helm lint "${repository_root}/.cache/secrets/external-secrets" \
   --values "${repository_root}/platform/external-secrets/configure-external-secrets.yaml"
 
 for manifest in prerequisites openbao external-secrets runtime-secrets; do
@@ -109,4 +109,4 @@ kube-linter lint \
   "${validation_dir}/external-secrets-first.yaml" \
   "${validation_dir}/runtime-secrets-first.yaml"
 
-printf 'Phase 6 runtime-secret resources rendered deterministically and validated.\n'
+printf 'Runtime-secret resources rendered deterministically and validated.\n'

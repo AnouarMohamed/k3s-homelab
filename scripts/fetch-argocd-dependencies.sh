@@ -4,7 +4,7 @@ set -euo pipefail
 repository_root="${HOMELAB_REPOSITORY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 export PATH="${repository_root}/.tools/bin:${PATH}"
 cache_root="${HOMELAB_CACHE_ROOT:-${repository_root}/.cache}"
-cache_dir="${cache_root}/phase3"
+cache_dir="${cache_root}/argocd"
 
 # shellcheck disable=SC1091
 source "${repository_root}/platform/argocd/dependencies.env"
@@ -21,4 +21,4 @@ test "$(yq --unwrapScalar '.version' "${cache_dir}/argo-cd/Chart.yaml")" = \
   "${ARGOCD_CHART_VERSION}"
 test "$(yq --unwrapScalar '.appVersion' "${cache_dir}/argo-cd/Chart.yaml")" = v3.5.4
 
-printf 'Cached verified Phase 3 dependencies in %s\n' "${cache_dir}"
+printf 'Cached verified Argo CD dependencies in %s\n' "${cache_dir}"

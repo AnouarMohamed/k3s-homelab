@@ -5,8 +5,8 @@ repository_root="$(git rev-parse --show-toplevel)"
 export PATH="${repository_root}/.tools/bin:${PATH}"
 schema_cache_dir="${repository_root}/.cache/kubeconform"
 
-"${repository_root}/scripts/fetch-phase6-dependencies.sh"
-"${repository_root}/scripts/fetch-phase7-dependencies.sh"
+"${repository_root}/scripts/fetch-secrets-dependencies.sh"
+"${repository_root}/scripts/fetch-observability-dependencies.sh"
 mkdir -p "${schema_cache_dir}"
 
 validation_dir="$(mktemp -d)"
@@ -63,7 +63,7 @@ value_files=(
   sloth/configure-sloth.yaml
 )
 for index in "${!charts[@]}"; do
-  helm lint "${repository_root}/.cache/phase7/${charts[$index]}" \
+  helm lint "${repository_root}/.cache/observability/${charts[$index]}" \
     --values "${repository_root}/observability/${value_files[$index]}"
 done
 
@@ -217,4 +217,4 @@ kube-linter lint \
   "${validation_dir}/resources-first.yaml" \
   "${validation_dir}/argocd-notifications-first.yaml"
 
-printf 'Phase 7 metrics, logs, traces, probes, dashboards, alerts, and SLOs validated.\n'
+printf 'Observability metrics, logs, traces, probes, dashboards, alerts, and SLOs validated.\n'

@@ -3,7 +3,7 @@ set -euo pipefail
 
 repository_root="${HOMELAB_REPOSITORY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 cache_root="${HOMELAB_CACHE_ROOT:-${repository_root}/.cache}"
-cache_dir="${cache_root}/phase6"
+cache_dir="${cache_root}/secrets"
 
 # shellcheck disable=SC1091
 source "${repository_root}/platform/openbao/dependencies.env"
@@ -29,4 +29,4 @@ fetch_chart openbao "${OPENBAO_CHART_URL}" "${OPENBAO_CHART_SHA256}"
 fetch_chart external-secrets \
   "${EXTERNAL_SECRETS_CHART_URL}" "${EXTERNAL_SECRETS_CHART_SHA256}"
 
-printf 'Cached verified Phase 6 dependencies in %s\n' "${cache_dir}"
+printf 'Cached verified Secrets dependencies in %s\n' "${cache_dir}"

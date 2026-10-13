@@ -3,13 +3,13 @@ set -euo pipefail
 
 repository_root="$(git rev-parse --show-toplevel)"
 export PATH="${repository_root}/.tools/bin:${PATH}"
-cache_dir="${repository_root}/.cache/phase2"
+cache_dir="${repository_root}/.cache/cilium"
 
 # shellcheck disable=SC1091
 source "${repository_root}/platform/cilium/dependencies.env"
 
 "${repository_root}/scripts/check-config-ready.sh"
-"${repository_root}/scripts/fetch-phase2-dependencies.sh"
+"${repository_root}/scripts/fetch-cilium-dependencies.sh"
 
 gateway_file="${cache_dir}/gateway-api-standard-${GATEWAY_API_VERSION}.yaml"
 kubectl apply --server-side --field-manager=homelab-bootstrap \

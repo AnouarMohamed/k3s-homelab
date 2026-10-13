@@ -3,7 +3,7 @@ set -euo pipefail
 
 repository_root="${HOMELAB_REPOSITORY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 cache_root="${HOMELAB_CACHE_ROOT:-${repository_root}/.cache}"
-cache_dir="${cache_root}/phase5"
+cache_dir="${cache_root}/storage"
 
 # shellcheck disable=SC1091
 source "${repository_root}/platform/longhorn/dependencies.env"
@@ -32,4 +32,4 @@ fetch_chart cloudnative-pg "${CNPG_CHART_URL}" "${CNPG_CHART_SHA256}"
 fetch_chart plugin-barman-cloud "${BARMAN_CHART_URL}" "${BARMAN_CHART_SHA256}"
 fetch_chart velero "${VELERO_CHART_URL}" "${VELERO_CHART_SHA256}"
 
-printf 'Cached verified Phase 5 dependencies in %s\n' "${cache_dir}"
+printf 'Cached verified Storage dependencies in %s\n' "${cache_dir}"

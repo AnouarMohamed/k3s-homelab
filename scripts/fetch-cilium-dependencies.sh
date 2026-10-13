@@ -4,7 +4,7 @@ set -euo pipefail
 repository_root="${HOMELAB_REPOSITORY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 export PATH="${repository_root}/.tools/bin:${PATH}"
 cache_root="${HOMELAB_CACHE_ROOT:-${repository_root}/.cache}"
-cache_dir="${cache_root}/phase2"
+cache_dir="${cache_root}/cilium"
 
 # shellcheck disable=SC1091
 source "${repository_root}/platform/cilium/dependencies.env"
@@ -53,4 +53,4 @@ printf '%s  %s\n' "${CILIUM_NETWORK_POLICY_CRD_SHA256}" "${network_policy_crd}" 
   sha256sum --check --strict
 
 test "$(yq --unwrapScalar '.version' "${cache_dir}/cilium/Chart.yaml")" = "${CILIUM_VERSION}"
-printf 'Cached verified Phase 2 dependencies in %s\n' "${cache_dir}"
+printf 'Cached verified Cilium dependencies in %s\n' "${cache_dir}"

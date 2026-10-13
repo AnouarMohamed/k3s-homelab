@@ -5,7 +5,7 @@ repository_root="$(git rev-parse --show-toplevel)"
 export PATH="${repository_root}/.tools/bin:${PATH}"
 schema_cache_dir="${repository_root}/.cache/kubeconform"
 
-"${repository_root}/scripts/fetch-phase5-dependencies.sh"
+"${repository_root}/scripts/fetch-storage-dependencies.sh"
 mkdir -p "${schema_cache_dir}"
 
 validation_dir="$(mktemp -d)"
@@ -46,11 +46,11 @@ printf '%s  %s\n' "${SNAPSHOT_DEPLOYMENT_SHA256}" \
 "${repository_root}/scripts/render-config.sh" \
   "${repository_root}/platform/longhorn/configure-longhorn.yaml" \
   >"${validation_dir}/longhorn-values.yaml"
-helm lint "${repository_root}/.cache/phase5/longhorn" \
+helm lint "${repository_root}/.cache/storage/longhorn" \
   --values "${validation_dir}/longhorn-values.yaml"
-helm lint "${repository_root}/.cache/phase5/cloudnative-pg" \
+helm lint "${repository_root}/.cache/storage/cloudnative-pg" \
   --values "${repository_root}/platform/cloudnative-pg/configure-cloudnative-pg.yaml"
-helm lint "${repository_root}/.cache/phase5/plugin-barman-cloud" \
+helm lint "${repository_root}/.cache/storage/plugin-barman-cloud" \
   --values "${repository_root}/platform/cloudnative-pg/configure-barman-cloud.yaml"
 set -a
 # shellcheck disable=SC1091
@@ -59,7 +59,7 @@ set +a
 "${repository_root}/scripts/render-config.sh" \
   "${repository_root}/platform/velero/configure-velero.yaml" \
   >"${validation_dir}/velero-values.yaml"
-helm lint "${repository_root}/.cache/phase5/velero" \
+helm lint "${repository_root}/.cache/storage/velero" \
   --values "${validation_dir}/velero-values.yaml"
 
 for manifest in snapshot-controller longhorn cloudnative-pg velero storage-verification; do
@@ -140,4 +140,4 @@ kube-linter lint \
   "${validation_dir}/velero-first.yaml" \
   "${validation_dir}/storage-verification-first.yaml"
 
-printf 'Phase 5 storage and backup resources rendered deterministically and validated.\n'
+printf 'Storage and backup resources rendered deterministically and validated.\n'

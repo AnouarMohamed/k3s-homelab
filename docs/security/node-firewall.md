@@ -18,6 +18,6 @@ addresses are read from the same file.
 | Pod CIDR (`podCidr`) | All | Pod traffic forwarded through each node |
 | Service CIDR (`serviceCidr`) | All | Cluster service traffic handled on each node |
 
-No rule opens a router port. Later phases must update this table and role before adding
+No rule opens a router port. Future components must update this table and role before adding
 host-listening services. Public HTTP traffic enters through outbound cloudflared
 connections rather than a WAN firewall rule.

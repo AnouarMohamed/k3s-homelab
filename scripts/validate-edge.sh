@@ -3,14 +3,14 @@ set -euo pipefail
 
 repository_root="$(git rev-parse --show-toplevel)"
 export PATH="${repository_root}/.tools/bin:${PATH}"
-cache_dir="${repository_root}/.cache/phase4"
+cache_dir="${repository_root}/.cache/edge"
 schema_cache_dir="${repository_root}/.cache/kubeconform"
 
 # shellcheck disable=SC1091
 source "${repository_root}/platform/cilium/dependencies.env"
 
-"${repository_root}/scripts/fetch-phase2-dependencies.sh"
-"${repository_root}/scripts/fetch-phase4-dependencies.sh"
+"${repository_root}/scripts/fetch-cilium-dependencies.sh"
+"${repository_root}/scripts/fetch-edge-dependencies.sh"
 mkdir -p "${schema_cache_dir}"
 
 validation_dir="$(mktemp -d)"
@@ -77,12 +77,12 @@ for resource_kind in gateway httproute; do
   plural="${resource_kind}s"
   yq eval-all --output-format=json \
     "select(.kind == \"CustomResourceDefinition\" and .metadata.name == \"${plural}.gateway.networking.k8s.io\") | .spec.versions[] | select(.name == \"v1\") | .schema.openAPIV3Schema" \
-    "${repository_root}/.cache/phase2/gateway-api-standard-${GATEWAY_API_VERSION}.yaml" \
+    "${repository_root}/.cache/cilium/gateway-api-standard-${GATEWAY_API_VERSION}.yaml" \
     >"${schema_dir}/${resource_kind}-v1.json"
 done
 yq --output-format=json \
   '.spec.versions[] | select(.name == "v2") | .schema.openAPIV3Schema' \
-  "${repository_root}/.cache/phase2/cilium-network-policy-crd.yaml" \
+  "${repository_root}/.cache/cilium/cilium-network-policy-crd.yaml" \
   >"${schema_dir}/ciliumnetworkpolicy-v2.json"
 sed \
   -e 's/CHANGE_ME_DOMAIN/example.invalid/g' \
@@ -110,7 +110,10 @@ test "$(yq eval-all '[select(.kind == "Gateway")] | length' \
   "${validation_dir}/gateways-first.yaml")" = 2
 test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "cloudflared") | select(.spec.replicas >= 2)] | length' \
   "${validation_dir}/cloudflared-first.yaml")" = 1
-test "$(yq eval-all '[select(.kind == "HTTPRoute" and .metadata.name == "whoami") | .spec.hostnames[] | select(. == "whoami.CHANGE_ME_DOMAIN")] | length' \
+WHOAMI_HOSTNAME="whoami.$(yq --unwrapScalar '.spec.domain' \
+  "${repository_root}/config/homelab.yaml")"
+export WHOAMI_HOSTNAME
+test "$(yq eval-all '[select(.kind == "HTTPRoute" and .metadata.name == "whoami") | .spec.hostnames[] | select(. == strenv(WHOAMI_HOSTNAME))] | length' \
   "${validation_dir}/whoami-first.yaml")" = 1
 test "$(yq eval-all '[.. | select(tag == "!!map" and has("containers")) | .containers[] | select(.image | test(":latest($|@)"))] | length' \
   "${validation_dir}"/*-first.yaml)" = 0
@@ -171,4 +174,4 @@ tofu -chdir="${plan_root}/infra/tofu" plan \
 grep -q 'Plan: 5 to add, 0 to change, 0 to destroy.' \
   "${validation_dir}/tofu-plan.log"
 
-printf 'Phase 4 edge resources rendered deterministically and validated.\n'
+printf 'Edge resources rendered deterministically and validated.\n'

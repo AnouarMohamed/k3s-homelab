@@ -4,7 +4,7 @@ set -euo pipefail
 repository_root="${HOMELAB_REPOSITORY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 export PATH="${repository_root}/.tools/bin:${PATH}"
 cache_root="${HOMELAB_CACHE_ROOT:-${repository_root}/.cache}"
-cache_dir="${cache_root}/phase4"
+cache_dir="${cache_root}/edge"
 
 # shellcheck disable=SC1091
 source "${repository_root}/platform/cert-manager/dependencies.env"
@@ -37,4 +37,4 @@ test "$(yq --unwrapScalar '.version' "${cache_dir}/external-dns/Chart.yaml")" = 
 test "$(yq --unwrapScalar '.appVersion' "${cache_dir}/external-dns/Chart.yaml")" = \
   "${EXTERNAL_DNS_APP_VERSION}"
 
-printf 'Cached verified Phase 4 dependencies in %s\n' "${cache_dir}"
+printf 'Cached verified Edge dependencies in %s\n' "${cache_dir}"

@@ -41,9 +41,9 @@ grep -q 'HOMELAB_CACHE_ROOT=/tmp/homelab-cache' \
   "${repository_root}/platform/argocd/configure-argocd.yaml"
 grep -q 'docker.io/curlimages/curl:8.16.0@sha256:' \
   "${repository_root}/platform/argocd/configure-argocd.yaml"
-for phase in 2 3 4 5 6 7 8 9 11; do
+for component in cilium argocd edge storage secrets observability policy sentinel chaos; do
   grep -q 'HOMELAB_CACHE_ROOT' \
-    "${repository_root}/scripts/fetch-phase${phase}-dependencies.sh"
+    "${repository_root}/scripts/fetch-${component}-dependencies.sh"
 done
 
 printf 'Portfolio documentation and operations indexes validated.\n'

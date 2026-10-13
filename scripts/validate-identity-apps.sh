@@ -5,10 +5,10 @@ repository_root="$(git rev-parse --show-toplevel)"
 export PATH="${repository_root}/.tools/bin:${PATH}"
 schema_cache_dir="${repository_root}/.cache/kubeconform"
 
-"${repository_root}/scripts/fetch-phase2-dependencies.sh" >/dev/null
-"${repository_root}/scripts/fetch-phase5-dependencies.sh" >/dev/null
-"${repository_root}/scripts/fetch-phase6-dependencies.sh" >/dev/null
-"${repository_root}/scripts/fetch-phase7-dependencies.sh" >/dev/null
+"${repository_root}/scripts/fetch-cilium-dependencies.sh" >/dev/null
+"${repository_root}/scripts/fetch-storage-dependencies.sh" >/dev/null
+"${repository_root}/scripts/fetch-secrets-dependencies.sh" >/dev/null
+"${repository_root}/scripts/fetch-observability-dependencies.sh" >/dev/null
 mkdir -p "${schema_cache_dir}"
 
 validation_dir="$(mktemp -d)"
@@ -53,7 +53,7 @@ extract_schema ExternalSecret v1 "${validation_dir}/external-secrets-first.yaml"
 extract_schema SecretStore v1 "${validation_dir}/external-secrets-first.yaml"
 extract_schema ServiceMonitor v1 "${validation_dir}/prometheus-stack-first.yaml"
 extract_schema PrometheusRule v1 "${validation_dir}/prometheus-stack-first.yaml"
-extract_schema HTTPRoute v1 "${repository_root}/.cache/phase2/gateway-api-standard-v1.6.1.yaml"
+extract_schema HTTPRoute v1 "${repository_root}/.cache/cilium/gateway-api-standard-v1.6.1.yaml"
 
 for manifest in keycloak vaultwarden homepage uptime-kuma; do
   yq eval-all 'select(.kind == "Cluster" or .kind == "ScheduledBackup" or .kind == "ObjectStore" or .kind == "ExternalSecret" or .kind == "SecretStore" or .kind == "ServiceMonitor" or .kind == "PrometheusRule" or .kind == "HTTPRoute")' \
@@ -95,4 +95,4 @@ kube-linter lint --exclude dangling-service --exclude minimum-three-replicas \
   "${validation_dir}/keycloak-first.yaml" "${validation_dir}/vaultwarden-first.yaml" \
   "${validation_dir}/homepage-first.yaml" "${validation_dir}/uptime-kuma-first.yaml"
 
-printf 'Phase 10 identity, SSO configuration, applications, backups, and policy boundaries validated.\n'
+printf 'Identity, SSO configuration, applications, backups, and policy boundaries validated.\n'

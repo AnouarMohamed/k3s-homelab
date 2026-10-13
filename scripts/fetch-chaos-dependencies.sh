@@ -4,7 +4,7 @@ set -euo pipefail
 repository_root="${HOMELAB_REPOSITORY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 export PATH="${repository_root}/.tools/bin:${PATH}"
 cache_root="${HOMELAB_CACHE_ROOT:-${repository_root}/.cache}"
-cache_dir="${cache_root}/phase11"
+cache_dir="${cache_root}/chaos"
 mkdir -p "${cache_dir}"
 
 # shellcheck disable=SC1091
@@ -19,4 +19,4 @@ tar -xzf "${archive}" --strip-components=1 -C "${cache_dir}/chaos-mesh"
 
 test "$(yq --unwrapScalar '.version' "${cache_dir}/chaos-mesh/Chart.yaml")" = "${CHAOS_MESH_CHART_VERSION}"
 test "$(yq --unwrapScalar '.appVersion' "${cache_dir}/chaos-mesh/Chart.yaml")" = "${CHAOS_MESH_APP_VERSION}"
-printf 'Cached verified Phase 11 dependency in %s.\n' "${cache_dir}"
+printf 'Cached verified Chaos dependency in %s.\n' "${cache_dir}"

@@ -7,7 +7,7 @@ ANSIBLE_INVENTORY := $(REPOSITORY_ROOT)/infra/ansible/inventory/homelab.py
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools lint ansible-syntax ansible-templates phase2-deps validate-cni phase3-deps validate-gitops phase4-deps validate-edge phase5-deps validate-storage phase6-deps validate-secrets phase7-deps validate-observability phase8-deps validate-policy phase9-deps validate-sentinel phase10-deps validate-identity-apps phase11-deps validate-chaos-dr validate-portfolio validate-ghcr-packages test-chaos test-sentinel-integration build-sentinel validate security bootstrap bootstrap-nodes upgrade-k3s reset \
+.PHONY: help tools lint ansible-syntax ansible-templates cilium-deps validate-cni argocd-deps validate-gitops edge-deps validate-edge storage-deps validate-storage secrets-deps validate-secrets observability-deps validate-observability policy-deps validate-policy sentinel-deps validate-sentinel identity-apps-deps validate-identity-apps chaos-deps validate-chaos-dr validate-portfolio validate-ghcr-packages test-chaos test-sentinel-integration build-sentinel validate security bootstrap bootstrap-nodes upgrade-k3s reset \
 	bootstrap-cni bootstrap-gitops bootstrap-platform test test-storage-reschedule tofu-init tofu-plan teardown
 
 help: ## Show all supported targets
@@ -35,62 +35,62 @@ ansible-syntax: ## Parse the dynamic inventory and all Ansible playbooks
 ansible-templates: ## Render and parse Ansible-owned configuration templates
 	@ansible-playbook -i $(ANSIBLE_INVENTORY) infra/ansible/validate-templates.yaml
 
-phase2-deps: ## Fetch checksum-verified Cilium and Gateway API artifacts
-	@scripts/fetch-phase2-dependencies.sh
+cilium-deps: ## Fetch checksum-verified Cilium and Gateway API artifacts
+	@scripts/fetch-cilium-dependencies.sh
 
 validate-cni: ## Render and validate Cilium and baseline network policies twice
 	@scripts/validate-cilium.sh
 
-phase3-deps: ## Fetch the digest-pinned Argo CD chart
-	@scripts/fetch-phase3-dependencies.sh
+argocd-deps: ## Fetch the digest-pinned Argo CD chart
+	@scripts/fetch-argocd-dependencies.sh
 
 validate-gitops: ## Render and validate Argo CD and its restricted application tree twice
 	@scripts/validate-gitops.sh
 
-phase4-deps: ## Fetch checksum-verified edge platform dependencies
-	@scripts/fetch-phase4-dependencies.sh
+edge-deps: ## Fetch checksum-verified edge platform dependencies
+	@scripts/fetch-edge-dependencies.sh
 
 validate-edge: ## Validate certificates, DNS, gateways, tunnel, test route, and OpenTofu
 	@scripts/validate-edge.sh
 
-phase5-deps: ## Fetch checksum-verified storage and backup charts
-	@scripts/fetch-phase5-dependencies.sh
+storage-deps: ## Fetch checksum-verified storage and backup charts
+	@scripts/fetch-storage-dependencies.sh
 
 validate-storage: ## Validate storage, database backup, CSI snapshot, and Velero resources
 	@scripts/validate-storage.sh
 
-phase6-deps: ## Fetch checksum-verified runtime-secret charts
-	@scripts/fetch-phase6-dependencies.sh
+secrets-deps: ## Fetch checksum-verified runtime-secret charts
+	@scripts/fetch-secrets-dependencies.sh
 
 validate-secrets: ## Validate OpenBao, External Secrets, TLS, policies, and stores
 	@scripts/validate-secrets.sh
 
-phase7-deps: ## Fetch checksum-verified observability charts
-	@scripts/fetch-phase7-dependencies.sh
+observability-deps: ## Fetch checksum-verified observability charts
+	@scripts/fetch-observability-dependencies.sh
 
 validate-observability: ## Validate metrics, logs, traces, dashboards, alerts, and SLOs
 	@scripts/validate-observability.sh
 
-phase8-deps: ## Fetch checksum-verified policy and security-scanner charts
-	@scripts/fetch-phase8-dependencies.sh
+policy-deps: ## Fetch checksum-verified policy and security-scanner charts
+	@scripts/fetch-policy-dependencies.sh
 
 validate-policy: ## Validate admission policies, policy tests, and security posture
 	@scripts/validate-policy.sh
 
-phase9-deps: ## Fetch the checksum-verified Argo Rollouts chart
-	@scripts/fetch-phase9-dependencies.sh
+sentinel-deps: ## Fetch the checksum-verified Argo Rollouts chart
+	@scripts/fetch-sentinel-dependencies.sh
 
 validate-sentinel: ## Validate Sentinel, Argo Rollouts, and promotion resources
 	@scripts/validate-sentinel.sh
 
-phase10-deps: ## Verify digest-pinned identity and self-hosted application images
-	@scripts/fetch-phase10-dependencies.sh
+identity-apps-deps: ## Verify digest-pinned identity and self-hosted application images
+	@scripts/fetch-identity-apps-dependencies.sh
 
 validate-identity-apps: ## Validate Keycloak SSO and self-hosted applications
 	@scripts/validate-identity-apps.sh
 
-phase11-deps: ## Fetch the checksum-verified Chaos Mesh chart
-	@scripts/fetch-phase11-dependencies.sh
+chaos-deps: ## Fetch the checksum-verified Chaos Mesh chart
+	@scripts/fetch-chaos-dependencies.sh
 
 validate-chaos-dr: ## Validate Chaos Mesh, bounded experiments, load tests, and DR docs
 	@scripts/validate-chaos-dr.sh
