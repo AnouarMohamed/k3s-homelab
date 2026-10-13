@@ -1,0 +1,16 @@
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: chaos-target
+  namespace: chaos-testing
+  labels:
+    app.kubernetes.io/name: chaos-target
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: resilience-testing
+spec:
+  minAvailable: 1
+  unhealthyPodEvictionPolicy: AlwaysAllow
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: chaos-target

@@ -1,0 +1,18 @@
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: PodChaos
+metadata:
+  name: terminate-one-target
+  labels:
+    app.kubernetes.io/name: terminate-one-target
+    app.kubernetes.io/component: chaos-experiment
+    app.kubernetes.io/part-of: resilience-testing
+spec:
+  action: pod-kill
+  mode: one
+  duration: 30s
+  selector:
+    namespaces:
+      - chaos-testing
+    labelSelectors:
+      chaos.homelab.dev/target: enabled

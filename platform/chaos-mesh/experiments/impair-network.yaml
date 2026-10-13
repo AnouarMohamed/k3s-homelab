@@ -1,0 +1,49 @@
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: delay-target-network
+  labels:
+    app.kubernetes.io/name: delay-target-network
+    app.kubernetes.io/component: chaos-experiment
+    app.kubernetes.io/part-of: resilience-testing
+spec:
+  action: delay
+  mode: one
+  duration: 2m
+  direction: both
+  selector:
+    namespaces:
+      - chaos-testing
+    labelSelectors:
+      chaos.homelab.dev/target: enabled
+  delay:
+    latency: 250ms
+    jitter: 50ms
+    correlation: '50'
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: NetworkChaos
+metadata:
+  name: partition-target-peers
+  labels:
+    app.kubernetes.io/name: partition-target-peers
+    app.kubernetes.io/component: chaos-experiment
+    app.kubernetes.io/part-of: resilience-testing
+spec:
+  action: partition
+  mode: one
+  duration: 1m
+  direction: both
+  selector:
+    namespaces:
+      - chaos-testing
+    labelSelectors:
+      chaos.homelab.dev/target: enabled
+  target:
+    mode: all
+    selector:
+      namespaces:
+        - chaos-testing
+      labelSelectors:
+        chaos.homelab.dev/target: enabled

@@ -1,0 +1,97 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chaos-target
+  namespace: chaos-testing
+  labels:
+    app.kubernetes.io/name: chaos-target
+    app.kubernetes.io/component: sacrificial-workload
+    app.kubernetes.io/part-of: resilience-testing
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: chaos-target
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: chaos-target
+        app.kubernetes.io/component: sacrificial-workload
+        app.kubernetes.io/part-of: resilience-testing
+        chaos.homelab.dev/target: enabled
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: chaos-target
+      containers:
+        - name: chaos-target
+          # yamllint disable-line rule:line-length
+          image: docker.io/traefik/whoami:v1.11.0@sha256:200689790a0a0ea48ca45992e0450bc26ccab5307375b41c84dfc4f2475937ab
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            requests:
+              cpu: 20m
+              memory: 24Mi
+            limits:
+              cpu: 250m
+              memory: 96Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chaos-target
+  namespace: chaos-testing
+  labels:
+    app.kubernetes.io/name: chaos-target
+    app.kubernetes.io/component: sacrificial-workload
+    app.kubernetes.io/part-of: resilience-testing
+spec:
+  selector:
+    app.kubernetes.io/name: chaos-target
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

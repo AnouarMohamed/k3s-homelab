@@ -1,0 +1,24 @@
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: IOChaos
+metadata:
+  name: delay-target-filesystem
+  labels:
+    app.kubernetes.io/name: delay-target-filesystem
+    app.kubernetes.io/component: chaos-experiment
+    app.kubernetes.io/part-of: resilience-testing
+spec:
+  action: latency
+  mode: one
+  duration: 2m
+  selector:
+    namespaces:
+      - chaos-testing
+    labelSelectors:
+      chaos.homelab.dev/target: enabled
+  volumePath: /data
+  path: '**/*'
+  delay: 100ms
+  percent: 50
+  containerNames:
+    - chaos-target

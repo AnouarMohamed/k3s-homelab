@@ -1,0 +1,16 @@
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: chaos-controller-manager
+  namespace: chaos-mesh
+  labels:
+    app.kubernetes.io/name: chaos-mesh
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: resilience-testing
+spec:
+  minAvailable: 2
+  unhealthyPodEvictionPolicy: AlwaysAllow
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: controller-manager

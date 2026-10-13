@@ -39,9 +39,21 @@ exception to the exact node-exporter controller and image.
 Neither controller is exempt from resource bounds, probes, container hardening, image
 pinning, or namespace network isolation.
 
+## Chaos Mesh daemon
+
+| Workload | Required exception | Reason | Compensating controls |
+| --- | --- | --- | --- |
+| `chaos-daemon` | privileged container, host PID, runtime socket, `/sys`, and `/lib/modules` mounts | Pod, network, stress, and I/O injection require entering target process and network namespaces | Dedicated privileged `chaos-mesh` namespace, exact checksum-pinned chart, resource bounds and probes, no dashboard, namespace-filter enforcement, mTLS-independent namespace NetworkPolicy, and a separately confirmed experiment command |
+
+Only `chaos-testing` carries `chaos-mesh.org/inject=enabled`. The GitOps application
+does not include experiment objects, and the guarded runner refuses execution when any
+other namespace opts in. The controller manager remains non-root, drops all
+capabilities, uses a read-only root filesystem, and has no host access. The privileged
+exception never applies to the sacrificial target or an application namespace.
+
 ## Review and expiry
 
-Re-check these exceptions on every Longhorn or kube-prometheus-stack upgrade with
+Re-check these exceptions on every Longhorn, Chaos Mesh, or kube-prometheus-stack upgrade with
 `helm show values`, rendered
 manifests, and the pinned CRDs. Remove an exception when upstream supports the baseline.
 Application policies use positive namespace profile labels rather than wildcard

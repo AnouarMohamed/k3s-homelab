@@ -1,0 +1,21 @@
+---
+apiVersion: chaos-mesh.org/v1alpha1
+kind: StressChaos
+metadata:
+  name: stress-one-target-cpu
+  labels:
+    app.kubernetes.io/name: stress-one-target-cpu
+    app.kubernetes.io/component: chaos-experiment
+    app.kubernetes.io/part-of: resilience-testing
+spec:
+  mode: one
+  duration: 2m
+  selector:
+    namespaces:
+      - chaos-testing
+    labelSelectors:
+      chaos.homelab.dev/target: enabled
+  stressors:
+    cpu:
+      workers: 1
+      load: 80

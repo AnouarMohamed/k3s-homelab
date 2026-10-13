@@ -16,7 +16,7 @@ checks against the three physical nodes are tracked separately as `PENDING HARDW
 - [x] Phase 8 — Policy and supply chain (offline validation complete; pending hardware)
 - [x] Phase 9 — Homelab Sentinel and delivery (offline validation complete; pending CI and hardware)
 - [x] Phase 10 — Identity and self-hosted applications (offline validation complete; pending hardware)
-- [ ] Phase 11 — Chaos and disaster recovery
+- [x] Phase 11 — Chaos and disaster recovery (offline validation complete; pending hardware)
 - [ ] Phase 12 — Portfolio polish
 
 ## Recovery audit — 2026-10-11
@@ -517,6 +517,52 @@ explicitly because that release has no checksum-list asset.
   behavior, kept all administration surfaces private, and documented capacity and SSO
   recovery boundaries. No account, cluster, registry, or cloud service was modified.
 
+## Phase 11 validation — 2026-10-13
+
+- The official Chaos Mesh `2.8.4` chart archive matched SHA-256
+  `ae4abd385649771300e4d33a44627c0df3618be0780c385bf30cc2fdf2ad93fa`.
+  `helm show chart` reported chart and application version `2.8.4`; `helm show values`
+  confirmed the k3s containerd socket and namespace-filter fields used by the values.
+- Implemented three HA controller replicas, one privileged daemon per node, disabled
+  dashboard/DNS/profiling, cert-manager webhook certificates, controller resource and
+  security hardening, probes, PDBs, and namespace NetworkPolicies. The necessary
+  daemon host/runtime privilege is documented as a narrow infrastructure exception.
+- Only `chaos-testing` has `chaos-mesh.org/inject=enabled`. The GitOps application
+  contains the controller and sacrificial three-replica target but no experiment CRs.
+  `make test-chaos` without `CONFIRM_CHAOS=homelab` returned exit 2 before any
+  Kubernetes command; the confirmed script also refuses when another namespace opts in.
+- Added four purpose-named experiment files: one bounded pod kill, delay and partition
+  network cases, bounded CPU stress, and bounded filesystem latency. Every selector and
+  target is pinned to `chaos-testing` and the explicit sacrificial workload label.
+- `make validate-chaos-dr` returned exit 0. Two controller renders and two experiment
+  renders compared byte-for-byte equal. The chart linted with zero failures. Generic
+  kubeconform reported 57 resources with no invalid objects or errors; pinned Chaos
+  Mesh schemas validated all five experiment CRs, and pinned cert-manager schemas
+  validated all six generated Certificate/Issuer resources. Kube-linter reported no
+  findings after only the documented chaos-daemon privilege checks were excluded.
+- Offline rendering caught the upstream chart selecting obsolete cert-manager
+  `v1alpha2` when discovery data was absent. The renderer now declares the installed
+  `cert-manager.io/v1` API explicitly, and the resulting objects passed strict schema
+  validation.
+- Added bounded baseline and ten-minute sustained k6 scenarios for Sentinel. `k6
+  inspect` parsed every load script successfully; none was executed against a live
+  endpoint.
+- Authored seven separate DR drills for node power loss, quorum recovery, etcd S3
+  restore, PostgreSQL failover/PITR, Velero namespace restore, single-node rebuild, and
+  full bare-metal rebuild. Each has preconditions, procedure, rollback, expected
+  behavior, `PENDING HARDWARE` status, and an intentionally empty results table.
+- `make validate-gitops` returned exit 0 with 52 strict custom resources and no errors
+  or skips after adding the restricted resilience project and sync-wave-30 application.
+  `make validate-policy` returned exit 0 after the privileged namespace received an
+  explicit PSA version.
+- `make lint` returned exit 0. Markdownlint checked 128 files with no issues;
+  yamllint and ShellCheck reported no findings, and ansible-lint reported zero failures
+  and warnings across 28 processed files.
+- The final `make validate` returned exit 0 across every Phase 1–11 gate, dependency
+  pin and private-value checks, generic kubeconform, and kube-linter.
+- `make security` returned exit 0. Gitleaks scanned approximately 839 KB of the working
+  tree and 3.58 MB across all 32 existing commits and found no leaks.
+
 ## Unverified
 
 - All real-hardware behavior.
@@ -538,6 +584,8 @@ explicitly because that release has no checksum-list asset.
   recovery, CNPG failover/backups, Vaultwarden's non-root volume permissions, Homepage
   startup with a read-only root filesystem, Uptime Kuma persistence, and Velero restore
   remain `PENDING HARDWARE`.
+- Chaos Mesh controller/daemon behavior on k3s, namespace-filter enforcement, every
+  experiment, both k6 scenarios, and all seven DR drills remain `PENDING HARDWARE`.
 
 ## Not done
 
@@ -554,3 +602,5 @@ explicitly because that release has no checksum-list asset.
   runner, and cluster.
 - Phase 10 OpenBao values and initial identity accounts were not created because they
   require Anouar's recovery material and private administration session.
+- No chaos experiment, load scenario, power operation, restore, rebuild, or destructive
+  recovery command was run. Result tables remain empty by design.

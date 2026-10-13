@@ -121,6 +121,7 @@ before later phases begin.
 | Vaultwarden | `1.37.4-alpine` | OCI index digest `sha256:19ea2b669945d842dadc3d500f2d6a795866a003330f59a47b9634658bae98bb` |
 | Homepage | `v2.5.0` | OCI index digest `sha256:57c4a0531937889c0b968b120fe9c2560bbe036b5c9e18c49a9e2479de9975d1` |
 | Uptime Kuma | `2.5.5-rootless` | OCI index digest `sha256:c4e17ce033deb811aff8a61a5f8f736f35b1bd937458ddeec46c59ca190f0e03` |
+| Chaos Mesh chart | `2.8.4` | Official chart archive SHA-256 `ae4abd385649771300e4d33a44627c0df3618be0780c385bf30cc2fdf2ad93fa`; app `2.8.4` |
 
 All remaining later-phase chart, provider, collection, application image, and CI image
 versions are `VERIFY`. Before implementing their phase I will verify them against an

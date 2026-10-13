@@ -1,0 +1,35 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: chaos-target
+  namespace: chaos-testing
+  labels:
+    app.kubernetes.io/name: chaos-target
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: resilience-testing
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: chaos-target
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: chaos-testing
+      ports:
+        - port: 80
+          protocol: TCP
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP

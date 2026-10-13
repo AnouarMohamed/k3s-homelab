@@ -279,6 +279,23 @@ Ready. Verify Argo CD and Grafana login for both groups, mandatory TOTP enrollme
 local break-glass login, a Keycloak pod eviction, a CNPG failover, a Vaultwarden backup,
 and a Velero restore. Record real timestamps and observations; do not infer success.
 
-## Phases 11–12
+## Phase 11 — Chaos and disaster recovery
 
-Status: **PENDING HARDWARE**. Component-specific commands are added by each phase.
+Status: **PENDING HARDWARE**
+
+```bash
+kubectl get namespaces -o json | \
+  yq -r '.items[] | select(.metadata.annotations."chaos-mesh.org/inject" == "enabled") | .metadata.name'
+kubectl -n chaos-mesh get deploy,daemonset,pods,networkpolicy
+kubectl -n chaos-testing get deploy,pods,pdb,networkpolicy
+make test-chaos CONFIRM_CHAOS=homelab
+```
+
+Expected: only `chaos-testing` is injection-enabled; three controller replicas and one
+daemon per node are Ready; every experiment remains in `chaos-testing`, finishes within
+its declared duration, and the target returns to three Ready replicas. Run the seven DR
+drills separately and leave every results table empty until real measurements exist.
+
+## Phase 12
+
+Status: **PENDING HARDWARE**. Component-specific commands are added by the phase.

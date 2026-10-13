@@ -582,6 +582,18 @@
         "[A-Z0-9_]+_IMAGE=(?<depName>(?:docker\\.io|quay\\.io|ghcr\\.io)/[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
       ],
       "datasourceTemplate": "docker"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^platform/chaos-mesh/dependencies\\.env$/"
+      ],
+      "matchStrings": [
+        "CHAOS_MESH_CHART_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "chaos-mesh/chaos-mesh",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.*)$"
     }
   ],
   "packageRules": [

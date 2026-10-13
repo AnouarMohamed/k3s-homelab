@@ -253,6 +253,20 @@ case "${relative_path}" in
     printf '%s\n' '---'
     kustomize build "${repository_root}/platform/argo-rollouts/resources"
     ;;
+  platform/chaos-mesh)
+    test -f "${repository_root}/.cache/phase11/chaos-mesh/Chart.yaml"
+    bash "${repository_root}/scripts/render-config.sh" \
+      "${repository_root}/platform/chaos-mesh/configure-chaos-mesh.yaml" | \
+      helm template chaos-mesh "${repository_root}/.cache/phase11/chaos-mesh" \
+        --namespace chaos-mesh \
+        --include-crds \
+        --skip-tests \
+        --api-versions cert-manager.io/v1 \
+        --values - | \
+      bash "${repository_root}/scripts/harden-chaos-mesh-render.sh"
+    printf '%s\n' '---'
+    kustomize build "${repository_root}/platform/chaos-mesh/resources"
+    ;;
   clusters/homelab/bootstrap | clusters/homelab/bootstrap/* | apps/*/overlays/prod | apps/*/overlays/staging | platform/* | observability/* | policies/*)
     test -f "${source_path}/kustomization.yaml" || test -f "${source_path}/kustomization.yml"
     kustomize build --enable-alpha-plugins --enable-exec "${source_path}" | \

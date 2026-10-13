@@ -38,5 +38,6 @@ resources:
   - expose-security-posture.yaml
   - deploy-argo-rollouts.yaml
   - deploy-keycloak.yaml
+  - deploy-chaos-mesh.yaml
   - deploy-sentinel-staging.yaml
   - generate-applications.yaml

@@ -1,0 +1,10 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - create-chaos-namespaces.yaml
+  - deploy-chaos-target.yaml
+  - preserve-chaos-target-availability.yaml
+  - preserve-chaos-controller-availability.yaml
+  - restrict-chaos-target-network.yaml
+  - restrict-chaos-controller-network.yaml

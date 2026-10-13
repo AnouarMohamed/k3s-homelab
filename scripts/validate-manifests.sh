@@ -18,6 +18,7 @@ for root in "${manifest_roots[@]}"; do
         "${repository_root}/apps/homepage/"* | \
         "${repository_root}/apps/uptime-kuma/"* | \
         "${repository_root}/platform/argo-rollouts/"* | \
+        "${repository_root}/platform/chaos-mesh/"* | \
         "${repository_root}/platform/longhorn/"* | \
         "${repository_root}/platform/cloudnative-pg/"* | \
         "${repository_root}/platform/snapshot-controller/"* | \
