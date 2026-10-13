@@ -603,13 +603,32 @@ explicitly because that release has no checksum-list asset.
   `make validate-sentinel`, `make lint`, and `make security` also returned exit 0;
   Gitleaks found no leaks in the working tree or all 34 commits.
 
+## GitHub application packages — 2026-10-13
+
+- Added a repository-token and OIDC-based GitHub workflow that publishes separate
+  deployment-source OCI packages for Homepage, Keycloak, Sentinel, Uptime Kuma,
+  Vaultwarden, and whoami. Actions are commit-pinned, ORAS is checksum-verified, and
+  every immutable digest is signed with Cosign.
+- The first live run reached authenticated GHCR publication but failed because ORAS
+  rejects absolute layer paths. The repair packages reproducible archives in the
+  runner temporary directory and presents only relative layer names to ORAS.
+- [GitHub Actions run 38462751656](https://github.com/AnouarMohamed/kubernetes-homelab/actions/runs/38462751656)
+  completed all six jobs successfully, including package publication and keyless
+  signing. The recorded manifest digests begin `2ad12737` (Keycloak), `da39c8b9`
+  (Homepage), `d1494b4f` (Vaultwarden), `afee6cf5` (Sentinel), `28bda5ed` (whoami),
+  and `168440a5` (Uptime Kuma).
+- `make validate-ghcr-packages`, `actionlint`, `make lint`, the pin check, portfolio
+  validation, and `make security` returned exit 0. The final secret scan covered all
+  36 commits and found no leaks.
+
 ## Unverified
 
 - All real-hardware behavior.
 - Every dependency not yet listed with upstream evidence in `PLAN.md`.
 - Live execution of the GitLab pipeline on a protected, privileged runner.
-- Publication and keyless Sigstore/Rekor verification of the GitLab and GHCR package
-  digests; repository validation did not push any artifact.
+- Publication and keyless verification of the GitLab-built Sentinel image mirrors
+  remain pending. GitHub published and signed the six deployment-source packages, but
+  their public visibility still requires the documented package-settings review.
 - Compatibility of the selected S3 service with Longhorn, Barman Cloud, and Velero.
 - OpenBao HCL startup and the declarative audit device on the real cluster.
 - Phase 7 signal ingestion, storage sizing, scrape selectors, alert delivery, and the
@@ -633,7 +652,8 @@ explicitly because that release has no checksum-list asset.
 
 ## Not done
 
-- No real node, cluster, Cloudflare account, S3 service, or Git remote was modified.
+- No real node, cluster, Cloudflare account, or S3 service was modified. The completed
+  repository and package workflow were pushed to the GitLab and GitHub remotes.
 - Vendor-specific S3 bucket provisioning is not implemented because the service has
   not been selected; creating and versioning the bucket is a documented human task.
 - Automatic OpenBao unseal is intentionally not implemented because no external KMS or
@@ -641,9 +661,10 @@ explicitly because that release has no checksum-list asset.
 - Phase 8 enforcement is intentionally not enabled before Anouar reviews real audit
   reports. Kubescape is deliberately omitted, and kube-bench has not been run because
   node execution is hardware-only.
-- The Sentinel GitLab pipeline, digest-promotion commits, GHCR mirrors, OIDC signatures,
-  and live k6 scenario have not run because they require Anouar's protected accounts,
-  runner, and cluster.
+- The Sentinel GitLab build, digest-promotion commits, image mirrors, GitLab OIDC
+  signatures, and live k6 scenario have not run because they require Anouar's
+  protected runner variables and cluster. The separate GitHub deployment bundles did
+  publish and sign successfully.
 - Phase 10 OpenBao values and initial identity accounts were not created because they
   require Anouar's recovery material and private administration session.
 - No chaos experiment, load scenario, power operation, restore, rebuild, or destructive
