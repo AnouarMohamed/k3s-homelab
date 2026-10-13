@@ -117,6 +117,10 @@ before later phases begin.
 | Cosign | `v3.0.5` | OCI digest `sha256:be924970ba7438c22e18067dec5637946d6566eac711f5bedd1584e7137008fb` |
 | ORAS | `v1.3.4` | OCI digest `sha256:f7bc056d54d97baa399414ed5048ecc67c3371b750d4bbce1d871827a5758179` |
 | k6 | `v2.3.0` | Go module checksum verified by the pinned local installer |
+| Keycloak | `26.8.0` | OCI index digest `sha256:27b3230fbabb8c9ff3c66c864cf09dcd8a41aca82e5100679d109ef0eeb05741` |
+| Vaultwarden | `1.37.4-alpine` | OCI index digest `sha256:19ea2b669945d842dadc3d500f2d6a795866a003330f59a47b9634658bae98bb` |
+| Homepage | `v2.5.0` | OCI index digest `sha256:57c4a0531937889c0b968b120fe9c2560bbe036b5c9e18c49a9e2479de9975d1` |
+| Uptime Kuma | `2.5.5-rootless` | OCI index digest `sha256:c4e17ce033deb811aff8a61a5f8f736f35b1bd937458ddeec46c59ca190f0e03` |
 
 All remaining later-phase chart, provider, collection, application image, and CI image
 versions are `VERIFY`. Before implementing their phase I will verify them against an

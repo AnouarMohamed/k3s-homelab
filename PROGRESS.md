@@ -15,7 +15,7 @@ checks against the three physical nodes are tracked separately as `PENDING HARDW
 - [x] Phase 7 — Observability (offline validation complete; pending hardware)
 - [x] Phase 8 — Policy and supply chain (offline validation complete; pending hardware)
 - [x] Phase 9 — Homelab Sentinel and delivery (offline validation complete; pending CI and hardware)
-- [ ] Phase 10 — Identity and self-hosted applications
+- [x] Phase 10 — Identity and self-hosted applications (offline validation complete; pending hardware)
 - [ ] Phase 11 — Chaos and disaster recovery
 - [ ] Phase 12 — Portfolio polish
 
@@ -471,6 +471,52 @@ explicitly because that release has no checksum-list asset.
 - `make security` returned exit 0. Gitleaks scanned approximately 720 KB of the working
   tree and 3.35 MB across all 28 existing commits and found no leaks.
 
+## Phase 10 validation — 2026-10-13
+
+- Repaired the prematurely tracked Phase 10 sources forward. Several purpose-named
+  files contained concatenated resources that belonged in neighboring manifests; the
+  repair restored one concern per file without rewriting history.
+- `make phase10-deps` returned exit 0. OCI index inspection matched the recorded
+  digests for Keycloak `26.8.0`, Vaultwarden `1.37.4-alpine`, Homepage `v2.5.0`, and
+  rootless Uptime Kuma `2.5.5`. Image configuration inspection confirmed Keycloak UID
+  1000 and Uptime Kuma's `node` user; local container inspection confirmed Homepage's
+  UID 1000 runtime and Vaultwarden's root-owned binary, which is deliberately launched
+  as UID/GID 65534 with volume ownership supplied by `fsGroup`.
+- Implemented a two-replica Keycloak service backed by a three-instance CNPG cluster,
+  Barman WAL/data backups, an internal-only route, health/metrics probes, a PDB,
+  topology controls, monitoring, and default-deny network boundaries. The declarative
+  realm defines Argo CD and Grafana clients, group claims, and default TOTP enrollment
+  for every account. Local Argo CD and Grafana credentials remain available for private
+  break-glass recovery.
+- Added Vaultwarden with a three-instance CNPG database and Barman backups, stateless
+  Homepage configuration, and rootless Uptime Kuma. Every application image is pinned
+  by digest; every Deployment has requests/limits, probes, restricted security
+  contexts, a NetworkPolicy, a PDB, an internal Gateway route, and an availability
+  alert. Longhorn data is included by the existing daily Velero schedule. Sentinel
+  remains the only selected-service public status page.
+- `make validate-identity-apps` returned exit 0. Two renders of Keycloak and all three
+  application overlays were byte-identical. Built-in kubeconform passes had no invalid
+  objects. Pinned CRD schemas validated 10 Keycloak, 9 Vaultwarden, 2 Homepage, and 2
+  Uptime Kuma custom resources with no invalid, errored, or skipped objects. Promtool
+  accepted all four rule sets, realm JSON and group mappers parsed, and kube-linter
+  reported no findings.
+- The validation gate asserts two Keycloak replicas, three instances in both CNPG
+  clusters, immutable workload images, full container resources/probes/hardening, a
+  NetworkPolicy for every Deployment, PVC coverage, and internal-only HTTPRoutes.
+- `make lint` returned exit 0. Markdownlint checked 119 files with no issues;
+  yamllint and ShellCheck reported no findings; ansible-lint reported zero failures
+  and warnings across 28 processed files.
+- The final `make validate` returned exit 0 across every Phase 1–10 gate and the
+  repository policy checks. The final generic kubeconform pass validated 25 resources
+  from 17 files with no invalid, errored, or skipped objects, and kube-linter reported
+  no findings.
+- `make security` returned exit 0. Gitleaks scanned approximately 791 KB of the working
+  tree and 3.55 MB across all 30 existing commits and found no leaks.
+- Skeptical review fixed central-config interpolation for Argo CD's secret reference
+  and Grafana's OIDC URLs, added missing anti-affinity and unhealthy-pod eviction
+  behavior, kept all administration surfaces private, and documented capacity and SSO
+  recovery boundaries. No account, cluster, registry, or cloud service was modified.
+
 ## Unverified
 
 - All real-hardware behavior.
@@ -488,6 +534,10 @@ explicitly because that release has no checksum-list asset.
 - Sentinel canary analysis, HPA behavior, CloudNativePG failover and recovery, S3
   backups, public routing, probe accuracy, alert delivery, and k6 execution against a
   deployed environment.
+- Keycloak realm import, TOTP enrollment, group claims, Argo CD/Grafana login and local
+  recovery, CNPG failover/backups, Vaultwarden's non-root volume permissions, Homepage
+  startup with a read-only root filesystem, Uptime Kuma persistence, and Velero restore
+  remain `PENDING HARDWARE`.
 
 ## Not done
 
@@ -502,3 +552,5 @@ explicitly because that release has no checksum-list asset.
 - The Sentinel GitLab pipeline, digest-promotion commits, GHCR mirrors, OIDC signatures,
   and live k6 scenario have not run because they require Anouar's protected accounts,
   runner, and cluster.
+- Phase 10 OpenBao values and initial identity accounts were not created because they
+  require Anouar's recovery material and private administration session.
