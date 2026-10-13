@@ -160,7 +160,8 @@ flowchart LR
   Registry --> Staging[Automatic staging digest commit]
   Registry --> Approval[Manual production approval]
   Approval --> Production[Production digest commit]
-  Registry --> GHCR[GHCR API, worker, deployment packages]
+  Registry --> GHCRImages[GHCR Sentinel API and worker]
+  GitHub[GitHub source mirror] --> GHCRApps[Six signed GHCR app bundles]
 ```
 
 ## Backup and restore flow

@@ -32,7 +32,8 @@ test "$(yq eval-all '[.spec.groups[]?.rules[]? | select(has("alert") and (.annot
 help_output="$(make help)"
 for target in help tools lint validate security bootstrap-nodes upgrade-k3s reset \
   bootstrap-cni bootstrap-gitops bootstrap-platform test tofu-plan \
-  validate-chaos-dr validate-identity-apps validate-portfolio; do
+  validate-chaos-dr validate-ghcr-packages validate-identity-apps \
+  validate-portfolio; do
   grep -qE "^  ${target}[[:space:]]" <<<"${help_output}"
 done
 

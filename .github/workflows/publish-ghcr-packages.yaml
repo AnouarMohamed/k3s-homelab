@@ -1,7 +1,7 @@
 ---
 name: Publish application packages to GHCR
 
-on:
+'on':
   push:
     branches:
       - main
@@ -78,21 +78,27 @@ jobs:
         run: |
           set -euo pipefail
           owner="${GITHUB_REPOSITORY_OWNER,,}"
-          archive="${RUNNER_TEMP}/homelab-${PACKAGE_NAME}-deploy.tgz"
-          checksum="${archive}.sha256"
+          archive_name="homelab-${PACKAGE_NAME}-deploy.tgz"
+          checksum_name="${archive_name}.sha256"
+          archive="${RUNNER_TEMP}/${archive_name}"
+          checksum="${RUNNER_TEMP}/${checksum_name}"
           repository="ghcr.io/${owner}/homelab-${PACKAGE_NAME}-deploy"
           target="${repository}:${GITHUB_SHA}"
 
           tar --create --gzip --file "${archive}" \
             --sort=name --mtime='UTC 1970-01-01' --owner=0 --group=0 \
             --numeric-owner --directory "${PACKAGE_PATH}" .
-          sha256sum "${archive}" > "${checksum}"
-          oras push "${target}" \
-            --artifact-type application/vnd.anouar.homelab.deployment.v1+tar \
-            --annotation "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
-            --annotation "org.opencontainers.image.revision=${GITHUB_SHA}" \
-            "${archive}:application/vnd.anouar.homelab.deployment.layer.v1.tar+gzip" \
-            "${checksum}:text/plain"
+          archive_digest="$(sha256sum "${archive}" | cut --delimiter=' ' --fields=1)"
+          printf '%s  %s\n' "${archive_digest}" "${archive_name}" > "${checksum}"
+          (
+            cd "${RUNNER_TEMP}"
+            oras push "${target}" \
+              --artifact-type application/vnd.anouar.homelab.deployment.v1+tar \
+              --annotation "org.opencontainers.image.source=${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}" \
+              --annotation "org.opencontainers.image.revision=${GITHUB_SHA}" \
+              "${archive_name}:application/vnd.anouar.homelab.deployment.layer.v1.tar+gzip" \
+              "${checksum_name}:text/plain"
+          )
           digest="$(oras resolve "${target}")"
           oras copy "${target}" "${repository}:main"
           printf 'reference=%s@%s\n' "${repository}" "${digest}" >> "${GITHUB_OUTPUT}"
