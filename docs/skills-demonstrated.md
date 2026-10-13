@@ -2,15 +2,16 @@
 
 | Capability | Evidence target |
 | --- | --- |
-| Linux automation and hardening | Phase 1 Ansible roles and CIS table |
-| HA Kubernetes | k3s, embedded etcd, and kube-vip configuration |
-| eBPF networking | Cilium, Hubble, L2 announcements, and Gateway API |
-| GitOps | Argo CD projects, applications, waves, and recovery runbook |
-| Infrastructure as code | OpenTofu Cloudflare and S3 modules |
-| Data resilience | Longhorn, CNPG, Velero, and restore drills |
-| Secret management | SOPS bootstrap and OpenBao runtime policies |
-| Observability | Metrics, logs, traces, dashboards, alerts, and SLOs |
-| Policy as code | Kyverno tests and enforcement evidence |
-| Supply-chain security | SBOM, Trivy, Cosign, and digest promotion |
-| Progressive delivery | Argo Rollouts canary analysis and rollback |
-| Reliability engineering | Chaos experiments, k6 tests, and DR drills |
+| Linux automation and hardening | [`infra/ansible`](../infra/ansible/) and CIS alignment |
+| HA Kubernetes | [Architecture](architecture.md) and kube-vip configuration |
+| eBPF networking | [`platform/cilium`](../platform/cilium/) and Gateway API |
+| GitOps | [Applications/projects](../clusters/homelab/) and recovery runbook |
+| Infrastructure as code | [`infra/tofu`](../infra/tofu/) Cloudflare resources |
+| Data resilience | [Storage flow](architecture.md#phase-5-storage-and-recovery) and DR drills |
+| Secret management | [Secret flow](architecture.md#phase-6-secret-flow) and OpenBao policies |
+| Observability | [`observability`](../observability/) and alert runbooks |
+| Policy as code | [Kyverno tests](../policies/tests/) and enforcement runbook |
+| Supply-chain security | [CI/package flow](architecture.md#cicd-and-package-flow) |
+| Progressive delivery | [Sentinel Rollout](../apps/sentinel/) and rollback runbook |
+| Identity | [Keycloak ADR](adr/0014-use-keycloak-for-identity.md) and SSO recovery |
+| Reliability engineering | [Chaos experiments](../platform/chaos-mesh/experiments/) and DR drills |

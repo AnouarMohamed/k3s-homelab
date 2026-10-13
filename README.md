@@ -1,83 +1,84 @@
-# k3s homelab
+# Three-node k3s homelab
 
-I am building this three-node homelab to practice the work expected of a platform and
-DevSecOps engineer: provisioning Linux, operating highly available Kubernetes, shipping
-through GitOps, securing the software supply chain, and proving recovery procedures.
-This repository describes my real environment. It is not a generic cluster template.
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Offline validation](https://img.shields.io/badge/offline%20validation-phases%200--11-success.svg)](PROGRESS.md)
+[![Hardware](https://img.shields.io/badge/hardware-PENDING-orange.svg)](docs/VERIFY_ON_HARDWARE.md)
 
-> Current state: Phases 0–6 pass local validation; the GitLab pipeline has not run.
-> Nodes, networking, GitOps, edge access, storage, backups, and runtime secrets remain
-> unverified on hardware.
-> [See the evidence ledger](docs/STATUS.md).
+I built this repository to practice the platform engineering work behind a small,
+defensible production system: Linux automation, highly available Kubernetes, GitOps,
+zero-inbound-port access, supply-chain controls, observability, and recovery. It models
+my three physical PCs; it is not presented as a generic cluster template.
 
 ```mermaid
 flowchart LR
-  Git[GitLab CI and registry] --> Argo[Argo CD]
-  Users[Public users] --> CF[Cloudflare Tunnel]
-  Admin[Administrator via WARP WireGuard] --> CF
+  Commit[GitLab commit] --> CI[Test, scan, sign]
+  CI --> Registry[GitLab registry + GHCR mirror]
+  CI --> Argo[Argo CD]
+  Public[Public users] --> CF[Cloudflare Tunnel]
+  Admin[Administrator via WARP] --> CF
   CF --> Gateway[Cilium Gateway API]
   Argo --> Cluster
+  Registry --> Cluster
   subgraph Cluster[Three schedulable k3s servers]
-    VIP[kube-vip API address]
-    Cilium[Cilium and Hubble]
-    Storage[Longhorn and CloudNativePG]
-    Observe[Metrics, logs, and traces]
-    Apps[Homelab Sentinel and selected apps]
+    VIP[kube-vip API VIP]
+    Network[Cilium, Hubble, WireGuard]
+    Data[Longhorn, CNPG, Velero]
+    Signals[Prometheus, Loki, Tempo]
+    Apps[Sentinel + private apps]
   end
   Gateway --> Apps
-  Apps --> Storage
-  Cluster --> Observe
+  Apps --> Data
+  Cluster --> Signals
 ```
 
-## What this is intended to demonstrate
+## What it demonstrates
 
-| Capability | Planned evidence |
-| --- | --- |
-| Three-node HA control plane | [Architecture](docs/architecture.md) and hardware verification |
-| Reconciled GitOps delivery | Argo CD tree and recovery runbook |
-| Zero inbound router ports | [Public surface](docs/security/public-surface.md) |
-| Backup and disaster recovery | [DR documents](docs/dr/README.md) and measured results |
-| Supply-chain security | Kyverno tests, SBOMs, Trivy reports, and Cosign verification |
-| Full-stack observability | Prometheus rules, dashboards, Loki, Tempo, and SLOs |
-| Canary delivery | Homelab Sentinel Rollout and Prometheus analysis |
+| Capability | Repository evidence | Runtime evidence |
+| --- | --- | --- |
+| Three-server HA | [Ansible and k3s design](docs/architecture.md) | [Pending node/VIP/quorum checks](docs/VERIFY_ON_HARDWARE.md) |
+| GitOps reconciliation | [Restricted projects and sync waves](clusters/homelab/apps/) | Argo CD screenshot pending |
+| Zero inbound router ports | [Public-surface boundary](docs/security/public-surface.md) | Tunnel/WARP checks pending |
+| Backup and recovery | [Seven DR drills](docs/dr/README.md) | Result tables intentionally empty |
+| Supply-chain security | [Policy and delivery flow](docs/architecture.md#phase-8-policy-and-supply-chain-flow) | GitLab/GHCR signatures pending CI |
+| Full-stack telemetry | [Observability stack](observability/) | Dashboards and alerts pending hardware |
+| Canary delivery | [Sentinel Rollout](apps/sentinel/) | Canary analysis pending hardware |
+| Failure testing | [Bounded Chaos Mesh experiments](platform/chaos-mesh/) | Experiments pending hardware |
 
-## Hardware
+## Hardware and access
 
 | Node | Architecture | Role | Scheduling |
 | --- | --- | --- | --- |
-| `pc-1` | x86-64 | k3s server and embedded etcd member | Enabled |
-| `pc-2` | x86-64 | k3s server and embedded etcd member | Enabled |
-| `pc-3` | x86-64 | k3s server and embedded etcd member | Enabled |
+| `pc-1` | x86-64 | k3s server + embedded etcd | Enabled |
+| `pc-2` | x86-64 | k3s server + embedded etcd | Enabled |
+| `pc-3` | x86-64 | k3s server + embedded etcd | Enabled |
 
-Addresses, interfaces, domains, and external service identifiers live only in
+The Kubernetes API floats behind kube-vip. Cilium replaces kube-proxy, announces LAN
+service addresses, and encrypts cross-node pod traffic. Cloudflare Tunnel is the only
+external ingress path; WARP carries private administration traffic. No router port is
+opened. Environment-specific values appear only in
 [`config/homelab.yaml`](config/homelab.yaml).
 
-## Build status
+## Current state
 
-| Phase | Status |
-| --- | --- |
-| 0 — Skeleton and CI | Implemented; CI runner untested |
-| 1 — Nodes and k3s | Implemented; pending hardware |
-| 2 — Cilium | Implemented; pending hardware |
-| 3 — Argo CD | Implemented; pending hardware |
-| 4 — Certificates, DNS, and access | Implemented; pending hardware/account |
-| 5 — Storage and backups | Implemented; pending hardware/account |
-| 6 — Runtime secrets | Implemented; pending hardware |
-| 7 — Observability | Planned |
-| 8 — Policy and supply chain | Planned |
-| 9 — Homelab Sentinel | Implemented; hardware verification pending |
-| 10 — Identity and self-hosted apps | Planned |
-| 11 — Chaos and disaster recovery | Planned |
-| 12 — Portfolio polish | Planned |
+Phases 0–11 pass the applicable offline lint, render, schema, policy, security, and
+application gates. Nothing in this repository proves the physical cluster or external
+accounts work yet. Only I can change `PENDING HARDWARE` to `Verified` after running the
+recorded commands and capturing evidence.
 
-## Start here
+- [Component status and evidence](docs/STATUS.md)
+- [Observed validation output](PROGRESS.md)
+- [Hardware verification ledger](docs/VERIFY_ON_HARDWARE.md)
+- [Human-only account and recovery tasks](HUMAN_TODO.md)
 
-- [Implementation plan](PLAN.md)
-- [Build specification](docs/BUILD_SPEC.md)
-- [Human-only inputs](HUMAN_TODO.md)
-- [Current evidence](docs/STATUS.md)
-- [Hardware verification](docs/VERIFY_ON_HARDWARE.md)
+## Explore
+
+- [Architecture and data flows](docs/architecture.md)
+- [Architecture decisions](docs/adr/README.md)
+- [Operations runbooks](docs/runbooks/README.md)
+- [Compatibility and upgrade order](docs/compatibility.md)
+- [Evidence map](docs/evidence.md)
 - [Skills demonstrated](docs/skills-demonstrated.md)
+- [Screenshot checklist](docs/img/README.md)
 
-Run `make help` for repository entry points. Bootstrap commands are for Anouar to run
-only after completing the human tasks and reading the matching runbooks.
+Run `make help` to see the supported offline validation and guarded operational entry
+points. Bootstrap and recovery commands are for my private administration session only.

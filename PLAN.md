@@ -83,6 +83,7 @@ before later phases begin.
 | Cilium chart | `1.20.2` | `helm show chart`; OCI digest `sha256:a7c12d330dd96bfcda3bf057b24be8f36566c34868265f930f776dff6f42d838` |
 | Argo CD chart | `10.10.2` | `helm show chart`; app `v3.5.4`, OCI digest `sha256:96ff0d2150557ceb51c309c3adedb63455226c2dd2c5323f5b1e894536e2901d` |
 | KSOPS | `v4.5.1` | Official release and image digest `sha256:4def9fdd4e2f850265740ebe9592c5455d19b76891e88e602df8b52d74b95334` |
+| curl renderer utility | `8.16.0` | Official curl image digest `sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6` |
 | community.general | `13.4.0` | Galaxy artifact SHA-256 `efd1c0b5dc6f89b9667e4bd77f2426c30545861910dba188593871095ede1804` |
 | cert-manager chart | `v1.21.1` | Official OCI digest `sha256:15c0b46d9006ce8eb9ff14d1bf54d1bbfcc587bb9e24cd9fe186fb8fec56af1f` |
 | external-dns chart | `1.22.0` | Official release archive SHA-256 `ec26bba67e02f46a55ac33790ad9d9ded724a163af6f6b4a63ce68f883201f4f`; app `0.22.0` |

@@ -298,4 +298,26 @@ drills separately and leave every results table empty until real measurements ex
 
 ## Phase 12
 
-Status: **PENDING HARDWARE**. Component-specific commands are added by the phase.
+Status: **PENDING HARDWARE**
+
+After every earlier phase is verified, open the README as a new visitor and follow
+each architecture, evidence, ADR, runbook, status, and security link. Confirm that no
+link exposes an administrative endpoint and that every public URL matches
+`docs/security/public-surface.md`.
+
+Capture the six exact files in `docs/img/README.md`, then inspect their metadata and
+pixels before committing them. Domains, addresses, tokens, account identifiers,
+emails, browser history, and unrelated tabs must be absent or redacted. Link the
+approved images from the relevant evidence rows.
+
+```bash
+make validate-portfolio
+make validate
+make security
+git status --short
+```
+
+Expected: every command exits zero, the worktree contains only the deliberately added
+redacted evidence, and every status claim points to observed output. Anouar reviews the
+five-minute walkthrough and is the only person who may change hardware status to
+`Verified`.

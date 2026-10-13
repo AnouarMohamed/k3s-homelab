@@ -16,4 +16,4 @@ Only Anouar changes the hardware verification column to `Verified`.
 | Homelab Sentinel | Implemented | PENDING HARDWARE | [Phase 9 evidence](../PROGRESS.md#phase-9-validation--2026-10-13) |
 | Identity and self-hosted apps | Implemented | PENDING HARDWARE | [Phase 10 evidence](../PROGRESS.md#phase-10-validation--2026-10-13) |
 | Chaos and disaster recovery | Implemented | PENDING HARDWARE | [Phase 11 evidence](../PROGRESS.md#phase-11-validation--2026-10-13) |
-| Portfolio documentation | Planned | Untested | [Phase 12](BUILD_SPEC.md) |
+| Portfolio documentation | Implemented | PENDING HARDWARE | [Phase 12 evidence](../PROGRESS.md#phase-12-validation--2026-10-13) |

@@ -6,8 +6,10 @@ are immutable pins in `dependencies.env`.
 
 The `homelab-renderer-v1` sidecar renders only known repository paths through
 `scripts/render-gitops.sh`. It supplies pinned yq, Kustomize, and KSOPS binaries,
-mounts the age identity read-only, and uses its own temporary volume. It never writes
-rendered private addresses or decrypted secrets into Git.
+mounts the age identity read-only, and uses its own temporary volume. Pinned chart
+archives are downloaded into that volume, checksum-verified, and cached behind a
+per-phase file lock. It never writes rendered private addresses, dependency archives,
+or decrypted secrets into Git.
 
 The server remains a ClusterIP with no Ingress, HTTPRoute, or public tunnel. Follow
 the recovery runbook for local port-forward access and the built-in `admin`

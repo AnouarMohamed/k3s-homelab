@@ -3,8 +3,38 @@ set -euo pipefail
 
 repository_root="${HOMELAB_REPOSITORY_ROOT:-$(git rev-parse --show-toplevel)}"
 export PATH="${repository_root}/.tools/bin:${PATH}"
+cache_root="${HOMELAB_CACHE_ROOT:-${repository_root}/.cache}"
 requested_path="${1:-${PWD}}"
 source_path="$(cd "${requested_path}" && pwd -P)"
+
+ensure_phase_dependencies() {
+  local phase="$1"
+  local marker
+  local phase_directory
+
+  case "${phase}" in
+    phase2 | phase3 | phase4 | phase5 | phase6 | phase7 | phase8 | phase9 | phase11) ;;
+    *)
+      printf 'Refusing unknown dependency phase %s.\n' "${phase}" >&2
+      return 1
+      ;;
+  esac
+
+  mkdir -p "${cache_root}"
+  exec {cache_lock_fd}>"${cache_root}/.${phase}.lock"
+  flock "${cache_lock_fd}"
+  marker="${cache_root}/${phase}/.verified"
+  phase_directory="${cache_root}/${phase}"
+  if [[ ! -f "${marker}" ]]; then
+    rm -rf -- "${phase_directory}"
+    HOMELAB_REPOSITORY_ROOT="${repository_root}" \
+      HOMELAB_CACHE_ROOT="${cache_root}" \
+      bash "${repository_root}/scripts/fetch-${phase}-dependencies.sh" >&2
+    touch "${marker}"
+  fi
+  flock --unlock "${cache_lock_fd}"
+  exec {cache_lock_fd}>&-
+}
 
 case "${source_path}" in
   "${repository_root}"/*) ;;
@@ -18,13 +48,14 @@ relative_path="${source_path#"${repository_root}/"}"
 
 case "${relative_path}" in
   platform/argocd)
+    ensure_phase_dependencies phase3
     set -a
     # shellcheck disable=SC1091
     source "${repository_root}/platform/argocd/dependencies.env"
     set +a
     argocd_chart="${ARGOCD_CHART_REF}"
-    if [[ -f "${repository_root}/.cache/phase3/argo-cd/Chart.yaml" ]]; then
-      argocd_chart="${repository_root}/.cache/phase3/argo-cd"
+    if [[ -f "${cache_root}/phase3/argo-cd/Chart.yaml" ]]; then
+      argocd_chart="${cache_root}/phase3/argo-cd"
     fi
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/platform/argocd/configure-argocd.yaml" | \
@@ -34,13 +65,14 @@ case "${relative_path}" in
         --values -
     ;;
   platform/cilium)
+    ensure_phase_dependencies phase2
     set -a
     # shellcheck disable=SC1091
     source "${repository_root}/platform/cilium/dependencies.env"
     set +a
     cilium_chart="${CILIUM_CHART_REF}"
-    if [[ -f "${repository_root}/.cache/phase2/cilium/Chart.yaml" ]]; then
-      cilium_chart="${repository_root}/.cache/phase2/cilium"
+    if [[ -f "${cache_root}/phase2/cilium/Chart.yaml" ]]; then
+      cilium_chart="${cache_root}/phase2/cilium"
     fi
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/platform/cilium/configure-cilium.yaml" | \
@@ -53,13 +85,14 @@ case "${relative_path}" in
       bash "${repository_root}/scripts/render-config.sh" -
     ;;
   platform/cert-manager)
+    ensure_phase_dependencies phase4
     set -a
     # shellcheck disable=SC1091
     source "${repository_root}/platform/cert-manager/dependencies.env"
     set +a
     cert_manager_chart="${CERT_MANAGER_CHART_REF}"
-    if [[ -f "${repository_root}/.cache/phase4/cert-manager/Chart.yaml" ]]; then
-      cert_manager_chart="${repository_root}/.cache/phase4/cert-manager"
+    if [[ -f "${cache_root}/phase4/cert-manager/Chart.yaml" ]]; then
+      cert_manager_chart="${cache_root}/phase4/cert-manager"
     fi
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/platform/cert-manager/configure-cert-manager.yaml" | \
@@ -73,11 +106,12 @@ case "${relative_path}" in
       bash "${repository_root}/scripts/render-config.sh" -
     ;;
   platform/external-dns)
+    ensure_phase_dependencies phase4
     set -a
     # shellcheck disable=SC1091
     source "${repository_root}/platform/external-dns/dependencies.env"
     set +a
-    external_dns_chart="${repository_root}/.cache/phase4/external-dns"
+    external_dns_chart="${cache_root}/phase4/external-dns"
     test -f "${external_dns_chart}/Chart.yaml"
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/platform/external-dns/configure-external-dns.yaml" | \
@@ -97,11 +131,12 @@ case "${relative_path}" in
       bash "${repository_root}/scripts/render-config.sh" -
     ;;
   platform/longhorn)
+    ensure_phase_dependencies phase5
     set -a
     # shellcheck disable=SC1091
     source "${repository_root}/platform/longhorn/dependencies.env"
     set +a
-    longhorn_chart="${repository_root}/.cache/phase5/longhorn"
+    longhorn_chart="${cache_root}/phase5/longhorn"
     test -f "${longhorn_chart}/Chart.yaml"
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/platform/longhorn/configure-longhorn.yaml" | \
@@ -114,13 +149,14 @@ case "${relative_path}" in
       bash "${repository_root}/scripts/render-config.sh" -
     ;;
   platform/cloudnative-pg)
+    ensure_phase_dependencies phase5
     set -a
     # shellcheck disable=SC1091
     source "${repository_root}/platform/cloudnative-pg/dependencies.env"
     set +a
     export CNPG_POSTGRES_IMAGE="${POSTGRES_IMAGE}"
-    cnpg_chart="${repository_root}/.cache/phase5/cloudnative-pg"
-    barman_chart="${repository_root}/.cache/phase5/plugin-barman-cloud"
+    cnpg_chart="${cache_root}/phase5/cloudnative-pg"
+    barman_chart="${cache_root}/phase5/plugin-barman-cloud"
     test -f "${cnpg_chart}/Chart.yaml"
     test -f "${barman_chart}/Chart.yaml"
     helm template cloudnative-pg "${cnpg_chart}" \
@@ -138,11 +174,12 @@ case "${relative_path}" in
       bash "${repository_root}/scripts/render-config.sh" -
     ;;
   platform/velero)
+    ensure_phase_dependencies phase5
     set -a
     # shellcheck disable=SC1091
     source "${repository_root}/platform/velero/dependencies.env"
     set +a
-    velero_chart="${repository_root}/.cache/phase5/velero"
+    velero_chart="${cache_root}/phase5/velero"
     test -f "${velero_chart}/Chart.yaml"
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/platform/velero/configure-velero.yaml" | \
@@ -155,7 +192,8 @@ case "${relative_path}" in
       bash "${repository_root}/scripts/render-config.sh" -
     ;;
   platform/openbao)
-    openbao_chart="${repository_root}/.cache/phase6/openbao"
+    ensure_phase_dependencies phase6
+    openbao_chart="${cache_root}/phase6/openbao"
     test -f "${openbao_chart}/Chart.yaml"
     helm template openbao "${openbao_chart}" \
       --namespace openbao \
@@ -167,7 +205,8 @@ case "${relative_path}" in
     kustomize build "${repository_root}/platform/openbao/resources"
     ;;
   platform/external-secrets)
-    external_secrets_chart="${repository_root}/.cache/phase6/external-secrets"
+    ensure_phase_dependencies phase6
+    external_secrets_chart="${cache_root}/phase6/external-secrets"
     test -f "${external_secrets_chart}/Chart.yaml"
     helm template external-secrets "${external_secrets_chart}" \
       --namespace external-secrets \
@@ -177,9 +216,10 @@ case "${relative_path}" in
       bash "${repository_root}/scripts/harden-runtime-secret-render.sh"
     ;;
   observability/prometheus-stack)
+    ensure_phase_dependencies phase7
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/observability/prometheus-stack/configure-prometheus-stack.yaml" | \
-    helm template monitoring "${repository_root}/.cache/phase7/kube-prometheus-stack" \
+    helm template monitoring "${cache_root}/phase7/kube-prometheus-stack" \
       --namespace monitoring \
       --include-crds \
       --skip-tests \
@@ -187,42 +227,48 @@ case "${relative_path}" in
       bash "${repository_root}/scripts/harden-observability-render.sh"
     ;;
   observability/blackbox)
-    helm template blackbox "${repository_root}/.cache/phase7/blackbox-exporter" \
+    ensure_phase_dependencies phase7
+    helm template blackbox "${cache_root}/phase7/blackbox-exporter" \
       --namespace monitoring \
       --skip-tests \
       --values "${repository_root}/observability/blackbox/configure-blackbox-exporter.yaml" | \
       bash "${repository_root}/scripts/harden-runtime-secret-render.sh"
     ;;
   observability/loki)
-    helm template loki "${repository_root}/.cache/phase7/loki" \
+    ensure_phase_dependencies phase7
+    helm template loki "${cache_root}/phase7/loki" \
       --namespace monitoring \
       --skip-tests \
       --values "${repository_root}/observability/loki/configure-loki.yaml" | \
       bash "${repository_root}/scripts/harden-runtime-secret-render.sh"
     ;;
   observability/alloy)
-    helm template alloy "${repository_root}/.cache/phase7/alloy" \
+    ensure_phase_dependencies phase7
+    helm template alloy "${cache_root}/phase7/alloy" \
       --namespace monitoring \
       --skip-tests \
       --values "${repository_root}/observability/alloy/configure-alloy.yaml" | \
       bash "${repository_root}/scripts/harden-runtime-secret-render.sh"
     ;;
   observability/tempo)
-    helm template tempo "${repository_root}/.cache/phase7/tempo" \
+    ensure_phase_dependencies phase7
+    helm template tempo "${cache_root}/phase7/tempo" \
       --namespace monitoring \
       --skip-tests \
       --values "${repository_root}/observability/tempo/configure-tempo.yaml" | \
       bash "${repository_root}/scripts/harden-runtime-secret-render.sh"
     ;;
   observability/otel-collector)
-    helm template otel-collector "${repository_root}/.cache/phase7/otel-collector" \
+    ensure_phase_dependencies phase7
+    helm template otel-collector "${cache_root}/phase7/otel-collector" \
       --namespace monitoring \
       --skip-tests \
       --values "${repository_root}/observability/otel-collector/configure-otel-collector.yaml" | \
       bash "${repository_root}/scripts/harden-runtime-secret-render.sh"
     ;;
   observability/sloth)
-    helm template sloth "${repository_root}/.cache/phase7/sloth" \
+    ensure_phase_dependencies phase7
+    helm template sloth "${cache_root}/phase7/sloth" \
       --namespace monitoring \
       --include-crds \
       --skip-tests \
@@ -230,7 +276,8 @@ case "${relative_path}" in
       bash "${repository_root}/scripts/harden-observability-render.sh"
     ;;
   policies/kyverno)
-    helm template kyverno "${repository_root}/.cache/phase8/kyverno" \
+    ensure_phase_dependencies phase8
+    helm template kyverno "${cache_root}/phase8/kyverno" \
       --namespace kyverno \
       --include-crds \
       --skip-tests \
@@ -238,14 +285,16 @@ case "${relative_path}" in
       bash "${repository_root}/scripts/harden-policy-render.sh"
     ;;
   policies/trivy)
-    helm template trivy-operator "${repository_root}/.cache/phase8/trivy-operator" \
+    ensure_phase_dependencies phase8
+    helm template trivy-operator "${cache_root}/phase8/trivy-operator" \
       --namespace trivy-system \
       --include-crds \
       --skip-tests \
       --values "${repository_root}/policies/trivy/configure-trivy-operator.yaml"
     ;;
   platform/argo-rollouts)
-    helm template argo-rollouts "${repository_root}/.cache/phase9/argo-rollouts" \
+    ensure_phase_dependencies phase9
+    helm template argo-rollouts "${cache_root}/phase9/argo-rollouts" \
       --namespace argo-rollouts \
       --include-crds \
       --skip-tests \
@@ -254,10 +303,11 @@ case "${relative_path}" in
     kustomize build "${repository_root}/platform/argo-rollouts/resources"
     ;;
   platform/chaos-mesh)
-    test -f "${repository_root}/.cache/phase11/chaos-mesh/Chart.yaml"
+    ensure_phase_dependencies phase11
+    test -f "${cache_root}/phase11/chaos-mesh/Chart.yaml"
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/platform/chaos-mesh/configure-chaos-mesh.yaml" | \
-      helm template chaos-mesh "${repository_root}/.cache/phase11/chaos-mesh" \
+      helm template chaos-mesh "${cache_root}/phase11/chaos-mesh" \
         --namespace chaos-mesh \
         --include-crds \
         --skip-tests \

@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repository_root="$(git rev-parse --show-toplevel)"
-cache_dir="${repository_root}/.cache/phase8"
+repository_root="${HOMELAB_REPOSITORY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+cache_root="${HOMELAB_CACHE_ROOT:-${repository_root}/.cache}"
+cache_dir="${cache_root}/phase8"
 # shellcheck disable=SC1091
 source "${repository_root}/policies/dependencies.env"
 

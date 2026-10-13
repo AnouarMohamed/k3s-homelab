@@ -17,7 +17,7 @@ checks against the three physical nodes are tracked separately as `PENDING HARDW
 - [x] Phase 9 — Homelab Sentinel and delivery (offline validation complete; pending CI and hardware)
 - [x] Phase 10 — Identity and self-hosted applications (offline validation complete; pending hardware)
 - [x] Phase 11 — Chaos and disaster recovery (offline validation complete; pending hardware)
-- [ ] Phase 12 — Portfolio polish
+- [x] Phase 12 — Portfolio polish (offline validation complete; pending hardware evidence)
 
 ## Recovery audit — 2026-10-11
 
@@ -563,6 +563,34 @@ explicitly because that release has no checksum-list asset.
 - `make security` returned exit 0. Gitleaks scanned approximately 839 KB of the working
   tree and 3.58 MB across all 32 existing commits and found no leaks.
 
+## Phase 12 validation — 2026-10-13
+
+- Replaced the root overview with an 84-line recruiter-focused README and added the
+  MIT license, single-owner CODEOWNERS, concise security policy, compatibility matrix,
+  evidence map, complete ADR/runbook indexes, upgrade guide, alert index, experimental
+  phone-worker boundary, and exact screenshot checklist.
+- Expanded the architecture document to nine Mermaid diagrams covering physical,
+  network, GitOps, delivery, secret, observability, storage, identity, and resilience
+  flows. The public-surface and skills documents now link directly to their evidence.
+- Skeptical review found that the Argo CD renderer silently relied on ignored local
+  chart caches. The repair gives every fetcher an overridable cache root, installs curl
+  from the immutable `curlimages/curl:8.16.0` image, checksum-verifies dependencies,
+  serializes cache population with `flock`, and renders from the repo-server's writable
+  temporary volume. No chart archive or rendered private value is committed.
+- A clean temporary-cache render downloaded the corrected external-dns `1.22.0`
+  release, created the verified marker, and two renders produced the same SHA-256
+  `2b1e6da164f7016b85009b30ef6d7120b304009f166c8911c97e64291c3e69e8`.
+- `make validate-portfolio` returned exit 0. It checked required governance/evidence
+  files, the README line budget, architecture coverage, unique ADR numbers, alert
+  runbook links, prohibited contributor files, and the public Make interface.
+- The final `make validate` returned exit 0 across every Phase 1–12 gate. It rebuilt
+  the Phase 2–11 dependency caches from pinned sources, verified checksums, completed
+  all deterministic render/schema/policy/application checks, and finished with 25
+  generic resources valid and no kube-linter findings.
+- `make security` returned exit 0. Gitleaks scanned approximately 855 KB of the working
+  tree and 3.62 MB across all 33 existing commits and found no leaks.
+- No node, cluster, cloud account, registry, Git remote, or public endpoint was changed.
+
 ## Unverified
 
 - All real-hardware behavior.
@@ -586,6 +614,10 @@ explicitly because that release has no checksum-list asset.
   remain `PENDING HARDWARE`.
 - Chaos Mesh controller/daemon behavior on k3s, namespace-filter enforcement, every
   experiment, both k6 scenarios, and all seven DR drills remain `PENDING HARDWARE`.
+- Argo CD repo-server dependency downloads, cache reuse, and reconciliation remain
+  `PENDING HARDWARE`; offline validation exercised the same scripts but not the pod.
+- Phase 12 screenshots, live-link evidence, and recruiter walkthrough remain
+  `PENDING HARDWARE` until the platform is deployed and identifying data is redacted.
 
 ## Not done
 

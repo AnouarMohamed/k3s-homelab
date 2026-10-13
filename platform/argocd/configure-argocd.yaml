@@ -60,6 +60,7 @@ configs:
             - |
               repository_root="${PWD%/${ARGOCD_APP_SOURCE_PATH}}"
               export HOMELAB_REPOSITORY_ROOT="${repository_root}"
+              export HOMELAB_CACHE_ROOT=/tmp/homelab-cache
               exec bash "${repository_root}/scripts/render-gitops.sh" "$PWD"
 
 controller:
@@ -191,6 +192,44 @@ repoServer:
   metrics:
     enabled: true
   initContainers:
+    - name: install-curl
+      image: docker.io/curlimages/curl:8.16.0@sha256:463eaf6072688fe96ac64fa623fe73e1dbe25d8ad6c34404a669ad3ce1f104b6
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/sh
+        - -c
+        - |
+          set -eu
+          mkdir -p /custom-tools/curl-lib
+          cp /usr/bin/curl /custom-tools/curl.bin
+          cp /lib/ld-musl-x86_64.so.1 /custom-tools/curl-lib/
+          cp /usr/lib/*.so* /custom-tools/curl-lib/
+          printf '%s\n' \
+            '#!/bin/sh' \
+            'exec /custom-tools/curl-lib/ld-musl-x86_64.so.1 \' \
+            '  --library-path /custom-tools/curl-lib \' \
+            '  /custom-tools/curl.bin "$@"' \
+            > /custom-tools/curl
+          chmod 0555 /custom-tools/curl /custom-tools/curl.bin
+      resources:
+        requests:
+          cpu: 10m
+          memory: 32Mi
+        limits:
+          cpu: 100m
+          memory: 64Mi
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop:
+            - ALL
+        readOnlyRootFilesystem: true
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      volumeMounts:
+        - name: custom-tools
+          mountPath: /custom-tools
     - name: install-ksops
       image: docker.io/viaductoss/ksops:v4.5.1@sha256:4def9fdd4e2f850265740ebe9592c5455d19b76891e88e602df8b52d74b95334
       imagePullPolicy: IfNotPresent
@@ -262,7 +301,10 @@ repoServer:
           command:
             - /bin/sh
             - -c
-            - test -x /custom-tools/ksops && test -x /custom-tools/yq
+            - >-
+              test -x /custom-tools/curl &&
+              test -x /custom-tools/ksops &&
+              test -x /custom-tools/yq
         initialDelaySeconds: 5
         periodSeconds: 10
       livenessProbe:

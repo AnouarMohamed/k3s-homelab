@@ -1,11 +1,8 @@
 # Platform Components
 
-This directory contains manifests for platform-level components installed via Argo CD, such as:
+Argo CD installs the networking, edge, storage, secret, identity, delivery, and
+resilience controllers from this directory. Each component owns a pinned dependency
+file, configuration, operational README, and purpose-named resources where applicable.
 
-- cilium (in kube-system namespace)
-- cert-manager
-- longhorn
-- openbao
-- external-secrets-operator
-
-Each component should have its own subdirectory with Kustomize bases and overlays as needed.
+Use the phase-specific `make validate-*` target before changing a component. Runtime
+operations and recovery procedures are indexed in [`docs/runbooks`](../docs/runbooks/README.md).

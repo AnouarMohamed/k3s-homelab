@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repository_root="$(git rev-parse --show-toplevel)"
+repository_root="${HOMELAB_REPOSITORY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
 export PATH="${repository_root}/.tools/bin:${PATH}"
-cache_dir="${repository_root}/.cache/phase3"
+cache_root="${HOMELAB_CACHE_ROOT:-${repository_root}/.cache}"
+cache_dir="${cache_root}/phase3"
 
 # shellcheck disable=SC1091
 source "${repository_root}/platform/argocd/dependencies.env"

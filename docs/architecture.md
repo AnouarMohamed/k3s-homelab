@@ -25,8 +25,26 @@ flowchart LR
   Platform --> Storage
 ```
 
-Detailed network, storage, secrets, GitOps, delivery, and backup diagrams are completed
-in Phase 12 and linked to observed evidence where available.
+Runtime proof remains linked from the [evidence map](evidence.md); diagrams describe
+intended flow and are not proof that hardware is healthy.
+
+## GitOps reconciliation flow
+
+```mermaid
+flowchart LR
+  Git[GitLab main] --> Root[Root Application]
+  Root --> Projects[Restricted AppProjects]
+  Root --> Platform[Wave-ordered platform apps]
+  Root --> Generator[Production ApplicationSet]
+  Generator --> Apps[Application overlays]
+  Renderer[Pinned yq, Kustomize, KSOPS CMP] --> Platform
+  Renderer --> Apps
+  Platform --> Cluster[Kubernetes API]
+  Apps --> Cluster
+  Drift[Out-of-band drift] --> Cluster
+  Cluster -->|self-heal| Argo[Argo CD controllers]
+  Argo --> Git
+```
 
 ## Phase 4 edge traffic
 
@@ -127,3 +145,37 @@ flowchart LR
 Phase 8 installs the admission and detection layers in Audit mode. Phase 9 supplies the
 owned, keylessly signed images and digest-only promotion path. Deny promotion requires
 clean reports and the explicit enforcement runbook.
+
+## CI/CD and package flow
+
+```mermaid
+flowchart LR
+  Commit[Reviewed commit] --> Tests[Lint, test, manifest gates]
+  Tests --> Build[Buildx amd64 and arm64]
+  Build --> SBOM[Syft SPDX]
+  Build --> Trivy[Trivy gate]
+  SBOM --> Sign[GitLab OIDC Cosign]
+  Trivy --> Sign
+  Sign --> Registry[GitLab registry digest]
+  Registry --> Staging[Automatic staging digest commit]
+  Registry --> Approval[Manual production approval]
+  Approval --> Production[Production digest commit]
+  Registry --> GHCR[GHCR API, worker, deployment packages]
+```
+
+## Backup and restore flow
+
+```mermaid
+flowchart LR
+  Etcd[k3s embedded etcd] --> EtcdS3[Versioned S3 snapshots]
+  CNPG[CloudNativePG] --> Base[Base backups]
+  CNPG --> WAL[Continuous WAL]
+  Longhorn[Longhorn volumes] --> LHBackup[Longhorn backups]
+  CSI[CSI snapshots] --> Velero[Velero schedules]
+  Base --> S3[S3-compatible object storage]
+  WAL --> S3
+  LHBackup --> S3
+  Velero --> S3
+  S3 --> Drills[Isolated restore objects]
+  Drills --> Verify[Checksums, markers, row counts]
+```

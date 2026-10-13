@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-repository_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cache_dir="${repository_root}/.cache/phase5"
+repository_root="${HOMELAB_REPOSITORY_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
+cache_root="${HOMELAB_CACHE_ROOT:-${repository_root}/.cache}"
+cache_dir="${cache_root}/phase5"
 
 # shellcheck disable=SC1091
 source "${repository_root}/platform/longhorn/dependencies.env"
