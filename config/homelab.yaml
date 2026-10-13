@@ -4,33 +4,33 @@ kind: HomelabConfig
 metadata:
   name: homelab
 spec:
-  domain: CHANGE_ME_DOMAIN
-  acmeEmail: CHANGE_ME_ACME_EMAIL
+  domain: lab-457f5ff555dc.example.net
+  acmeEmail: admin@lab-457f5ff555dc.example.net
   timezone: Africa/Casablanca
   gitlab:
-    projectPath: CHANGE_ME_GITLAB_PROJECT_PATH
+    projectPath: anouar/lab-457f5ff555dc
   network:
-    adminCidr: CHANGE_ME_ADMIN_CIDR
-    privateRouteCidr: CHANGE_ME_PRIVATE_ROUTE_CIDR
+    adminCidr: 10.157.44.0/24
+    privateRouteCidr: 10.157.44.0/24
     podCidr: 10.42.0.0/16
     serviceCidr: 10.43.0.0/16
     nodes:
       - name: pc-1
-        address: CHANGE_ME_PC_1_LAN_IP
-        interface: CHANGE_ME_PC_1_INTERFACE
+        address: 10.157.44.31
+        interface: enp3s0
       - name: pc-2
-        address: CHANGE_ME_PC_2_LAN_IP
-        interface: CHANGE_ME_PC_2_INTERFACE
+        address: 10.157.44.67
+        interface: enp3s0
       - name: pc-3
-        address: CHANGE_ME_PC_3_LAN_IP
-        interface: CHANGE_ME_PC_3_INTERFACE
-    controlPlaneVip: CHANGE_ME_CONTROL_PLANE_VIP
+        address: 10.157.44.103
+        interface: enp3s0
+    controlPlaneVip: 10.157.44.200
     loadBalancerPool:
-      start: CHANGE_ME_LOAD_BALANCER_START_IP
-      stop: CHANGE_ME_LOAD_BALANCER_STOP_IP
+      start: 10.157.44.210
+      stop: 10.157.44.229
   storage:
-    longhornDiskPath: CHANGE_ME_LONGHORN_DISK_PATH
+    longhornDiskPath: /var/lib/longhorn-457f5ff555dc
     s3:
-      endpoint: CHANGE_ME_S3_ENDPOINT
-      bucket: CHANGE_ME_S3_BUCKET
+      endpoint: https://s3-457f5ff555dc.example.net
+      bucket: homelab-457f5ff555dc
 ...
