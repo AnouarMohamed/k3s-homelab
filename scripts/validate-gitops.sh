@@ -32,11 +32,13 @@ cmp "${validation_dir}/argocd-values-first.yaml" \
 helm lint "${cache_dir}/argo-cd" \
   --values "${validation_dir}/argocd-values-first.yaml"
 helm template argocd "${cache_dir}/argo-cd" \
+  --kube-version 1.36.5 \
   --namespace argocd \
   --include-crds \
   --values "${validation_dir}/argocd-values-first.yaml" \
   >"${validation_dir}/argocd-render-first.yaml"
 helm template argocd "${cache_dir}/argo-cd" \
+  --kube-version 1.36.5 \
   --namespace argocd \
   --include-crds \
   --values "${validation_dir}/argocd-values-second.yaml" \

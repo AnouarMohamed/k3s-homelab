@@ -60,6 +60,7 @@ case "${relative_path}" in
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/platform/argocd/configure-argocd.yaml" | \
       helm template argocd "${argocd_chart}" \
+        --kube-version 1.36.5 \
         --namespace argocd \
         --include-crds \
         --values -
@@ -77,6 +78,7 @@ case "${relative_path}" in
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/platform/cilium/configure-cilium.yaml" | \
       helm template cilium "${cilium_chart}" \
+        --kube-version 1.36.5 \
         --namespace kube-system \
         --include-crds \
         --values -
@@ -97,6 +99,7 @@ case "${relative_path}" in
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/platform/cert-manager/configure-cert-manager.yaml" | \
       helm template cert-manager "${cert_manager_chart}" \
+        --kube-version 1.36.5 \
         --namespace cert-manager \
         --include-crds \
         --values - | \
@@ -116,6 +119,7 @@ case "${relative_path}" in
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/platform/external-dns/configure-external-dns.yaml" | \
       helm template external-dns "${external_dns_chart}" \
+        --kube-version 1.36.5 \
         --namespace external-dns \
         --values -
     printf '%s\n' '---'
@@ -141,6 +145,7 @@ case "${relative_path}" in
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/platform/longhorn/configure-longhorn.yaml" | \
       helm template longhorn "${longhorn_chart}" \
+        --kube-version 1.36.5 \
         --namespace longhorn-system \
         --include-crds \
         --values -
@@ -160,11 +165,13 @@ case "${relative_path}" in
     test -f "${cnpg_chart}/Chart.yaml"
     test -f "${barman_chart}/Chart.yaml"
     helm template cloudnative-pg "${cnpg_chart}" \
+      --kube-version 1.36.5 \
       --namespace cnpg-system \
       --include-crds \
       --values "${repository_root}/platform/cloudnative-pg/configure-cloudnative-pg.yaml"
     printf '%s\n' '---'
     helm template barman-cloud "${barman_chart}" \
+      --kube-version 1.36.5 \
       --namespace cnpg-system \
       --include-crds \
       --values "${repository_root}/platform/cloudnative-pg/configure-barman-cloud.yaml" | \
@@ -184,6 +191,7 @@ case "${relative_path}" in
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/platform/velero/configure-velero.yaml" | \
       helm template velero "${velero_chart}" \
+        --kube-version 1.36.5 \
         --namespace velero \
         --include-crds \
         --values -
@@ -196,6 +204,7 @@ case "${relative_path}" in
     openbao_chart="${cache_root}/phase6/openbao"
     test -f "${openbao_chart}/Chart.yaml"
     helm template openbao "${openbao_chart}" \
+      --kube-version 1.36.5 \
       --namespace openbao \
       --include-crds \
       --skip-tests \
@@ -209,6 +218,7 @@ case "${relative_path}" in
     external_secrets_chart="${cache_root}/phase6/external-secrets"
     test -f "${external_secrets_chart}/Chart.yaml"
     helm template external-secrets "${external_secrets_chart}" \
+      --kube-version 1.36.5 \
       --namespace external-secrets \
       --include-crds \
       --skip-tests \
@@ -220,6 +230,7 @@ case "${relative_path}" in
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/observability/prometheus-stack/configure-prometheus-stack.yaml" | \
     helm template monitoring "${cache_root}/phase7/kube-prometheus-stack" \
+      --kube-version 1.36.5 \
       --namespace monitoring \
       --include-crds \
       --skip-tests \
@@ -229,6 +240,7 @@ case "${relative_path}" in
   observability/blackbox)
     ensure_phase_dependencies phase7
     helm template blackbox "${cache_root}/phase7/blackbox-exporter" \
+      --kube-version 1.36.5 \
       --namespace monitoring \
       --skip-tests \
       --values "${repository_root}/observability/blackbox/configure-blackbox-exporter.yaml" | \
@@ -237,6 +249,7 @@ case "${relative_path}" in
   observability/loki)
     ensure_phase_dependencies phase7
     helm template loki "${cache_root}/phase7/loki" \
+      --kube-version 1.36.5 \
       --namespace monitoring \
       --skip-tests \
       --values "${repository_root}/observability/loki/configure-loki.yaml" | \
@@ -245,6 +258,7 @@ case "${relative_path}" in
   observability/alloy)
     ensure_phase_dependencies phase7
     helm template alloy "${cache_root}/phase7/alloy" \
+      --kube-version 1.36.5 \
       --namespace monitoring \
       --skip-tests \
       --values "${repository_root}/observability/alloy/configure-alloy.yaml" | \
@@ -253,6 +267,7 @@ case "${relative_path}" in
   observability/tempo)
     ensure_phase_dependencies phase7
     helm template tempo "${cache_root}/phase7/tempo" \
+      --kube-version 1.36.5 \
       --namespace monitoring \
       --skip-tests \
       --values "${repository_root}/observability/tempo/configure-tempo.yaml" | \
@@ -261,6 +276,7 @@ case "${relative_path}" in
   observability/otel-collector)
     ensure_phase_dependencies phase7
     helm template otel-collector "${cache_root}/phase7/otel-collector" \
+      --kube-version 1.36.5 \
       --namespace monitoring \
       --skip-tests \
       --values "${repository_root}/observability/otel-collector/configure-otel-collector.yaml" | \
@@ -269,6 +285,7 @@ case "${relative_path}" in
   observability/sloth)
     ensure_phase_dependencies phase7
     helm template sloth "${cache_root}/phase7/sloth" \
+      --kube-version 1.36.5 \
       --namespace monitoring \
       --include-crds \
       --skip-tests \
@@ -278,6 +295,7 @@ case "${relative_path}" in
   policies/kyverno)
     ensure_phase_dependencies phase8
     helm template kyverno "${cache_root}/phase8/kyverno" \
+      --kube-version 1.36.5 \
       --namespace kyverno \
       --include-crds \
       --skip-tests \
@@ -287,6 +305,7 @@ case "${relative_path}" in
   policies/trivy)
     ensure_phase_dependencies phase8
     helm template trivy-operator "${cache_root}/phase8/trivy-operator" \
+      --kube-version 1.36.5 \
       --namespace trivy-system \
       --include-crds \
       --skip-tests \
@@ -295,6 +314,7 @@ case "${relative_path}" in
   platform/argo-rollouts)
     ensure_phase_dependencies phase9
     helm template argo-rollouts "${cache_root}/phase9/argo-rollouts" \
+      --kube-version 1.36.5 \
       --namespace argo-rollouts \
       --include-crds \
       --skip-tests \
@@ -308,6 +328,7 @@ case "${relative_path}" in
     bash "${repository_root}/scripts/render-config.sh" \
       "${repository_root}/platform/chaos-mesh/configure-chaos-mesh.yaml" | \
       helm template chaos-mesh "${cache_root}/phase11/chaos-mesh" \
+        --kube-version 1.36.5 \
         --namespace chaos-mesh \
         --include-crds \
         --skip-tests \

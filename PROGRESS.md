@@ -617,7 +617,13 @@ explicitly because that release has no checksum-list asset.
   fetcher now derives Helm's digest-based archive name from the pinned chart reference.
   A fetch into an empty temporary cache produced that archive, verified all four
   downloaded manifests, and confirmed chart version `1.20.2`. Replacement-pipeline
-  execution is not recorded until this repair is pushed.
+  execution passed the corrected fetch and chart lint in pipeline 9.
+- Pipeline 9 then exposed Helm capability drift: the CI-built Helm binary defaulted
+  `helm template` to Kubernetes `v1.20.0`, below Cilium's declared minimum, while the
+  local binary selected a newer default. Every Helm render now explicitly targets the
+  pinned Kubernetes version `1.36.5`, including the shared GitOps renderer. A complete
+  `make validate` returned exit 0 across all Phase 1–12 gates after this change.
+  Replacement-pipeline execution is not recorded until the repair is pushed.
 
 ## GitHub application packages — 2026-10-13
 

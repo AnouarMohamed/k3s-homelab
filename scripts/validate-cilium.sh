@@ -42,11 +42,13 @@ cmp "${validation_dir}/cilium-values-first.yaml" \
 helm lint "${cache_dir}/cilium" \
   --values "${validation_dir}/cilium-values-first.yaml"
 helm template cilium "${cache_dir}/cilium" \
+  --kube-version 1.36.5 \
   --namespace kube-system \
   --include-crds \
   --values "${validation_dir}/cilium-values-first.yaml" \
   >"${validation_dir}/cilium-render-first.yaml"
 helm template cilium "${cache_dir}/cilium" \
+  --kube-version 1.36.5 \
   --namespace kube-system \
   --include-crds \
   --values "${validation_dir}/cilium-values-second.yaml" \
