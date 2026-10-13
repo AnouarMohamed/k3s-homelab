@@ -60,6 +60,16 @@ block repository implementation.
   `secret/apps-sentinel/prod/database`, and S3 properties `access-key-id` and
   `secret-access-key` at `secret/apps-sentinel/prod/s3`. Repeat under
   `secret/apps-sentinel-staging/` with separate least-privilege credentials.
+- [ ] Generate independent random Keycloak database and bootstrap-admin credentials,
+  plus Argo CD and Grafana OIDC client secrets. Store the Keycloak copies at
+  `secret/keycloak/runtime`; store the exact matching client secrets at
+  `secret/argocd/oidc` and `secret/monitoring/grafana-oidc`. Store Keycloak backup S3
+  credentials at `secret/keycloak/s3`. Never commit these values.
+- [ ] Store Vaultwarden database credentials at `secret/apps-vaultwarden/runtime` and
+  its least-privilege S3 backup credentials at `secret/apps-vaultwarden/s3`.
+- [ ] Create the first Keycloak administrator in `homelab-admins`, enroll TOTP, verify
+  a separate `homelab-viewers` account, and exercise the SSO recovery runbook. Only
+  Anouar may mark the runtime checks verified.
 
 ## Hardware verification
 
@@ -73,6 +83,6 @@ block repository implementation.
 
 ## Optional capacity decisions
 
-- [ ] After the core platform capacity report exists, choose whether to add
+- [ ] After reviewing `docs/capacity-phase10.md`, choose whether to add
   Paperless-ngx, Immich, Jellyfin, Nextcloud, AdGuard Home, or Gitea.
 - [ ] Decide whether to attempt the isolated experimental arm64 phone-worker project.

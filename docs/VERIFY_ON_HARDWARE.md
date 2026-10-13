@@ -262,9 +262,23 @@ Exercise a canary abort, node reschedule, database failover, S3 recovery, and th
 rollback runbook. Record real timestamps and evidence in the Phase 9 result tables;
 do not copy expected values into results.
 
-## Phases 10–12
+## Phase 10 — Identity and self-hosted applications
 
 Status: **PENDING HARDWARE**
 
-Exact component-specific commands are added by each phase before it is marked
-implemented. No runtime result is inferred from offline rendering.
+```bash
+kubectl -n keycloak get deploy,cluster,scheduledbackup,servicemonitor,httproute
+kubectl -n apps-vaultwarden get deploy,cluster,pvc,scheduledbackup,httproute
+kubectl -n apps-homepage get deploy,pdb,httproute
+kubectl -n apps-uptime-kuma get deploy,pvc,httproute
+```
+
+Expected: Keycloak has two available replicas, both CNPG clusters have three healthy
+instances, routes attach only to the internal Gateway, and every ExternalSecret is
+Ready. Verify Argo CD and Grafana login for both groups, mandatory TOTP enrollment,
+local break-glass login, a Keycloak pod eviction, a CNPG failover, a Vaultwarden backup,
+and a Velero restore. Record real timestamps and observations; do not infer success.
+
+## Phases 11–12
+
+Status: **PENDING HARDWARE**. Component-specific commands are added by each phase.

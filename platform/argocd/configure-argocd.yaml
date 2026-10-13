@@ -26,6 +26,16 @@ configs:
     exec.enabled: false
     statusbadge.enabled: false
     timeout.reconciliation: 180s
+    oidc.config: |
+      name: Keycloak
+      issuer: https://keycloak.${CONFIG_DOMAIN}/realms/homelab
+      clientID: argocd
+      clientSecret: $argocd-oidc:client-secret
+      requestedScopes:
+        - openid
+        - profile
+        - email
+        - groups
   params:
     applicationsetcontroller.enable.scm.providers: 'false'
     server.insecure: false
@@ -33,6 +43,8 @@ configs:
     policy.default: role:readonly
     policy.csv: |
       g, platform-reader, role:readonly
+      g, homelab-viewers, role:readonly
+      g, homelab-admins, role:admin
     scopes: '[groups]'
   cmp:
     create: true

@@ -1,0 +1,751 @@
+---
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: keycloak-backups
+  labels:
+    app.kubernetes.io/name: keycloak-backups
+    app.kubernetes.io/component: database-backup
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  retentionPolicy: 30d
+  configuration:
+    destinationPath: s3://${CONFIG_S3_BUCKET}/keycloak
+    endpointURL: ${CONFIG_S3_ENDPOINT}
+    s3Credentials:
+      accessKeyId:
+        name: keycloak-s3-credentials
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: keycloak-s3-credentials
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+      maxParallel: 2
+    data:
+      compression: gzip
+      jobs: 2
+  instanceSidecarConfiguration:
+    retentionPolicyIntervalSeconds: 1800
+    resources:
+      requests:
+        cpu: 30m
+        memory: 64Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: openbao-auth
+  labels:
+    app.kubernetes.io/name: keycloak-openbao-auth
+    app.kubernetes.io/component: authentication
+    app.kubernetes.io/part-of: homelab-platform
+automountServiceAccountToken: false
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: mint-openbao-auth-token
+  labels:
+    app.kubernetes.io/name: keycloak-openbao-auth
+    app.kubernetes.io/component: authorization
+    app.kubernetes.io/part-of: homelab-platform
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - serviceaccounts/token
+    resourceNames:
+      - openbao-auth
+    verbs:
+      - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: allow-external-secrets-to-mint-openbao-token
+  labels:
+    app.kubernetes.io/name: keycloak-openbao-auth
+    app.kubernetes.io/component: authorization
+    app.kubernetes.io/part-of: homelab-platform
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: mint-openbao-auth-token
+subjects:
+  - kind: ServiceAccount
+    name: external-secrets
+    namespace: external-secrets
+---
+apiVersion: external-secrets.io/v1
+kind: SecretStore
+metadata:
+  name: openbao
+  labels:
+    app.kubernetes.io/name: keycloak-openbao-store
+    app.kubernetes.io/component: secret-store
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  provider:
+    vault:
+      server: https://openbao-active.openbao.svc:8200
+      path: secret
+      version: v2
+      caProvider:
+        type: Secret
+        namespace: openbao
+        name: openbao-server-tls
+        key: ca.crt
+      auth:
+        kubernetes:
+          mountPath: kubernetes
+          role: runtime-keycloak
+          serviceAccountRef:
+            name: openbao-auth
+            audiences:
+              - openbao
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-homelab-realm
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: realm-configuration
+    app.kubernetes.io/part-of: homelab-platform
+data:
+  homelab-realm.json: |
+    {
+      "realm": "homelab",
+      "enabled": true,
+      "displayName": "Anouar's Homelab",
+      "sslRequired": "external",
+      "registrationAllowed": false,
+      "resetPasswordAllowed": true,
+      "rememberMe": true,
+      "bruteForceProtected": true,
+      "groups": [
+        {"name": "homelab-admins"},
+        {"name": "homelab-viewers"}
+      ],
+      "requiredActions": [
+        {
+          "alias": "CONFIGURE_TOTP",
+          "name": "Configure OTP",
+          "providerId": "CONFIGURE_TOTP",
+          "enabled": true,
+          "defaultAction": true,
+          "priority": 10
+        }
+      ],
+      "clients": [
+        {
+          "clientId": "argocd",
+          "name": "Argo CD",
+          "enabled": true,
+          "clientAuthenticatorType": "client-secret",
+          "secret": "${ARGOCD_CLIENT_SECRET}",
+          "redirectUris": ["https://argocd.${CONFIG_DOMAIN}/auth/callback"],
+          "webOrigins": ["https://argocd.${CONFIG_DOMAIN}"],
+          "standardFlowEnabled": true,
+          "directAccessGrantsEnabled": false,
+          "publicClient": false,
+          "protocol": "openid-connect",
+          "protocolMappers": [
+            {
+              "name": "groups",
+              "protocol": "openid-connect",
+              "protocolMapper": "oidc-group-membership-mapper",
+              "consentRequired": false,
+              "config": {
+                "full.path": "false",
+                "claim.name": "groups",
+                "id.token.claim": "true",
+                "access.token.claim": "true",
+                "userinfo.token.claim": "true"
+              }
+            }
+          ]
+        },
+        {
+          "clientId": "grafana",
+          "name": "Grafana",
+          "enabled": true,
+          "clientAuthenticatorType": "client-secret",
+          "secret": "${GRAFANA_CLIENT_SECRET}",
+          "redirectUris": ["https://grafana.${CONFIG_DOMAIN}/login/generic_oauth"],
+          "webOrigins": ["https://grafana.${CONFIG_DOMAIN}"],
+          "standardFlowEnabled": true,
+          "directAccessGrantsEnabled": false,
+          "publicClient": false,
+          "protocol": "openid-connect",
+          "protocolMappers": [
+            {
+              "name": "groups",
+              "protocol": "openid-connect",
+              "protocolMapper": "oidc-group-membership-mapper",
+              "consentRequired": false,
+              "config": {
+                "full.path": "false",
+                "claim.name": "groups",
+                "id.token.claim": "true",
+                "access.token.claim": "true",
+                "userinfo.token.claim": "true"
+              }
+            }
+          ]
+        }
+      ]
+    }
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: keycloak
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: identity
+    app.kubernetes.io/part-of: homelab-platform
+    policy.homelab.dev/profile: application
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.36
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: v1.36
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: v1.36
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: keycloak-database
+  labels:
+    app.kubernetes.io/name: keycloak-database
+    app.kubernetes.io/component: database
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  instances: 3
+  imageName: ${CNPG_POSTGRES_IMAGE}
+  primaryUpdateStrategy: unsupervised
+  enableSuperuserAccess: false
+  inheritedMetadata:
+    labels:
+      app.kubernetes.io/name: keycloak-database
+      app.kubernetes.io/component: database
+      app.kubernetes.io/part-of: homelab-platform
+  bootstrap:
+    initdb:
+      database: keycloak
+      owner: keycloak
+      secret:
+        name: keycloak-database-owner
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
+  storage:
+    size: 10Gi
+    storageClass: longhorn
+  walStorage:
+    size: 2Gi
+    storageClass: longhorn
+  affinity:
+    enablePodAntiAffinity: true
+    topologyKey: kubernetes.io/hostname
+    podAntiAffinityType: required
+  monitoring:
+    enablePodMonitor: true
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: keycloak-backups
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: keycloak-database-owner
+  labels:
+    app.kubernetes.io/name: keycloak-database-owner
+    app.kubernetes.io/component: database-credentials
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: SecretStore
+    name: openbao
+  target:
+    name: keycloak-database-owner
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    template:
+      engineVersion: v2
+      data:
+        username: '{{ .username }}'
+        password: '{{ .password }}'
+  data:
+    - secretKey: username
+      remoteRef:
+        key: keycloak/runtime
+        property: database-username
+    - secretKey: password
+      remoteRef:
+        key: keycloak/runtime
+        property: database-password
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: identity
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: keycloak
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: keycloak
+        app.kubernetes.io/component: identity
+        app.kubernetes.io/part-of: homelab-platform
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: keycloak
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: keycloak
+      containers:
+        - name: keycloak
+          image: ${KEYCLOAK_IMAGE}
+          imagePullPolicy: IfNotPresent
+          args:
+            - start
+            - --import-realm
+            - --hostname=https://keycloak.${CONFIG_DOMAIN}
+            - --proxy-headers=xforwarded
+            - --http-enabled=true
+            - --health-enabled=true
+            - --metrics-enabled=true
+          env:
+            - name: KC_DB
+              value: postgres
+            - name: KC_DB_URL_HOST
+              value: keycloak-database-rw
+            - name: KC_DB_URL_DATABASE
+              value: keycloak
+            - name: KC_CACHE
+              value: ispn
+          envFrom:
+            - secretRef:
+                name: keycloak-runtime
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: management
+              containerPort: 9000
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: management
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: management
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          startupProbe:
+            httpGet:
+              path: /health/started
+              port: management
+            failureThreshold: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 250m
+              memory: 768Mi
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: realm
+              mountPath: /opt/keycloak/data/import
+              readOnly: true
+            - name: cache
+              mountPath: /opt/keycloak/data/tmp
+      volumes:
+        - name: realm
+          configMap:
+            name: keycloak-homelab-realm
+        - name: cache
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: identity
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  selector:
+    app.kubernetes.io/name: keycloak
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+    - name: management
+      port: 9000
+      targetPort: management
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: keycloak
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: internal-route
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  parentRefs:
+    - name: internal
+      namespace: gateways
+      sectionName: https
+  hostnames:
+    - keycloak.${CONFIG_DOMAIN}
+  rules:
+    - backendRefs:
+        - name: keycloak
+          port: 8080
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: keycloak
+resources:
+  - create-keycloak-namespace.yaml
+  - authorize-openbao-authentication.yaml
+  - materialize-keycloak-secrets.yaml
+  - configure-homelab-realm.yaml
+  - deploy-keycloak-database.yaml
+  - archive-keycloak-database.yaml
+  - schedule-keycloak-database-backups.yaml
+  - deploy-keycloak.yaml
+  - expose-keycloak.yaml
+  - preserve-keycloak-availability.yaml
+  - monitor-keycloak.yaml
+  - restrict-keycloak-network.yaml
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: keycloak-runtime
+  labels:
+    app.kubernetes.io/name: keycloak-runtime
+    app.kubernetes.io/component: runtime-credentials
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: SecretStore
+    name: openbao
+  target:
+    name: keycloak-runtime
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    template:
+      engineVersion: v2
+      data:
+        KC_DB_USERNAME: '{{ .databaseUsername }}'
+        KC_DB_PASSWORD: '{{ .databasePassword }}'
+        KC_BOOTSTRAP_ADMIN_USERNAME: '{{ .administratorUsername }}'
+        KC_BOOTSTRAP_ADMIN_PASSWORD: '{{ .administratorPassword }}'
+        ARGOCD_CLIENT_SECRET: '{{ .argocdClientSecret }}'
+        GRAFANA_CLIENT_SECRET: '{{ .grafanaClientSecret }}'
+  data:
+    - secretKey: databaseUsername
+      remoteRef:
+        key: keycloak/runtime
+        property: database-username
+    - secretKey: databasePassword
+      remoteRef:
+        key: keycloak/runtime
+        property: database-password
+    - secretKey: administratorUsername
+      remoteRef:
+        key: keycloak/runtime
+        property: administrator-username
+    - secretKey: administratorPassword
+      remoteRef:
+        key: keycloak/runtime
+        property: administrator-password
+    - secretKey: argocdClientSecret
+      remoteRef:
+        key: keycloak/runtime
+        property: argocd-client-secret
+    - secretKey: grafanaClientSecret
+      remoteRef:
+        key: keycloak/runtime
+        property: grafana-client-secret
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: keycloak-s3-credentials
+  labels:
+    app.kubernetes.io/name: keycloak-s3-credentials
+    app.kubernetes.io/component: backup-credentials
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  refreshInterval: 1h
+  secretStoreRef:
+    kind: SecretStore
+    name: openbao
+  target:
+    name: keycloak-s3-credentials
+    creationPolicy: Owner
+    deletionPolicy: Retain
+  data:
+    - secretKey: ACCESS_KEY_ID
+      remoteRef:
+        key: keycloak/s3
+        property: access-key-id
+    - secretKey: ACCESS_SECRET_KEY
+      remoteRef:
+        key: keycloak/s3
+        property: secret-access-key
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: keycloak
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: monitoring
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: keycloak
+  endpoints:
+    - port: management
+      path: /metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: keycloak
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: alerting
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  groups:
+    - name: keycloak.rules
+      rules:
+        - alert: KeycloakUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="keycloak",deployment="keycloak"} < 1
+          for: 10m
+          labels:
+            severity: critical
+          annotations:
+            summary: Keycloak has no available replica
+            runbook_url: https://gitlab.${CONFIG_DOMAIN}/${CONFIG_GITLAB_PROJECT_PATH}/-/blob/main/docs/runbooks/recover-sso.md
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: keycloak
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  minAvailable: 1
+  unhealthyPodEvictionPolicy: AlwaysAllow
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: keycloak
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: keycloak
+  labels:
+    app.kubernetes.io/name: keycloak
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: keycloak
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: gateways
+      ports:
+        - port: 8080
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - port: 9000
+          protocol: TCP
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: keycloak
+      ports:
+        - port: 7800
+          protocol: TCP
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: keycloak-database
+      ports:
+        - port: 5432
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: keycloak
+      ports:
+        - port: 7800
+          protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: keycloak-database
+  labels:
+    app.kubernetes.io/name: keycloak-database
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  podSelector:
+    matchLabels:
+      cnpg.io/cluster: keycloak-database
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: keycloak
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: keycloak-database
+      ports:
+        - port: 5432
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: cnpg-system
+      ports:
+        - port: 8000
+          protocol: TCP
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: monitoring
+      ports:
+        - port: 9187
+          protocol: TCP
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    - to:
+        - podSelector:
+            matchLabels:
+              cnpg.io/cluster: keycloak-database
+      ports:
+        - port: 5432
+          protocol: TCP
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - port: 443
+          protocol: TCP
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: ScheduledBackup
+metadata:
+  name: daily-keycloak
+  labels:
+    app.kubernetes.io/name: keycloak-database
+    app.kubernetes.io/component: database-backup
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  schedule: 0 15 3 * * *
+  backupOwnerReference: self
+  immediate: false
+  cluster:
+    name: keycloak-database
+  method: plugin
+  pluginConfiguration:
+    name: barman-cloud.cloudnative-pg.io

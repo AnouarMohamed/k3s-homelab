@@ -1,0 +1,10 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - configure-homepage.yaml
+  - deploy-homepage.yaml
+  - expose-homepage.yaml
+  - preserve-homepage-availability.yaml
+  - monitor-homepage.yaml
+  - restrict-homepage-network.yaml

@@ -1,0 +1,15 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homepage
+  labels: {'app.kubernetes.io/name': homepage, 'app.kubernetes.io/component': alerting, 'app.kubernetes.io/part-of': homepage}
+spec:
+  groups:
+    - name: homepage.rules
+      rules:
+        - alert: HomepageUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="apps-homepage",deployment="homepage"} < 1
+          for: 10m
+          labels: {severity: warning}
+          annotations: {summary: Homepage is unavailable, runbook_url: 'https://gitlab.${CONFIG_DOMAIN}/${CONFIG_GITLAB_PROJECT_PATH}/-/blob/main/docs/runbooks/operate-self-hosted-apps.md'}

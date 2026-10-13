@@ -1,0 +1,275 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: homepage-configuration
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: configuration
+    app.kubernetes.io/part-of: homepage
+data:
+  settings.yaml: |
+    title: Anouar's Homelab
+    target: _self
+    hideVersion: true
+    disableUpdateCheck: true
+    statusStyle: dot
+  services.yaml: |
+    - Platform:
+        - Argo CD:
+            href: https://argocd.${CONFIG_DOMAIN}
+            description: GitOps reconciliation
+        - Grafana:
+            href: https://grafana.${CONFIG_DOMAIN}
+            description: Metrics, logs, and traces
+        - Keycloak:
+            href: https://keycloak.${CONFIG_DOMAIN}
+            description: Identity and access
+    - Applications:
+        - Vaultwarden:
+            href: https://vaultwarden.${CONFIG_DOMAIN}
+            description: Password vault
+        - Uptime Kuma:
+            href: https://uptime.${CONFIG_DOMAIN}
+            description: Internal service checks
+        - Status:
+            href: https://status.${CONFIG_DOMAIN}
+            description: Public selected-service status
+  bookmarks.yaml: '[]'
+  widgets.yaml: '[]'
+  docker.yaml: '{}'
+  kubernetes.yaml: '{}'
+  custom.css: ""
+  custom.js: ""
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: homepage
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: homepage
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: homepage
+        app.kubernetes.io/component: application
+        app.kubernetes.io/part-of: homepage
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: homepage
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: homepage
+      containers:
+        - name: homepage
+          image: ${HOMEPAGE_IMAGE}
+          imagePullPolicy: IfNotPresent
+          command:
+            - node
+            - server.js
+          workingDir: /app
+          env:
+            - name: HOMEPAGE_ALLOWED_HOSTS
+              value: homepage.${CONFIG_DOMAIN}
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /api/healthcheck
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /api/healthcheck
+              port: http
+            initialDelaySeconds: 20
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: configuration
+              mountPath: /app/config
+              readOnly: true
+            - name: cache
+              mountPath: /app/.next/cache
+            - name: temporary
+              mountPath: /tmp
+      volumes:
+        - name: configuration
+          configMap:
+            name: homepage-configuration
+        - name: cache
+          emptyDir: {}
+        - name: temporary
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: homepage
+spec:
+  selector:
+    app.kubernetes.io/name: homepage
+  ports:
+    - name: http
+      port: 3000
+      targetPort: http
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: internal-route
+    app.kubernetes.io/part-of: homepage
+spec:
+  parentRefs:
+    - name: internal
+      namespace: gateways
+      sectionName: https
+  hostnames:
+    - homepage.${CONFIG_DOMAIN}
+  rules:
+    - backendRefs:
+        - name: homepage
+          port: 3000
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - configure-homepage.yaml
+  - deploy-homepage.yaml
+  - expose-homepage.yaml
+  - preserve-homepage-availability.yaml
+  - monitor-homepage.yaml
+  - restrict-homepage-network.yaml
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: alerting
+    app.kubernetes.io/part-of: homepage
+spec:
+  groups:
+    - name: homepage.rules
+      rules:
+        - alert: HomepageUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="apps-homepage",deployment="homepage"} < 1
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Homepage is unavailable
+            runbook_url: https://gitlab.${CONFIG_DOMAIN}/${CONFIG_GITLAB_PROJECT_PATH}/-/blob/main/docs/runbooks/operate-self-hosted-apps.md
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: homepage
+spec:
+  minAvailable: 1
+  unhealthyPodEvictionPolicy: AlwaysAllow
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: homepage
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: homepage
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: homepage
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: homepage
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: gateways
+      ports:
+        - port: 3000
+          protocol: TCP
+  egress: []
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apps-homepage
+  labels:
+    app.kubernetes.io/name: homepage
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: homelab-applications
+    policy.homelab.dev/profile: application
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.36
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: v1.36
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: v1.36
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: apps-homepage
+resources:
+  - create-homepage-namespace.yaml
+  - ../../base

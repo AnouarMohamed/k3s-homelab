@@ -1,0 +1,17 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: keycloak
+resources:
+  - create-keycloak-namespace.yaml
+  - authorize-openbao-authentication.yaml
+  - materialize-keycloak-secrets.yaml
+  - configure-homelab-realm.yaml
+  - deploy-keycloak-database.yaml
+  - archive-keycloak-database.yaml
+  - schedule-keycloak-database-backups.yaml
+  - deploy-keycloak.yaml
+  - expose-keycloak.yaml
+  - preserve-keycloak-availability.yaml
+  - monitor-keycloak.yaml
+  - restrict-keycloak-network.yaml

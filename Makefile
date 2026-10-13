@@ -7,7 +7,7 @@ ANSIBLE_INVENTORY := $(REPOSITORY_ROOT)/infra/ansible/inventory/homelab.py
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools lint ansible-syntax ansible-templates phase2-deps validate-cni phase3-deps validate-gitops phase4-deps validate-edge phase5-deps validate-storage phase6-deps validate-secrets phase7-deps validate-observability phase8-deps validate-policy phase9-deps validate-sentinel test-sentinel-integration build-sentinel validate security bootstrap bootstrap-nodes upgrade-k3s reset \
+.PHONY: help tools lint ansible-syntax ansible-templates phase2-deps validate-cni phase3-deps validate-gitops phase4-deps validate-edge phase5-deps validate-storage phase6-deps validate-secrets phase7-deps validate-observability phase8-deps validate-policy phase9-deps validate-sentinel phase10-deps validate-identity-apps test-sentinel-integration build-sentinel validate security bootstrap bootstrap-nodes upgrade-k3s reset \
 	bootstrap-cni bootstrap-gitops bootstrap-platform test test-storage-reschedule tofu-init tofu-plan teardown
 
 help: ## Show all supported targets
@@ -83,13 +83,19 @@ phase9-deps: ## Fetch the checksum-verified Argo Rollouts chart
 validate-sentinel: ## Validate Sentinel, Argo Rollouts, and promotion resources
 	@scripts/validate-sentinel.sh
 
+phase10-deps: ## Verify digest-pinned identity and self-hosted application images
+	@scripts/fetch-phase10-dependencies.sh
+
+validate-identity-apps: ## Validate Keycloak SSO and self-hosted applications
+	@scripts/validate-identity-apps.sh
+
 test-sentinel-integration: ## Run Sentinel against a disposable pinned PostgreSQL container
 	@scripts/test-sentinel-integration.sh
 
 build-sentinel: ## Build Sentinel API and worker binaries locally
 	@$(MAKE) -C apps/sentinel build
 
-validate: ansible-syntax ansible-templates validate-cni validate-gitops validate-edge validate-storage validate-secrets validate-observability validate-policy validate-sentinel ## Validate repository policy and Kubernetes manifests
+validate: ansible-syntax ansible-templates validate-cni validate-gitops validate-edge validate-storage validate-secrets validate-observability validate-policy validate-sentinel validate-identity-apps ## Validate repository policy and Kubernetes manifests
 	@scripts/check-forbidden-files.sh
 	@scripts/check-private-values.sh
 	@scripts/check-pins.sh

@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - authorize-openbao-authentication.yaml
   - materialize-notification-destination.yaml
+  - materialize-argocd-oidc-secret.yaml

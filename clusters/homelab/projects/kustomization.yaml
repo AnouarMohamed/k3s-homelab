@@ -6,6 +6,7 @@ resources:
   - restrict-default-project.yaml
   - restrict-edge-project.yaml
   - restrict-gitops-project.yaml
+  - restrict-identity-project.yaml
   - restrict-platform-project.yaml
   - restrict-storage-project.yaml
   - restrict-runtime-secrets-project.yaml

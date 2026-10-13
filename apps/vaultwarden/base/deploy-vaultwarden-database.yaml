@@ -1,0 +1,50 @@
+---
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: vaultwarden-database
+  labels: {'app.kubernetes.io/name': vaultwarden-database, 'app.kubernetes.io/component': database, 'app.kubernetes.io/part-of': vaultwarden}
+spec:
+  instances: 3
+  imageName: ${CNPG_POSTGRES_IMAGE}
+  primaryUpdateStrategy: unsupervised
+  enableSuperuserAccess: false
+  inheritedMetadata:
+    labels: {'app.kubernetes.io/name': vaultwarden-database, 'app.kubernetes.io/component': database, 'app.kubernetes.io/part-of': vaultwarden}
+  bootstrap:
+    initdb:
+      database: vaultwarden
+      owner: vaultwarden
+      secret: {name: vaultwarden-database-owner}
+  resources:
+    requests: {cpu: 100m, memory: 256Mi}
+    limits: {cpu: '1', memory: 1Gi}
+  storage: {size: 10Gi, storageClass: longhorn}
+  walStorage: {size: 2Gi, storageClass: longhorn}
+  affinity: {enablePodAntiAffinity: true, topologyKey: kubernetes.io/hostname, podAntiAffinityType: required}
+  monitoring: {enablePodMonitor: true}
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters: {barmanObjectName: vaultwarden-backups}
+---
+apiVersion: external-secrets.io/v1
+kind: ExternalSecret
+metadata:
+  name: vaultwarden-database-owner
+  labels: {'app.kubernetes.io/name': vaultwarden-database-owner, 'app.kubernetes.io/component': database-credentials, 'app.kubernetes.io/part-of': vaultwarden}
+spec:
+  refreshInterval: 1h
+  secretStoreRef: {kind: SecretStore, name: openbao}
+  target:
+    name: vaultwarden-database-owner
+    creationPolicy: Owner
+    deletionPolicy: Retain
+    template:
+      engineVersion: v2
+      data: {username: '{{ .username }}', password: '{{ .password }}'}
+  data:
+    - secretKey: username
+      remoteRef: {key: apps-vaultwarden/runtime, property: database-username}
+    - secretKey: password
+      remoteRef: {key: apps-vaultwarden/runtime, property: database-password}

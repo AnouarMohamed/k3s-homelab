@@ -26,3 +26,7 @@ spec:
       remoteRef:
         key: monitoring/grafana-admin
         property: admin-password
+    - secretKey: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
+      remoteRef:
+        key: monitoring/grafana-oidc
+        property: client-secret

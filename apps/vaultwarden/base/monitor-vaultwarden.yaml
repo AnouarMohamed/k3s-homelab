@@ -1,0 +1,15 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: vaultwarden
+  labels: {'app.kubernetes.io/name': vaultwarden, 'app.kubernetes.io/component': alerting, 'app.kubernetes.io/part-of': vaultwarden}
+spec:
+  groups:
+    - name: vaultwarden.rules
+      rules:
+        - alert: VaultwardenUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="apps-vaultwarden",deployment="vaultwarden"} < 1
+          for: 10m
+          labels: {severity: critical}
+          annotations: {summary: Vaultwarden is unavailable, runbook_url: 'https://gitlab.${CONFIG_DOMAIN}/${CONFIG_GITLAB_PROJECT_PATH}/-/blob/main/docs/runbooks/operate-self-hosted-apps.md'}

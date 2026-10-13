@@ -16,11 +16,13 @@ configMapGenerator:
       - policy-argocd.hcl=policies/argocd.hcl
       - policy-apps-sentinel.hcl=policies/apps-sentinel.hcl
       - policy-apps-sentinel-staging.hcl=policies/apps-sentinel-staging.hcl
+      - policy-apps-vaultwarden.hcl=policies/apps-vaultwarden.hcl
       - policy-cert-manager.hcl=policies/cert-manager.hcl
       - policy-cloudflared.hcl=policies/cloudflared.hcl
       - policy-external-dns.hcl=policies/external-dns.hcl
       - policy-external-secrets.hcl=policies/external-secrets.hcl
       - policy-longhorn-system.hcl=policies/longhorn-system.hcl
+      - policy-keycloak.hcl=policies/keycloak.hcl
       - policy-monitoring.hcl=policies/monitoring.hcl
       - policy-storage-verification.hcl=policies/storage-verification.hcl
       - policy-velero.hcl=policies/velero.hcl

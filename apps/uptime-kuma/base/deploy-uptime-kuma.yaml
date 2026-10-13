@@ -1,0 +1,241 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: uptime-kuma-data
+  labels:
+    app.kubernetes.io/name: uptime-kuma
+    app.kubernetes.io/component: data
+    app.kubernetes.io/part-of: uptime-kuma
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: longhorn
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: uptime-kuma
+  labels:
+    app.kubernetes.io/name: uptime-kuma
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: uptime-kuma
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: uptime-kuma
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: uptime-kuma
+        app.kubernetes.io/component: application
+        app.kubernetes.io/part-of: uptime-kuma
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: uptime-kuma
+          image: ${UPTIME_KUMA_IMAGE}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 3001
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 192Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+            - name: temporary
+              mountPath: /tmp
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: uptime-kuma-data
+        - name: temporary
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: uptime-kuma
+  labels:
+    app.kubernetes.io/name: uptime-kuma
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: uptime-kuma
+spec:
+  selector:
+    app.kubernetes.io/name: uptime-kuma
+  ports:
+    - name: http
+      port: 3001
+      targetPort: http
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: uptime-kuma
+  labels:
+    app.kubernetes.io/name: uptime-kuma
+    app.kubernetes.io/component: internal-route
+    app.kubernetes.io/part-of: uptime-kuma
+spec:
+  parentRefs:
+    - name: internal
+      namespace: gateways
+      sectionName: https
+  hostnames:
+    - uptime.${CONFIG_DOMAIN}
+  rules:
+    - backendRefs:
+        - name: uptime-kuma
+          port: 3001
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - deploy-uptime-kuma.yaml
+  - expose-uptime-kuma.yaml
+  - preserve-uptime-kuma-availability.yaml
+  - monitor-uptime-kuma.yaml
+  - restrict-uptime-kuma-network.yaml
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: uptime-kuma
+  labels:
+    app.kubernetes.io/name: uptime-kuma
+    app.kubernetes.io/component: alerting
+    app.kubernetes.io/part-of: uptime-kuma
+spec:
+  groups:
+    - name: uptime-kuma.rules
+      rules:
+        - alert: UptimeKumaUnavailable
+          expr: kube_deployment_status_replicas_available{namespace="apps-uptime-kuma",deployment="uptime-kuma"} < 1
+          for: 10m
+          labels:
+            severity: warning
+          annotations:
+            summary: Uptime Kuma is unavailable
+            runbook_url: https://gitlab.${CONFIG_DOMAIN}/${CONFIG_GITLAB_PROJECT_PATH}/-/blob/main/docs/runbooks/operate-self-hosted-apps.md
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: uptime-kuma
+  labels:
+    app.kubernetes.io/name: uptime-kuma
+    app.kubernetes.io/component: availability
+    app.kubernetes.io/part-of: uptime-kuma
+spec:
+  maxUnavailable: 1
+  unhealthyPodEvictionPolicy: AlwaysAllow
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: uptime-kuma
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: uptime-kuma
+  labels:
+    app.kubernetes.io/name: uptime-kuma
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: uptime-kuma
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: uptime-kuma
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: gateways
+      ports:
+        - port: 3001
+          protocol: TCP
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - port: 53
+          protocol: UDP
+        - port: 53
+          protocol: TCP
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - port: 80
+          protocol: TCP
+        - port: 443
+          protocol: TCP
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: apps-uptime-kuma
+  labels:
+    app.kubernetes.io/name: uptime-kuma
+    app.kubernetes.io/component: application
+    app.kubernetes.io/part-of: homelab-applications
+    policy.homelab.dev/profile: application
+    pod-security.kubernetes.io/enforce: restricted
+    pod-security.kubernetes.io/enforce-version: v1.36
+    pod-security.kubernetes.io/audit: restricted
+    pod-security.kubernetes.io/audit-version: v1.36
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: v1.36
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: apps-uptime-kuma
+resources:
+  - create-uptime-kuma-namespace.yaml
+  - ../../base

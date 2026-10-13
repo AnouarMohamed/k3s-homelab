@@ -103,6 +103,8 @@ server:
                   values:
                     - apps-sentinel
                     - apps-sentinel-staging
+                    - apps-vaultwarden
+                    - keycloak
         ports:
           - protocol: TCP
             port: 8200

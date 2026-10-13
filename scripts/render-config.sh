@@ -27,6 +27,12 @@ export SNAPSHOT_CONTROLLER_IMAGE
 export VELERO_AWS_PLUGIN_IMAGE
 export SENTINEL_API_IMAGE
 export SENTINEL_WORKER_IMAGE
+export KEYCLOAK_IMAGE
+export VAULTWARDEN_IMAGE
+export HOMEPAGE_IMAGE
+export UPTIME_KUMA_IMAGE
+export ARGOCD_CLIENT_SECRET='${ARGOCD_CLIENT_SECRET}'
+export GRAFANA_CLIENT_SECRET='${GRAFANA_CLIENT_SECRET}'
 
 CONFIG_DOMAIN="$(yq --unwrapScalar '.spec.domain' "${config_file}")"
 CONFIG_ACME_EMAIL="$(yq --unwrapScalar '.spec.acmeEmail' "${config_file}")"
@@ -60,11 +66,22 @@ if [[ -f "${repository_root}/apps/sentinel/dependencies.env" ]]; then
   SENTINEL_WORKER_IMAGE="${CONFIG_GITLAB_REGISTRY_PATH}/homelab-sentinel-worker@${SENTINEL_WORKER_DIGEST}"
 fi
 
+for dependency_file in \
+  "${repository_root}/platform/keycloak/dependencies.env" \
+  "${repository_root}/apps/vaultwarden/dependencies.env" \
+  "${repository_root}/apps/homepage/dependencies.env" \
+  "${repository_root}/apps/uptime-kuma/dependencies.env"; do
+  if [[ -f "${dependency_file}" ]]; then
+    # shellcheck disable=SC1090
+    source "${dependency_file}"
+  fi
+done
+
 yq '(
   .. |
   select(
     tag == "!!str" and
-    test("\\$\\{(CONFIG_[A-Z0-9_]+|ARGOCD_IMAGE|KSOPS_IMAGE|YQ_IMAGE|CNPG_POSTGRES_IMAGE|SNAPSHOT_CONTROLLER_IMAGE|VELERO_AWS_PLUGIN_IMAGE|SENTINEL_API_IMAGE|SENTINEL_WORKER_IMAGE)\\}")
+    test("\\$\\{(CONFIG_[A-Z0-9_]+|ARGOCD_IMAGE|KSOPS_IMAGE|YQ_IMAGE|CNPG_POSTGRES_IMAGE|SNAPSHOT_CONTROLLER_IMAGE|VELERO_AWS_PLUGIN_IMAGE|SENTINEL_API_IMAGE|SENTINEL_WORKER_IMAGE|KEYCLOAK_IMAGE|VAULTWARDEN_IMAGE|HOMEPAGE_IMAGE|UPTIME_KUMA_IMAGE)\\}")
   )
 ) |= envsubst(nu,ff) |
 (
