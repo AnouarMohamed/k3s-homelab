@@ -57,10 +57,10 @@ variable "instance_type" {
 variable "root_volume_gib" {
   description = "Encrypted gp3 root and Longhorn data capacity per node."
   type        = number
-  default     = 100
+  default     = 200
 
   validation {
-    condition     = var.root_volume_gib == 100
-    error_message = "The validated temporary environment uses exactly 100 GiB per node."
+    condition     = var.root_volume_gib == 200
+    error_message = "The full-stack validation environment uses exactly 200 GiB per node."
   }
 }

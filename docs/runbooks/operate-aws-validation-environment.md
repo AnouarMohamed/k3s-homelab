@@ -52,7 +52,7 @@ tofu show .cache/aws-validation/validation.tfplan
 CONFIRM_AWS_SPEND=150 make aws-validation-apply
 ```
 
-The plan must contain exactly three `m7i-flex.large` instances, three encrypted 100 GiB
+The plan must contain exactly three `m7i-flex.large` instances, three encrypted 200 GiB
 gp3 root volumes, one internal Network Load Balancer, one versioned encrypted S3 bucket,
 and no public security-group ingress. This type is x86-64, provides 2 vCPUs and 8 GiB of
 memory, and is eligible for the account's AWS Free plan. Stop if the reviewed regional

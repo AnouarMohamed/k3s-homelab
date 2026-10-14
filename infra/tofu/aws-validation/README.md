@@ -20,6 +20,9 @@ encrypted off-repository copy until destruction is complete.
 
 The validation nodes use `m7i-flex.large`: the largest x86-64, 8 GiB option accepted by
 the account's AWS Free plan at the time of the observed deployment attempt.
+Each node uses a 200 GiB encrypted gp3 root disk so Longhorn can retain its canonical
+three replicas for the full evidence stack. AWS Pricing returned USD 0.088 per
+GB-month in `eu-west-1` on 2026-10-14; review the current storage price before apply.
 
 ```bash
 export AWS_VALIDATION_AMI_ID="$(make --silent aws-validation-resolve-ami)"
