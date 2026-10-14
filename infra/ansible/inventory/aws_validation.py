@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -60,6 +61,16 @@ def build_inventory() -> dict[str, object]:
         str(REPOSITORY_ROOT / ".runtime" / "aws-validation" / "id_ed25519"),
     )
     known_hosts = REPOSITORY_ROOT / ".runtime" / "aws-validation" / "known_hosts"
+    rejoin_marker = (
+        REPOSITORY_ROOT
+        / ".runtime"
+        / "aws-validation"
+        / "initial-server-rejoin"
+    )
+    requested_rejoin = checked_environment_value(
+        "AWS_VALIDATION_REJOIN_INITIAL_SERVER", "false", r"true|false"
+    )
+    initial_server_rejoin = requested_rejoin == "true" or rejoin_marker.exists()
     proxy_command = (
         f"ProxyCommand={aws} ssm start-session --profile {profile} --region {region} "
         "--target %h --document-name AWS-StartSSHSession --parameters portNumber=%p"
@@ -70,14 +81,19 @@ def build_inventory() -> dict[str, object]:
             "ansible_host": instance_ids[node["name"]],
             "ansible_user": "ubuntu",
             "ansible_ssh_common_args": (
-                f"-o {proxy_command} -o StrictHostKeyChecking=accept-new "
-                f"-o UserKnownHostsFile={known_hosts}"
+                f"-o {shlex.quote(proxy_command)} -o StrictHostKeyChecking=accept-new "
+                f"-o UserKnownHostsFile={shlex.quote(str(known_hosts))}"
             ),
             "ansible_ssh_private_key_file": private_key,
             "homelab_control_plane_endpoint": endpoint,
             "homelab_enable_kube_vip": False,
             "homelab_node_address": node["address"],
-            "homelab_node_interface": "ens5",
+            # Observed on the pinned m7i-flex.large validation instances. Keep
+            # this aligned with the Cilium bootstrap override.
+            "homelab_node_interface": "enp39s0",
+            "homelab_rejoin_existing_cluster": (
+                initial_server_rejoin and node["name"] == nodes[0]["name"]
+            ),
             "homelab_s3_bucket": backup_bucket,
             "homelab_s3_endpoint": backup_endpoint,
             "homelab_s3_region": region,

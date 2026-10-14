@@ -52,10 +52,11 @@ tofu show .cache/aws-validation/validation.tfplan
 CONFIRM_AWS_SPEND=150 make aws-validation-apply
 ```
 
-The plan must contain exactly three `t3.large` instances, three encrypted 100 GiB gp3
-root volumes, one internal Network Load Balancer, one versioned encrypted S3 bucket,
-and no public security-group ingress. Stop if the reviewed regional estimate approaches
-the USD 150 ceiling.
+The plan must contain exactly three `m7i-flex.large` instances, three encrypted 100 GiB
+gp3 root volumes, one internal Network Load Balancer, one versioned encrypted S3 bucket,
+and no public security-group ingress. This type is x86-64, provides 2 vCPUs and 8 GiB of
+memory, and is eligible for the account's AWS Free plan. Stop if the reviewed regional
+estimate approaches the USD 150 ceiling.
 
 ## Access and bootstrap boundary
 
@@ -68,6 +69,14 @@ name as the shared k3s API endpoint, and retains the configured private node add
 ```bash
 make aws-validation-bootstrap-nodes
 make aws-validation-kubeconfig
+```
+
+If a removed initial etcd member reports a tombstone, rejoin only after confirming the
+other two servers are active. The successful wrapper records an ignored local marker so
+future idempotence runs retain the rejoin configuration:
+
+```bash
+AWS_VALIDATION_REJOIN_INITIAL_SERVER=true make aws-validation-bootstrap-nodes
 ```
 
 The workstation cannot route directly to the internal NLB. Kubernetes access therefore

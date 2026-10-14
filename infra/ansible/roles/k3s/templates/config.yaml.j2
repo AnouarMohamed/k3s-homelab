@@ -1,5 +1,6 @@
 write-kubeconfig-mode: "0600"
 token: {{ k3s_token | to_json }}
+node-name: {{ inventory_hostname | to_json }}
 node-ip: {{ (homelab_node_address | default(ansible_host)) | to_json }}
 advertise-address: {{ (homelab_node_address | default(ansible_host)) | to_json }}
 tls-san:
@@ -37,7 +38,7 @@ etcd-s3-access-key: {{ k3s_s3_access_key | to_json }}
 etcd-s3-secret-key: {{ k3s_s3_secret_key | to_json }}
 {% endif %}
 etcd-s3-timeout: 5m
-{% if inventory_hostname in groups['initial_server'] %}
+{% if inventory_hostname in groups['initial_server'] and not (homelab_rejoin_existing_cluster | default(false)) %}
 cluster-init: true
 {% else %}
 server: {{ ('https://' ~ (homelab_control_plane_endpoint | default(homelab_spec.network.controlPlaneVip)) ~ ':6443') | to_json }}

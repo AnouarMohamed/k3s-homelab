@@ -18,6 +18,9 @@ public key, a destruction deadline no more than seven days away, and an explicit
 confirmation. State stays local and ignored for this temporary environment. Keep an
 encrypted off-repository copy until destruction is complete.
 
+The validation nodes use `m7i-flex.large`: the largest x86-64, 8 GiB option accepted by
+the account's AWS Free plan at the time of the observed deployment attempt.
+
 ```bash
 export AWS_VALIDATION_AMI_ID="$(make --silent aws-validation-resolve-ami)"
 make aws-validation-init

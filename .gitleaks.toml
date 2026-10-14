@@ -2,10 +2,11 @@
 useDefault = true
 
 [allowlist]
-description = "Ignored local build and validation caches"
+description = "Ignored local tools, caches, and explicitly untracked runtime credentials"
 paths = [
   '''^\.tools/''',
   '''^\.cache/''',
+  '''^\.runtime/''',
 ]
 regexTarget = "line"
 regexes = [

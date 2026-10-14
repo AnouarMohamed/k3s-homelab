@@ -137,12 +137,6 @@ data "aws_iam_policy_document" "etcd_snapshots" {
     resources = [
       aws_s3_bucket.validation.arn,
     ]
-
-    condition {
-      test     = "StringLike"
-      values   = ["k3s-etcd/*"]
-      variable = "s3:prefix"
-    }
   }
 
   statement {

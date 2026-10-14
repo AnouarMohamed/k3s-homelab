@@ -37,6 +37,10 @@ for target in help tools lint validate security bootstrap-nodes upgrade-k3s rese
   grep -qE "^  ${target}[[:space:]]" <<<"${help_output}"
 done
 
+for required_script in bootstrap-cni.sh bootstrap-gitops.sh bootstrap-platform.sh; do
+  test -x "${repository_root}/scripts/${required_script}"
+done
+
 grep -q 'HOMELAB_CACHE_ROOT=/tmp/homelab-cache' \
   "${repository_root}/platform/argocd/configure-argocd.yaml"
 grep -q 'docker.io/curlimages/curl:8.16.0@sha256:' \

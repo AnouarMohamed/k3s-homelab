@@ -46,11 +46,11 @@ variable "expires_at" {
 variable "instance_type" {
   description = "Fixed instance size for each of the three temporary k3s servers."
   type        = string
-  default     = "t3.large"
+  default     = "m7i-flex.large"
 
   validation {
-    condition     = var.instance_type == "t3.large"
-    error_message = "The evidence environment is cost-bounded to t3.large. Review the budget before changing it."
+    condition     = var.instance_type == "m7i-flex.large"
+    error_message = "The evidence environment is cost-bounded to m7i-flex.large. Review the budget before changing it."
   }
 }
 

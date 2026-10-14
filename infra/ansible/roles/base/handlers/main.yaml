@@ -8,6 +8,15 @@
     name: chrony
     state: restarted
 
+- name: Create the volatile OpenSSH privilege-separation directory
+  ansible.builtin.file:
+    path: /run/sshd
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  listen: Restart SSH
+
 - name: Validate SSH configuration
   ansible.builtin.command: sshd -t
   changed_when: false

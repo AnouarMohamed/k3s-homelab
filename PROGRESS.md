@@ -5,10 +5,11 @@ the runbooks and verification checklist until it is observed.
 
 ## Current work
 
-Temporary AWS validation and observability evidence preparation are in progress. No AWS
-resource has been created. The canonical repository architecture remains the three-PC
-k3s cluster; AWS is a short-lived substitute for tests that do not depend on LAN ARP or
-L2 broadcast behavior.
+Temporary AWS validation is active in `eu-west-1`. Three pinned
+`m7i-flex.large` instances, an internal API load balancer, and the versioned backup
+bucket are deployed with no security-group ingress from the Internet. The canonical
+repository architecture remains the three-PC k3s cluster; AWS is a short-lived
+substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 
 ## Observed repository validation
 
@@ -21,7 +22,17 @@ L2 broadcast behavior.
 | 2026-10-14 | `make aws-validation-tools` | Checksum verification passed and Session Manager plugin 1.2.814.0 was installed under `.tools/bin`. |
 | 2026-10-14 | `make lint` | Markdown and Ansible lint passed; tracked SOPS documents produced configured yamllint warnings only. |
 | 2026-10-14 | `make validate` | All repository validators completed successfully, including deterministic chart rendering, kubeconform, kube-linter, Kyverno's 10 policy tests, promtool, Sentinel unit tests, GHCR package policy, and OpenTofu validation. |
-| 2026-10-14 | `make security` | Gitleaks found no leaks in the working tree or across all 49 commits. |
+| 2026-10-14 | `make security` | After excluding only the explicitly ignored `.runtime/` credential directory from the directory scan, Gitleaks found no leaks in repository content or across all 52 commits. Forbidden-file validation separately confirms runtime credentials are not tracked. |
+| 2026-10-14 | `make aws-validation-apply` | OpenTofu created the internal load balancer, private network controls, versioned S3 bucket, IAM role, and three validation nodes after the reviewed plan. The first `t3.large` attempt was rejected by the account's Free-plan instance restrictions before any instance was created; the plan was repaired to the eligible pinned `m7i-flex.large` type and applied successfully. |
+| 2026-10-14 | `make aws-validation-bootstrap-nodes` | All three nodes completed preparation and hardening; k3s `v1.36.5+k3s1` formed a three-server embedded-etcd control plane through the internal load balancer. The API `/readyz?verbose` reported `etcd`, `etcd-readiness`, and every other readiness check passing. |
+| 2026-10-14 | second `make aws-validation-bootstrap-nodes` | Idempotence run completed with `changed=0`, `unreachable=0`, and `failed=0` for all three hosts. |
+| 2026-10-14 | `make aws-validation-bootstrap-cni` | Gateway API `v1.6.1` CRDs were established and Cilium `1.20.2` deployed after correcting the observed AWS interface name. All three Cilium agents, both operators, three Envoy pods, two Hubble relays, Hubble UI, CoreDNS, and metrics-server became Ready. |
+| 2026-10-14 | `kubectl -n kube-system exec ds/cilium -- cilium-dbg status --verbose` | Cilium reported Kubernetes OK, kube-proxy replacement enabled, 3/3 nodes reachable, Hubble OK, 41/41 controllers healthy, and 97 modules OK with none degraded or stopped. |
+| 2026-10-14 | `kubectl -n kube-system exec ds/cilium -- cilium-dbg encrypt status` | WireGuard was enabled on `cilium_wg0`; the inspected node reported two peers. |
+| 2026-10-14 | `k3s etcd-snapshot save --name validation-pre-platform` | The first live S3 snapshot attempt failed before upload: the IAM role's prefix-conditioned `ListBucket` permission denied K3s's bucket-existence check. This failure led to the scoped policy repair recorded below. |
+| 2026-10-14 | repeat `k3s etcd-snapshot save --name validation-pre-platform` | After an OpenTofu plan of `0 to add, 1 to change, 0 to destroy` updated only the inline IAM policy, K3s saved the snapshot successfully. `aws s3api head-object` confirmed a 13,656,096-byte object under `k3s-etcd/` with `AES256` server-side encryption. |
+| 2026-10-14 | `make validate` | The full repository suite passed after the live-bootstrap repairs, including Ansible syntax/template assertions, deterministic Helm/Kustomize rendering, kubeconform, kube-linter, 10 Kyverno tests, promtool, Go tests, GHCR package policy, and both OpenTofu modules. |
+| 2026-10-14 | `make lint` | Ansible lint passed its production profile, markdownlint reported zero issues across 128 Markdown files, and SOPS ciphertext produced only the configured yamllint warnings. |
 
 ## Defects repaired during this work
 
@@ -42,11 +53,26 @@ L2 broadcast behavior.
 - The Cilium bootstrap can omit LB IPAM and L2 announcements only for AWS validation,
   where VPC networking cannot reproduce LAN broadcast behavior. Canonical installs
   still enable and validate both resources.
+- Systems Manager SSH now quotes its proxy command correctly, Ubuntu creates the
+  volatile OpenSSH runtime directory before validation, and k3s registers the
+  canonical node names explicitly.
+- The pinned AWS instance family exposes `enp39s0`, not the assumed `ens5`; both the
+  inventory and Cilium bootstrap now use the interface observed on all three nodes.
+- Recovery after removal of a stale pre-canonical node registration now has an
+  explicit, marker-backed initial-server rejoin path. The recovered node rejoined the
+  surviving etcd quorum successfully.
+- `make bootstrap-platform` referenced a missing file. It now has an executable,
+  bounded waiter that fails on Argo CD sync errors and succeeds only when discovered
+  applications are both Synced and Healthy; portfolio validation checks the bootstrap
+  scripts exist.
+- The live etcd snapshot test showed that K3s checks bucket existence without an S3
+  prefix before writing its prefix-scoped object. The AWS node policy now permits
+  listing only the dedicated validation bucket while retaining object permissions
+  under `k3s-etcd/*`.
 
 ## Not done
 
-- AWS authentication, account plan, apply, bootstrap, tests, and destruction have not
-  run.
+- Argo CD and the remaining platform applications have not been bootstrapped in AWS.
 - No dashboard has been opened against live telemetry.
 - No screenshot has been captured.
 - kube-vip ARP and Cilium L2 announcement behavior cannot be proven in AWS and remain

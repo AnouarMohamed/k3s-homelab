@@ -17,7 +17,7 @@
       when: homelab_enable_kube_vip | default(true) | bool
 
 - name: Wait for the control-plane virtual address
-  hosts: initial_server
+  hosts: joining_servers
   gather_facts: false
   become: false
   tasks:
@@ -28,6 +28,7 @@
         connect_timeout: 3
         sleep: 5
         timeout: 300
+      run_once: true
 
 - name: Join remaining k3s servers through the VIP
   hosts: joining_servers

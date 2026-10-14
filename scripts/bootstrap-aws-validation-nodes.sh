@@ -67,3 +67,7 @@ export AWS_VALIDATION_SSH_PRIVATE_KEY_FILE="${private_key}"
 
 ansible-inventory -i "${inventory}" --graph
 ansible-playbook -i "${inventory}" "${repository_root}/infra/ansible/site.yaml"
+
+if [[ "${AWS_VALIDATION_REJOIN_INITIAL_SERVER:-false}" == true ]]; then
+  install -m 0600 /dev/null "${runtime_directory}/initial-server-rejoin"
+fi

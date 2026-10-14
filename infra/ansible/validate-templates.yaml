@@ -34,6 +34,7 @@
       ansible.builtin.assert:
         that:
           - rendered_k3s_config['disable-kube-proxy']
+          - rendered_k3s_config['node-name'] == inventory_hostname
           - rendered_k3s_config['disable-network-policy']
           - rendered_k3s_config['flannel-backend'] == 'none'
           - rendered_k3s_config['secrets-encryption']
