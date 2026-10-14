@@ -39,6 +39,7 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-14 | GitLab pipeline `2947394669` | All lint, repository validation, unit, integration, and deployment-package jobs passed. The multi-architecture image build completed compilation but failed while pushing because GitLab's registry token endpoint returned HTTP 500; the failed job was retried once. |
 | 2026-10-14 | Argo reconciliation after commit `3ab2bd3` | The corrected Longhorn StorageClass was recreated and began binding the previously blocked volumes. Snapshot Controller's corrected image pulled. Cilium's canonical `enp3s0` and ARP-VIP settings could not run on AWS; self-heal was paused for the root and Cilium Applications and live-only overrides selected the observed `enp39s0` interface and each server's local API. All three agents then became Ready. |
 | 2026-10-14 | Docker Registry API plus `make validate-storage` | The registry returned `sha256:37396519f399536e5f01427d723565ae69294ec3fb5625cf1c87c09eaa9de16b` for the Velero `v1.18.2` multi-platform manifest. Storage validation then passed deterministic rendering, four Helm lints, kubeconform, and kube-linter with the repaired digest. |
+| 2026-10-14 | full Argo reconciliation | Argo CD's application controller was repeatedly OOM-killed at its 1 GiB limit while reconciling 44 Applications and rapidly changing Longhorn resources. Node memory use remained between 51% and 59%; the controller request and limit were increased to 768 MiB and 2 GiB respectively before reconciliation resumed. |
 
 ## Defects repaired during this work
 
@@ -78,6 +79,9 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 - Velero's pinned application digest referenced no registry manifest. The pin now uses
   the digest returned by Docker's registry for the published `v1.18.2` multi-platform
   tag; the AWS plugin remains separately pinned to its verified manifest digest.
+- Argo CD's application controller exhausted its original 1 GiB limit during the first
+  full reconciliation. Its bounded memory request and limit now accommodate the
+  observed 44-Application workload without removing the resource ceiling.
 - Argo CD now propagates child `Application` health so app-of-apps sync waves wait for
   dependencies instead of merely creating every child at once. Restricted projects now
   include only the additional destinations and resource kinds rendered by their pinned
