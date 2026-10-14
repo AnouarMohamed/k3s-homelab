@@ -1,9 +1,9 @@
 write-kubeconfig-mode: "0600"
 token: {{ k3s_token | to_json }}
-node-ip: {{ ansible_host | to_json }}
-advertise-address: {{ ansible_host | to_json }}
+node-ip: {{ (homelab_node_address | default(ansible_host)) | to_json }}
+advertise-address: {{ (homelab_node_address | default(ansible_host)) | to_json }}
 tls-san:
-  - {{ homelab_spec.network.controlPlaneVip | to_json }}
+  - {{ (homelab_control_plane_endpoint | default(homelab_spec.network.controlPlaneVip)) | to_json }}
 flannel-backend: none
 disable-kube-proxy: true
 disable-network-policy: true
@@ -26,15 +26,19 @@ kubelet-arg:
 etcd-snapshot-schedule-cron: "0 */6 * * *"
 etcd-snapshot-retention: 28
 etcd-s3: true
-etcd-s3-endpoint: {{ homelab_spec.storage.s3.endpoint | regex_replace('^https?://', '') | to_json }}
-etcd-s3-insecure: {{ homelab_spec.storage.s3.endpoint is match('^http://') | to_json }}
-etcd-s3-bucket: {{ homelab_spec.storage.s3.bucket | to_json }}
+etcd-s3-endpoint: {{ (homelab_s3_endpoint | default(homelab_spec.storage.s3.endpoint)) | regex_replace('^https?://', '') | to_json }}
+etcd-s3-insecure: {{ (homelab_s3_endpoint | default(homelab_spec.storage.s3.endpoint)) is match('^http://') | to_json }}
+etcd-s3-bucket: {{ (homelab_s3_bucket | default(homelab_spec.storage.s3.bucket)) | to_json }}
+etcd-s3-region: {{ (homelab_s3_region | default('us-east-1')) | to_json }}
 etcd-s3-folder: k3s-etcd
+etcd-s3-retention: 28
+{% if not (homelab_use_instance_role_for_s3 | default(false)) %}
 etcd-s3-access-key: {{ k3s_s3_access_key | to_json }}
 etcd-s3-secret-key: {{ k3s_s3_secret_key | to_json }}
+{% endif %}
 etcd-s3-timeout: 5m
 {% if inventory_hostname in groups['initial_server'] %}
 cluster-init: true
 {% else %}
-server: {{ ('https://' ~ homelab_spec.network.controlPlaneVip ~ ':6443') | to_json }}
+server: {{ ('https://' ~ (homelab_control_plane_endpoint | default(homelab_spec.network.controlPlaneVip)) ~ ':6443') | to_json }}
 {% endif %}

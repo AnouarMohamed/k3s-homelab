@@ -19,6 +19,7 @@
     k3s_token: validation-token-with-more-than-32-characters
     k3s_s3_access_key: validation-access-key
     k3s_s3_secret_key: validation-secret-key
+    homelab_s3_region: us-east-1
     kube_vip_image: >-
       ghcr.io/kube-vip/kube-vip:v1.2.4@sha256:dde4c0669d9058c74c69c0bc2f0122e26900e1e4b913c03577cb6e4e28083079
   tasks:
@@ -37,6 +38,10 @@
           - rendered_k3s_config['flannel-backend'] == 'none'
           - rendered_k3s_config['secrets-encryption']
           - rendered_k3s_config['etcd-s3']
+          - rendered_k3s_config['etcd-s3-region'] == homelab_s3_region
+          - rendered_k3s_config['etcd-s3-retention'] == 28
+          - rendered_k3s_config['etcd-s3-access-key'] == k3s_s3_access_key
+          - rendered_k3s_config['etcd-s3-secret-key'] == k3s_s3_secret_key
           - rendered_k3s_config.disable | sort == ['local-storage', 'servicelb', 'traefik']
           - rendered_k3s_config['cluster-cidr'] == homelab_spec.network.podCidr
           - rendered_k3s_config['service-cidr'] == homelab_spec.network.serviceCidr

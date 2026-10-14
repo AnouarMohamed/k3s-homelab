@@ -14,19 +14,16 @@
   roles:
     - role: k3s
     - role: kube_vip
+      when: homelab_enable_kube_vip | default(true) | bool
 
 - name: Wait for the control-plane virtual address
-  hosts: localhost
-  connection: local
+  hosts: initial_server
   gather_facts: false
   become: false
-  vars:
-    homelab_config_path: "{{ playbook_dir }}/../../config/homelab.yaml"
-    homelab_config: "{{ lookup('ansible.builtin.file', homelab_config_path) | from_yaml }}"
   tasks:
-    - name: Wait for the VIP API endpoint before any server joins
+    - name: Wait for the shared API endpoint before any server joins
       ansible.builtin.wait_for:
-        host: "{{ homelab_config.spec.network.controlPlaneVip }}"
+        host: "{{ homelab_control_plane_endpoint | default(homelab_spec.network.controlPlaneVip) }}"
         port: 6443
         connect_timeout: 3
         sleep: 5
@@ -40,4 +37,5 @@
   roles:
     - role: k3s
     - role: kube_vip
+      when: homelab_enable_kube_vip | default(true) | bool
 ...

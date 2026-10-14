@@ -7,8 +7,8 @@ ANSIBLE_INVENTORY := $(REPOSITORY_ROOT)/infra/ansible/inventory/homelab.py
 
 .DEFAULT_GOAL := help
 
-.PHONY: help tools lint ansible-syntax ansible-templates cilium-deps validate-cni argocd-deps validate-gitops edge-deps validate-edge storage-deps validate-storage secrets-deps validate-secrets observability-deps validate-observability policy-deps validate-policy sentinel-deps validate-sentinel identity-apps-deps validate-identity-apps chaos-deps validate-chaos-dr validate-portfolio validate-ghcr-packages test-chaos test-sentinel-integration build-sentinel validate security bootstrap bootstrap-nodes upgrade-k3s reset \
-	bootstrap-cni bootstrap-gitops bootstrap-platform test test-storage-reschedule tofu-init tofu-plan teardown
+.PHONY: help tools aws-validation-tools lint ansible-syntax ansible-templates cilium-deps validate-cni argocd-deps validate-gitops edge-deps validate-edge storage-deps validate-storage secrets-deps validate-secrets observability-deps validate-observability policy-deps validate-policy sentinel-deps validate-sentinel identity-apps-deps validate-identity-apps chaos-deps validate-chaos-dr validate-portfolio validate-ghcr-packages validate-aws-validation test-chaos test-sentinel-integration build-sentinel validate security bootstrap bootstrap-nodes upgrade-k3s reset \
+	bootstrap-cni bootstrap-gitops bootstrap-platform test test-storage-reschedule tofu-init tofu-plan aws-validation-resolve-ami aws-validation-init aws-validation-plan aws-validation-apply aws-validation-bootstrap-nodes aws-validation-kubeconfig aws-validation-kube-tunnel aws-validation-bootstrap-cni aws-validation-destroy teardown
 
 help: ## Show all supported targets
 	@awk 'BEGIN {FS = ":.*## "; printf "Usage: make <target>\n\nTargets:\n"} \
@@ -16,6 +16,13 @@ help: ## Show all supported targets
 
 tools: ## Install pinned local validation tools into .tools/bin
 	@scripts/install-tools.sh
+	@scripts/install-aws-validation-tools.sh
+
+aws-validation-tools: ## Install the pinned AWS Session Manager plugin locally
+	@scripts/install-aws-validation-tools.sh
+
+aws-validation-resolve-ami: ## Resolve and verify the current Canonical Ubuntu AMI ID
+	@scripts/resolve-aws-validation-ami.sh
 
 lint: ## Lint YAML, Markdown, shell, and Ansible sources
 	@git ls-files -co --exclude-standard -z -- '*.yaml' '*.yml' | \
@@ -110,7 +117,12 @@ test-sentinel-integration: ## Run Sentinel against a disposable pinned PostgreSQ
 build-sentinel: ## Build Sentinel API and worker binaries locally
 	@$(MAKE) -C apps/sentinel build
 
-validate: ansible-syntax ansible-templates validate-cni validate-gitops validate-edge validate-storage validate-secrets validate-observability validate-policy validate-sentinel validate-identity-apps validate-chaos-dr validate-portfolio validate-ghcr-packages ## Validate repository policy and Kubernetes manifests
+validate-aws-validation: ## Validate the temporary AWS module without accessing an account
+	@tofu -chdir=infra/tofu/aws-validation fmt -check
+	@tofu -chdir=infra/tofu/aws-validation init -backend=false -input=false
+	@tofu -chdir=infra/tofu/aws-validation validate
+
+validate: ansible-syntax ansible-templates validate-cni validate-gitops validate-edge validate-storage validate-secrets validate-observability validate-policy validate-sentinel validate-identity-apps validate-chaos-dr validate-portfolio validate-ghcr-packages validate-aws-validation ## Validate repository policy and Kubernetes manifests
 	@scripts/check-forbidden-files.sh
 	@scripts/check-private-values.sh
 	@scripts/check-pins.sh
@@ -159,6 +171,30 @@ tofu-plan: ## Produce a non-destructive Cloudflare OpenTofu plan
 	@tofu -chdir=infra/tofu fmt -check
 	@tofu -chdir=infra/tofu validate
 	@tofu -chdir=infra/tofu plan
+
+aws-validation-init: ## Initialize the pinned temporary AWS module locally
+	@tofu -chdir=infra/tofu/aws-validation init -input=false
+
+aws-validation-plan: ## Save a non-destructive, seven-day-bounded AWS validation plan
+	@scripts/plan-aws-validation.sh
+
+aws-validation-apply: ## Create the reviewed environment with CONFIRM_AWS_SPEND=150
+	@scripts/apply-aws-validation.sh
+
+aws-validation-bootstrap-nodes: ## Harden and install k3s on the temporary EC2 nodes
+	@scripts/bootstrap-aws-validation-nodes.sh
+
+aws-validation-kubeconfig: ## Fetch an ignored kubeconfig configured for the SSM tunnel
+	@scripts/prepare-aws-validation-kubeconfig.sh
+
+aws-validation-kube-tunnel: ## Open a foreground SSM tunnel to the Kubernetes API
+	@scripts/open-aws-validation-kube-tunnel.sh
+
+aws-validation-bootstrap-cni: ## Install Cilium without LAN-only L2 resources on AWS
+	@scripts/bootstrap-aws-validation-cni.sh
+
+aws-validation-destroy: ## Destroy it with CONFIRM_AWS_DESTROY=homelab-validation
+	@scripts/destroy-aws-validation.sh
 
 teardown: ## Alias for the guarded reset target
 	@$(MAKE) reset CONFIRM_RESET="$(CONFIRM_RESET)"

@@ -14,4 +14,5 @@ ignores:
   - "AGENTS.md"
   - ".tools/**"
   - ".cache/**"
+  - "**/.terraform/**"
 ...

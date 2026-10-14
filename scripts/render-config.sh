@@ -3,7 +3,7 @@ set -euo pipefail
 
 repository_root="${HOMELAB_REPOSITORY_ROOT:-$(git rev-parse --show-toplevel)}"
 export PATH="${repository_root}/.tools/bin:${PATH}"
-config_file="${repository_root}/config/homelab.yaml"
+config_file="${HOMELAB_CONFIG_FILE:-${repository_root}/config/homelab.yaml}"
 input_file="${1:--}"
 
 export CONFIG_DOMAIN
@@ -57,6 +57,11 @@ CONFIG_NODE_INTERFACE_PATTERN="$(
   yq --unwrapScalar '.spec.network.nodes | map(.interface) | unique | "^(" + join("|") + ")$"' \
     "${config_file}"
 )"
+CONFIG_CONTROL_PLANE_VIP="${CONFIG_CONTROL_PLANE_ENDPOINT_OVERRIDE:-${CONFIG_CONTROL_PLANE_VIP}}"
+if [[ -n "${CONFIG_NODE_INTERFACES_OVERRIDE:-}" ]]; then
+  CONFIG_NODE_INTERFACES="${CONFIG_NODE_INTERFACES_OVERRIDE}"
+  CONFIG_NODE_INTERFACE_PATTERN="^(${CONFIG_NODE_INTERFACES_OVERRIDE})$"
+fi
 CONFIG_S3_ENDPOINT="$(yq --unwrapScalar '.spec.storage.s3.endpoint' "${config_file}")"
 CONFIG_S3_BUCKET="$(yq --unwrapScalar '.spec.storage.s3.bucket' "${config_file}")"
 
