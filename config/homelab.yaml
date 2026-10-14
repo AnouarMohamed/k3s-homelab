@@ -8,7 +8,7 @@ spec:
   acmeEmail: admin@lab-457f5ff555dc.example.net
   timezone: Africa/Casablanca
   gitlab:
-    projectPath: anouar/lab-457f5ff555dc
+    projectPath: AnouarMohamed/k3s-homelab
   network:
     adminCidr: 10.157.44.0/24
     privateRouteCidr: 10.157.44.0/24
