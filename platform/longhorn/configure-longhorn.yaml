@@ -16,9 +16,7 @@ persistence:
   volumeBindingMode: WaitForFirstConsumer
   recurringJobSelector:
     enable: true
-    jobList:
-      - name: standard-storage-protection
-        isGroup: true
+    jobList: '[{"name":"standard-storage-protection","isGroup":true}]'
 
 preUpgradeChecker:
   jobEnabled: false

@@ -24,6 +24,17 @@ configs:
     admin.enabled: true
     accounts.platform-reader: login
     exec.enabled: false
+    resource.customizations.health.argoproj.io_Application: |
+      hs = {}
+      hs.status = "Progressing"
+      hs.message = "Waiting for child application health"
+      if obj.status ~= nil and obj.status.health ~= nil then
+        hs.status = obj.status.health.status
+        if obj.status.health.message ~= nil then
+          hs.message = obj.status.health.message
+        end
+      end
+      return hs
     statusbadge.enabled: false
     timeout.reconciliation: 180s
     oidc.config: |

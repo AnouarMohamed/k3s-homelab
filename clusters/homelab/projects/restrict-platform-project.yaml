@@ -15,12 +15,17 @@ spec:
   destinations:
     - namespace: kube-system
       server: https://kubernetes.default.svc
+    - namespace: cilium-secrets
+      server: https://kubernetes.default.svc
   clusterResourceWhitelist:
     - group: ''
       kind: Namespace
       name: cilium-secrets
     - group: admissionregistration.k8s.io
       kind: ValidatingAdmissionPolicy
+      name: gateway.cilium.io
+    - group: admissionregistration.k8s.io
+      kind: ValidatingAdmissionPolicyBinding
       name: gateway.cilium.io
     - group: cilium.io
       kind: CiliumL2AnnouncementPolicy

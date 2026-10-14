@@ -33,6 +33,10 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-14 | repeat `k3s etcd-snapshot save --name validation-pre-platform` | After an OpenTofu plan of `0 to add, 1 to change, 0 to destroy` updated only the inline IAM policy, K3s saved the snapshot successfully. `aws s3api head-object` confirmed a 13,656,096-byte object under `k3s-etcd/` with `AES256` server-side encryption. |
 | 2026-10-14 | `make validate` | The full repository suite passed after the live-bootstrap repairs, including Ansible syntax/template assertions, deterministic Helm/Kustomize rendering, kubeconform, kube-linter, 10 Kyverno tests, promtool, Go tests, GHCR package policy, and both OpenTofu modules. |
 | 2026-10-14 | `make lint` | Ansible lint passed its production profile, markdownlint reported zero issues across 128 Markdown files, and SOPS ciphertext produced only the configured yamllint warnings. |
+| 2026-10-14 | `make bootstrap-gitops` | Argo CD chart `10.10.2` installed successfully; its server and renderer-enabled repository server rolled out, restricted projects were applied, and the root Application was created from GitLab `main`. |
+| 2026-10-14 | first root Application sync | The root expanded to 44 Applications, but dependent Applications synchronized concurrently before their CRDs existed. Argo also rejected Cilium, CloudNativePG, and Prometheus resources omitted from their restricted project allowlists. These are observed failures, not successful deployment evidence. |
+| 2026-10-14 | live image and volume inspection | Snapshot Controller and the Velero AWS plugin reported `NotFound` for their configured image digests. Longhorn rejected the rendered recurring-job selector as invalid JSON, leaving four PVCs Pending. Registry inspection and the pinned Longhorn values schema were used for the repairs. |
+| 2026-10-14 | GitLab pipeline `2947394669` | All lint, repository validation, unit, integration, and deployment-package jobs passed. The multi-architecture image build completed compilation but failed while pushing because GitLab's registry token endpoint returned HTTP 500; the failed job was retried once. |
 
 ## Defects repaired during this work
 
@@ -69,6 +73,13 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
   prefix before writing its prefix-scoped object. The AWS node policy now permits
   listing only the dedicated validation bucket while retaining object permissions
   under `k3s-etcd/*`.
+- Argo CD now propagates child `Application` health so app-of-apps sync waves wait for
+  dependencies instead of merely creating every child at once. Restricted projects now
+  include only the additional destinations and resource kinds rendered by their pinned
+  Cilium, CloudNativePG, and Prometheus charts.
+- Registry inspection replaced two image digests that did not exist upstream. The
+  Longhorn recurring-job selector is now the JSON string required by the chart rather
+  than a YAML list that Helm stringified as a Go map.
 
 ## Not done
 

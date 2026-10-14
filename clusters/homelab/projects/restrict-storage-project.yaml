@@ -65,6 +65,9 @@ spec:
       name: '*cnpg*'
     - group: rbac.authorization.k8s.io
       kind: ClusterRole
+      name: cloudnative-pg*
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRole
       name: '*barman*'
     - group: rbac.authorization.k8s.io
       kind: ClusterRole
@@ -78,6 +81,9 @@ spec:
     - group: rbac.authorization.k8s.io
       kind: ClusterRoleBinding
       name: '*cnpg*'
+    - group: rbac.authorization.k8s.io
+      kind: ClusterRoleBinding
+      name: cloudnative-pg*
     - group: rbac.authorization.k8s.io
       kind: ClusterRoleBinding
       name: '*barman*'
@@ -130,6 +136,10 @@ spec:
       kind: Job
     - group: coordination.k8s.io
       kind: Lease
+    - group: cert-manager.io
+      kind: Certificate
+    - group: cert-manager.io
+      kind: Issuer
     - group: longhorn.io
       kind: RecurringJob
     - group: networking.k8s.io

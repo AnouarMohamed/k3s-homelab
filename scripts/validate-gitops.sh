@@ -131,6 +131,9 @@ test "$(yq --unwrapScalar '.server.ingress.enabled' \
   "${validation_dir}/argocd-values-first.yaml")" = false
 test "$(yq --unwrapScalar '.server.httproute.enabled' \
   "${validation_dir}/argocd-values-first.yaml")" = false
+test "$(yq \
+  '.configs.cm."resource.customizations.health.argoproj.io_Application" | contains("obj.status.health")' \
+  "${validation_dir}/argocd-values-first.yaml")" = true
 test "$(yq eval-all --unwrapScalar \
   'select(.kind == "Deployment" and .metadata.name == "argocd-repo-server") | .spec.template.spec.automountServiceAccountToken' \
   "${validation_dir}/argocd-render-first.yaml")" = false
