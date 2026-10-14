@@ -2,7 +2,7 @@
 image:
   repository: docker.io/velero/velero
   tag: v1.18.2
-  digest: sha256:19ab41ee1c8dee7db027bd2e10b61a5139e51c02b0699ba391cf5415f0e82ec0
+  digest: sha256:37396519f399536e5f01427d723565ae69294ec3fb5625cf1c87c09eaa9de16b
 
 resources:
   requests:

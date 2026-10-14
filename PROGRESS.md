@@ -37,6 +37,8 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-14 | first root Application sync | The root expanded to 44 Applications, but dependent Applications synchronized concurrently before their CRDs existed. Argo also rejected Cilium, CloudNativePG, and Prometheus resources omitted from their restricted project allowlists. These are observed failures, not successful deployment evidence. |
 | 2026-10-14 | live image and volume inspection | Snapshot Controller and the Velero AWS plugin reported `NotFound` for their configured image digests. Longhorn rejected the rendered recurring-job selector as invalid JSON, leaving four PVCs Pending. Registry inspection and the pinned Longhorn values schema were used for the repairs. |
 | 2026-10-14 | GitLab pipeline `2947394669` | All lint, repository validation, unit, integration, and deployment-package jobs passed. The multi-architecture image build completed compilation but failed while pushing because GitLab's registry token endpoint returned HTTP 500; the failed job was retried once. |
+| 2026-10-14 | Argo reconciliation after commit `3ab2bd3` | The corrected Longhorn StorageClass was recreated and began binding the previously blocked volumes. Snapshot Controller's corrected image pulled. Cilium's canonical `enp3s0` and ARP-VIP settings could not run on AWS; self-heal was paused for the root and Cilium Applications and live-only overrides selected the observed `enp39s0` interface and each server's local API. All three agents then became Ready. |
+| 2026-10-14 | Docker Registry API plus `make validate-storage` | The registry returned `sha256:37396519f399536e5f01427d723565ae69294ec3fb5625cf1c87c09eaa9de16b` for the Velero `v1.18.2` multi-platform manifest. Storage validation then passed deterministic rendering, four Helm lints, kubeconform, and kube-linter with the repaired digest. |
 
 ## Defects repaired during this work
 
@@ -73,6 +75,9 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
   prefix before writing its prefix-scoped object. The AWS node policy now permits
   listing only the dedicated validation bucket while retaining object permissions
   under `k3s-etcd/*`.
+- Velero's pinned application digest referenced no registry manifest. The pin now uses
+  the digest returned by Docker's registry for the published `v1.18.2` multi-platform
+  tag; the AWS plugin remains separately pinned to its verified manifest digest.
 - Argo CD now propagates child `Application` health so app-of-apps sync waves wait for
   dependencies instead of merely creating every child at once. Restricted projects now
   include only the additional destinations and resource kinds rendered by their pinned
