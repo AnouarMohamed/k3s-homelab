@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-14T00:00:00Z",
+  "title": "Design System: Homelab Operations",
+  "extensions": {
+    "breakpoints": [
+      {
+        "name": "evidence-capture",
+        "value": "1920x1080"
+      }
+    ]
+  },
+  "components": [],
+  "narrative": {
+    "northStar": "The Quiet Flight Deck",
+    "overview": "A calm, incident-focused Grafana workspace where user impact is visible first and diagnostic depth is one deliberate step away.",
+    "keyCharacteristics": [
+      "User impact before infrastructure inventory",
+      "Predictable operational hierarchy",
+      "Text-supported semantic status",
+      "Native Grafana interactions"
+    ],
+    "rules": [
+      {
+        "name": "The Signal Rule",
+        "body": "Color communicates a condition, never decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Native Surface Rule",
+        "body": "Grafana owns surfaces and depth; dashboard rows own information hierarchy.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do give every panel an operational decision to support.",
+      "Do expose missing telemetry as unknown."
+    ],
+    "donts": [
+      "Don't use a neon security-operations-center aesthetic.",
+      "Don't use decorative gauges, maps, or vanity totals.",
+      "Don't create a wall of equal-weight cards.",
+      "Don't communicate status through color alone.",
+      "Don't add screenshot-only claims that are not backed by live telemetry."
+    ]
+  }
+}

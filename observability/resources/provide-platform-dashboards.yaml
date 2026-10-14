@@ -12,17 +12,396 @@ metadata:
     app.kubernetes.io/part-of: observability
     grafana_dashboard: '1'
 data:
-  cluster.json: |-
-    {"annotations":{"list":[]},"panels":[{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":0},"id":1,"targets":[{"expr":"sum(kube_node_status_condition{condition=\"Ready\",status=\"true\"})","refId":"A"}],"title":"Ready nodes","type":"stat"},{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":0},"id":2,"targets":[{"expr":"sum(kube_pod_status_phase{phase=\"Running\"})","refId":"A"}],"title":"Running pods","type":"stat"}],"refresh":"30s","schemaVersion":42,"tags":["homelab","cluster"],"time":{"from":"now-6h","to":"now"},"title":"Homelab / Cluster","uid":"homelab-cluster","version":1}
+  overview.json: |-
+    {
+      "annotations": {
+        "list": [
+          {
+            "datasource": {"type": "prometheus", "uid": "prometheus"},
+            "enable": true,
+            "expr": "ALERTS{alertstate=\"firing\",severity=~\"warning|critical\"}",
+            "iconColor": "red",
+            "name": "Firing alerts",
+            "tagKeys": "alertname,severity",
+            "textFormat": "{{alertname}}"
+          }
+        ]
+      },
+      "description": "Start here during validation or an incident. Current user impact is followed by delivery, platform pressure, and recovery risk.",
+      "editable": false,
+      "links": [
+        {
+          "asDropdown": true,
+          "icon": "external link",
+          "includeVars": true,
+          "keepTime": true,
+          "tags": ["homelab", "drilldown"],
+          "title": "Open a drill-down",
+          "type": "dashboards"
+        }
+      ],
+      "panels": [
+        {
+          "collapsed": false,
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 0},
+          "id": 1,
+          "panels": [],
+          "title": "Current user impact",
+          "type": "row"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "description": "Percentage of selected Sentinel probes whose latest result is healthy.",
+          "fieldConfig": {
+            "defaults": {
+              "decimals": 1,
+              "max": 100,
+              "min": 0,
+              "noValue": "Unknown",
+              "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "orange", "value": 99}, {"color": "green", "value": 100}]},
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 1},
+          "id": 2,
+          "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "auto"},
+          "targets": [{"expr": "100 * avg(sentinel_probe_up)", "instant": true, "refId": "A"}],
+          "title": "Selected services healthy",
+          "type": "stat"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "description": "Share of Sentinel API requests returning a server error over five minutes.",
+          "fieldConfig": {
+            "defaults": {
+              "decimals": 2,
+              "max": 100,
+              "min": 0,
+              "noValue": "Unknown",
+              "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 1}, {"color": "red", "value": 5}]},
+              "unit": "percent"
+            },
+            "overrides": []
+          },
+          "gridPos": {"h": 4, "w": 6, "x": 6, "y": 1},
+          "id": 3,
+          "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "auto"},
+          "targets": [{"expr": "100 * sum(rate(sentinel_api_requests_total{class=\"5xx\"}[5m])) / clamp_min(sum(rate(sentinel_api_requests_total[5m])), 0.001)", "instant": true, "refId": "A"}],
+          "title": "Sentinel API 5xx",
+          "type": "stat"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "description": "Critical alerts currently firing. Open Alertmanager before investigating lower-priority signals.",
+          "fieldConfig": {
+            "defaults": {
+              "decimals": 0,
+              "noValue": "Unknown",
+              "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]},
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {"h": 4, "w": 6, "x": 12, "y": 1},
+          "id": 4,
+          "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "auto"},
+          "targets": [{"expr": "count(ALERTS{alertstate=\"firing\",severity=\"critical\"}) or vector(0)", "instant": true, "refId": "A"}],
+          "title": "Critical alerts firing",
+          "type": "stat"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "description": "The fixed three-node embedded-etcd cluster requires all three nodes for full redundancy.",
+          "fieldConfig": {
+            "defaults": {
+              "decimals": 0,
+              "max": 3,
+              "min": 0,
+              "noValue": "Unknown",
+              "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "orange", "value": 2}, {"color": "green", "value": 3}]},
+              "unit": "short"
+            },
+            "overrides": []
+          },
+          "gridPos": {"h": 4, "w": 6, "x": 18, "y": 1},
+          "id": 5,
+          "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "auto"},
+          "targets": [{"expr": "sum(kube_node_status_condition{condition=\"Ready\",status=\"true\"})", "instant": true, "refId": "A"}],
+          "title": "Nodes ready of 3",
+          "type": "stat"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "description": "Latest probe result per selected service. A drop to zero is direct user-impact evidence.",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {"drawStyle": "line", "fillOpacity": 12, "lineInterpolation": "stepAfter", "lineWidth": 2, "showPoints": "never"},
+              "max": 1,
+              "min": 0,
+              "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "green", "value": 1}]},
+              "unit": "bool_on_off"
+            },
+            "overrides": []
+          },
+          "gridPos": {"h": 7, "w": 12, "x": 0, "y": 5},
+          "id": 6,
+          "options": {"legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "targets": [{"expr": "sentinel_probe_up", "legendFormat": "{{service}}", "refId": "A"}],
+          "title": "Selected service availability",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "description": "Ninety-fifth percentile probe latency by service over five minutes.",
+          "fieldConfig": {
+            "defaults": {
+              "custom": {"drawStyle": "line", "fillOpacity": 8, "lineWidth": 2, "showPoints": "never"},
+              "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 0.5}, {"color": "red", "value": 1}]},
+              "unit": "s"
+            },
+            "overrides": []
+          },
+          "gridPos": {"h": 7, "w": 12, "x": 12, "y": 5},
+          "id": 7,
+          "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "targets": [{"expr": "histogram_quantile(0.95, sum by (le, service) (rate(sentinel_probe_duration_seconds_bucket[5m])))", "legendFormat": "{{service}}", "refId": "A"}],
+          "title": "Probe latency p95",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": false,
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 12},
+          "id": 8,
+          "panels": [],
+          "title": "Change and delivery",
+          "type": "row"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "description": "Applications whose Argo CD health is not Healthy.",
+          "fieldConfig": {"defaults": {"decimals": 0, "noValue": "Unknown", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 1}, {"color": "red", "value": 3}]}, "unit": "short"}, "overrides": []},
+          "gridPos": {"h": 4, "w": 6, "x": 0, "y": 13},
+          "id": 9,
+          "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "auto"},
+          "targets": [{"expr": "count(argocd_app_info{health_status!=\"Healthy\"}) or (0 * count(argocd_app_info))", "instant": true, "refId": "A"}],
+          "title": "Unhealthy Argo CD apps",
+          "type": "stat"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "description": "Applications whose live state differs from Git for longer than the alert grace period.",
+          "fieldConfig": {"defaults": {"decimals": 0, "noValue": "Unknown", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 1}]}, "unit": "short"}, "overrides": []},
+          "gridPos": {"h": 4, "w": 6, "x": 6, "y": 13},
+          "id": 10,
+          "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "auto"},
+          "targets": [{"expr": "count(argocd_app_info{sync_status!=\"Synced\"}) or (0 * count(argocd_app_info))", "instant": true, "refId": "A"}],
+          "title": "Out-of-sync Argo CD apps",
+          "type": "stat"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "description": "Container restarts in the last fifteen minutes. Bursts often explain fresh degradation.",
+          "fieldConfig": {"defaults": {"decimals": 0, "noValue": "Unknown", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 3}, {"color": "red", "value": 10}]}, "unit": "short"}, "overrides": []},
+          "gridPos": {"h": 4, "w": 6, "x": 12, "y": 13},
+          "id": 11,
+          "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "auto"},
+          "targets": [{"expr": "sum(increase(kube_pod_container_status_restarts_total[15m]))", "instant": true, "refId": "A"}],
+          "title": "Container restarts in 15m",
+          "type": "stat"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "description": "Shortest remaining lifetime across certificates managed by cert-manager.",
+          "fieldConfig": {"defaults": {"decimals": 1, "noValue": "Unknown", "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "orange", "value": 14}, {"color": "green", "value": 30}]}, "unit": "d"}, "overrides": []},
+          "gridPos": {"h": 4, "w": 6, "x": 18, "y": 13},
+          "id": 12,
+          "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "auto"},
+          "targets": [{"expr": "min((certmanager_certificate_expiration_timestamp_seconds - time()) / 86400)", "instant": true, "refId": "A"}],
+          "title": "Shortest certificate lifetime",
+          "type": "stat"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "description": "Argo CD application health distribution. Use this to identify whether degradation is isolated or platform-wide.",
+          "fieldConfig": {"defaults": {"custom": {"drawStyle": "line", "fillOpacity": 10, "lineWidth": 2, "showPoints": "never"}, "unit": "short"}, "overrides": []},
+          "gridPos": {"h": 7, "w": 12, "x": 0, "y": 17},
+          "id": 13,
+          "options": {"legend": {"calcs": ["lastNotNull"], "displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "targets": [{"expr": "sum by (health_status) (argocd_app_info)", "legendFormat": "{{health_status}}", "refId": "A"}],
+          "title": "Application health over time",
+          "type": "timeseries"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "description": "Top workloads by recent restarts. A single noisy workload should not hide behind a cluster total.",
+          "fieldConfig": {"defaults": {"custom": {"drawStyle": "bars", "fillOpacity": 30, "lineWidth": 1, "showPoints": "never"}, "unit": "short"}, "overrides": []},
+          "gridPos": {"h": 7, "w": 12, "x": 12, "y": 17},
+          "id": 14,
+          "options": {"legend": {"calcs": ["sum"], "displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "targets": [{"expr": "topk(8, sum by (namespace, pod) (increase(kube_pod_container_status_restarts_total[1h])))", "legendFormat": "{{namespace}} / {{pod}}", "refId": "A"}],
+          "title": "Workload restart concentration",
+          "type": "timeseries"
+        },
+        {
+          "collapsed": true,
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 24},
+          "id": 15,
+          "panels": [
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "description": "Mean non-idle CPU by node.",
+              "fieldConfig": {"defaults": {"max": 100, "min": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 75}, {"color": "red", "value": 90}]}, "unit": "percent"}, "overrides": []},
+              "gridPos": {"h": 7, "w": 8, "x": 0, "y": 25},
+              "id": 16,
+              "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"}},
+              "targets": [{"expr": "100 * (1 - avg by (instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])))", "legendFormat": "{{instance}}", "refId": "A"}],
+              "title": "Node CPU used",
+              "type": "timeseries"
+            },
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "description": "Memory unavailable to workloads by node.",
+              "fieldConfig": {"defaults": {"max": 100, "min": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 80}, {"color": "red", "value": 90}]}, "unit": "percent"}, "overrides": []},
+              "gridPos": {"h": 7, "w": 8, "x": 8, "y": 25},
+              "id": 17,
+              "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"}},
+              "targets": [{"expr": "100 * (1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)", "legendFormat": "{{instance}}", "refId": "A"}],
+              "title": "Node memory used",
+              "type": "timeseries"
+            },
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "description": "Lowest free-space percentage on persistent local filesystems.",
+              "fieldConfig": {"defaults": {"max": 100, "min": 0, "thresholds": {"mode": "absolute", "steps": [{"color": "red", "value": null}, {"color": "orange", "value": 15}, {"color": "green", "value": 25}]}, "unit": "percent"}, "overrides": []},
+              "gridPos": {"h": 7, "w": 8, "x": 16, "y": 25},
+              "id": 18,
+              "options": {"legend": {"calcs": ["lastNotNull", "min"], "displayMode": "table", "placement": "bottom"}},
+              "targets": [{"expr": "100 * node_filesystem_avail_bytes{fstype!~\"tmpfs|overlay|squashfs\",mountpoint!~\"/run.*\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|overlay|squashfs\",mountpoint!~\"/run.*\"}", "legendFormat": "{{instance}} {{mountpoint}}", "refId": "A"}],
+              "title": "Filesystem headroom",
+              "type": "timeseries"
+            },
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "description": "Policy-denied traffic reported by Hubble, grouped by reason.",
+              "fieldConfig": {"defaults": {"unit": "ops"}, "overrides": []},
+              "gridPos": {"h": 7, "w": 12, "x": 0, "y": 32},
+              "id": 19,
+              "options": {"legend": {"calcs": ["lastNotNull", "sum"], "displayMode": "table", "placement": "bottom"}},
+              "targets": [{"expr": "sum by (reason) (rate(hubble_drop_total{reason=\"POLICY_DENIED\"}[5m]))", "legendFormat": "{{reason}}", "refId": "A"}],
+              "title": "Policy-denied network flows",
+              "type": "timeseries"
+            },
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "description": "Pods unable to schedule or complete. Sustained pending pods indicate capacity or placement pressure.",
+              "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+              "gridPos": {"h": 7, "w": 12, "x": 12, "y": 32},
+              "id": 20,
+              "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"}},
+              "targets": [{"expr": "sum by (phase) (kube_pod_status_phase{phase=~\"Pending|Failed|Unknown\"})", "legendFormat": "{{phase}}", "refId": "A"}],
+              "title": "Non-running workload pressure",
+              "type": "timeseries"
+            }
+          ],
+          "title": "Compute and network pressure",
+          "type": "row"
+        },
+        {
+          "collapsed": true,
+          "gridPos": {"h": 1, "w": 24, "x": 0, "y": 25},
+          "id": 21,
+          "panels": [
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "description": "Longhorn volumes reporting degraded robustness.",
+              "fieldConfig": {"defaults": {"decimals": 0, "noValue": "Unknown", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}, "unit": "short"}, "overrides": []},
+              "gridPos": {"h": 4, "w": 6, "x": 0, "y": 26},
+              "id": 22,
+              "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "auto"},
+              "targets": [{"expr": "count(longhorn_volume_robustness{state=~\"degraded|faulted\"} == 1) or (0 * count(longhorn_volume_robustness{state=\"healthy\"}))", "instant": true, "refId": "A"}],
+              "title": "Degraded Longhorn volumes",
+              "type": "stat"
+            },
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "description": "CloudNativePG collectors currently reporting unhealthy.",
+              "fieldConfig": {"defaults": {"decimals": 0, "noValue": "Unknown", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}, "unit": "short"}, "overrides": []},
+              "gridPos": {"h": 4, "w": 6, "x": 6, "y": 26},
+              "id": 23,
+              "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "auto"},
+              "targets": [{"expr": "count(cnpg_collector_up == 0) or (0 * count(cnpg_collector_up))", "instant": true, "refId": "A"}],
+              "title": "Unhealthy PostgreSQL collectors",
+              "type": "stat"
+            },
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "description": "Velero schedules whose most recent backup did not complete successfully.",
+              "fieldConfig": {"defaults": {"decimals": 0, "noValue": "Unknown", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}, "unit": "short"}, "overrides": []},
+              "gridPos": {"h": 4, "w": 6, "x": 12, "y": 26},
+              "id": 24,
+              "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "auto"},
+              "targets": [{"expr": "sum(velero_backup_last_status{schedule!=\"\"} != bool 1)", "instant": true, "refId": "A"}],
+              "title": "Unsuccessful Velero schedules",
+              "type": "stat"
+            },
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "description": "Embedded-etcd members that do not currently observe a leader.",
+              "fieldConfig": {"defaults": {"decimals": 0, "noValue": "Unknown", "thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "red", "value": 1}]}, "unit": "short"}, "overrides": []},
+              "gridPos": {"h": 4, "w": 6, "x": 18, "y": 26},
+              "id": 25,
+              "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "auto"},
+              "targets": [{"expr": "count(etcd_server_has_leader == 0) or vector(0)", "instant": true, "refId": "A"}],
+              "title": "etcd members without leader",
+              "type": "stat"
+            },
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "description": "Maximum PostgreSQL replication lag by instance.",
+              "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 5}, {"color": "red", "value": 30}]}, "unit": "s"}, "overrides": []},
+              "gridPos": {"h": 7, "w": 12, "x": 0, "y": 30},
+              "id": 26,
+              "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"}},
+              "targets": [{"expr": "max by (namespace, pod) (cnpg_pg_replication_lag)", "legendFormat": "{{namespace}} / {{pod}}", "refId": "A"}],
+              "title": "PostgreSQL replication lag",
+              "type": "timeseries"
+            },
+            {
+              "datasource": {"type": "prometheus", "uid": "prometheus"},
+              "description": "Recent etcd leader changes by member. Repeated changes threaten control-plane stability.",
+              "fieldConfig": {"defaults": {"thresholds": {"mode": "absolute", "steps": [{"color": "green", "value": null}, {"color": "orange", "value": 1}, {"color": "red", "value": 3}]}, "unit": "short"}, "overrides": []},
+              "gridPos": {"h": 7, "w": 12, "x": 12, "y": 30},
+              "id": 27,
+              "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"}},
+              "targets": [{"expr": "increase(etcd_server_leader_changes_seen_total[1h])", "legendFormat": "{{instance}}", "refId": "A"}],
+              "title": "etcd leader changes in 1h",
+              "type": "timeseries"
+            }
+          ],
+          "title": "Data protection and control plane",
+          "type": "row"
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 42,
+      "tags": ["homelab", "overview"],
+      "time": {"from": "now-6h", "to": "now"},
+      "timepicker": {"refresh_intervals": ["30s", "1m", "5m"], "time_options": ["1h", "6h", "24h", "2d", "7d"]},
+      "timezone": "browser",
+      "title": "Homelab / Operations overview",
+      "uid": "homelab-overview",
+      "version": 2
+    }
   nodes.json: |-
-    {"annotations":{"list":[]},"panels":[{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{"unit":"percentunit"},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":0},"id":1,"targets":[{"expr":"1 - avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))","legendFormat":"{{instance}}","refId":"A"}],"title":"CPU utilization","type":"timeseries"},{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{"unit":"percentunit"},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":0},"id":2,"targets":[{"expr":"1 - node_filesystem_avail_bytes{fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|overlay\"}","legendFormat":"{{instance}} {{mountpoint}}","refId":"A"}],"title":"Filesystem utilization","type":"timeseries"}],"refresh":"30s","schemaVersion":42,"tags":["homelab","node"],"time":{"from":"now-6h","to":"now"},"title":"Homelab / Nodes","uid":"homelab-nodes","version":1}
+    {"annotations":{"list":[]},"panels":[{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{"unit":"percentunit"},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":0},"id":1,"targets":[{"expr":"1 - avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m]))","legendFormat":"{{instance}}","refId":"A"}],"title":"CPU utilization","type":"timeseries"},{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{"unit":"percentunit"},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":0},"id":2,"targets":[{"expr":"1 - node_filesystem_avail_bytes{fstype!~\"tmpfs|overlay\"} / node_filesystem_size_bytes{fstype!~\"tmpfs|overlay\"}","legendFormat":"{{instance}} {{mountpoint}}","refId":"A"}],"title":"Filesystem utilization","type":"timeseries"}],"refresh":"30s","schemaVersion":42,"tags":["homelab","node","drilldown"],"time":{"from":"now-6h","to":"now"},"title":"Homelab / Nodes","uid":"homelab-nodes","version":1}
   cilium.json: |-
-    {"annotations":{"list":[]},"panels":[{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":0},"id":1,"targets":[{"expr":"sum(rate(hubble_flows_processed_total[5m])) by (type)","legendFormat":"{{type}}","refId":"A"}],"title":"Hubble flows","type":"timeseries"},{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":0},"id":2,"targets":[{"expr":"sum(rate(hubble_drop_total[5m])) by (reason)","legendFormat":"{{reason}}","refId":"A"}],"title":"Dropped flows","type":"timeseries"}],"refresh":"30s","schemaVersion":42,"tags":["homelab","cilium"],"time":{"from":"now-6h","to":"now"},"title":"Homelab / Cilium and Hubble","uid":"homelab-cilium","version":1}
+    {"annotations":{"list":[]},"panels":[{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":0},"id":1,"targets":[{"expr":"sum(rate(hubble_flows_processed_total[5m])) by (type)","legendFormat":"{{type}}","refId":"A"}],"title":"Hubble flows","type":"timeseries"},{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":0},"id":2,"targets":[{"expr":"sum(rate(hubble_drop_total[5m])) by (reason)","legendFormat":"{{reason}}","refId":"A"}],"title":"Dropped flows","type":"timeseries"}],"refresh":"30s","schemaVersion":42,"tags":["homelab","cilium","drilldown"],"time":{"from":"now-6h","to":"now"},"title":"Homelab / Cilium and Hubble","uid":"homelab-cilium","version":1}
   argocd.json: |-
-    {"annotations":{"list":[]},"panels":[{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":0},"id":1,"targets":[{"expr":"sum(argocd_app_info{health_status=\"Healthy\"})","refId":"A"}],"title":"Healthy applications","type":"stat"},{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":0},"id":2,"targets":[{"expr":"sum(argocd_app_info{sync_status!=\"Synced\"})","refId":"A"}],"title":"Out-of-sync applications","type":"stat"}],"refresh":"30s","schemaVersion":42,"tags":["homelab","argocd"],"time":{"from":"now-6h","to":"now"},"title":"Homelab / Argo CD","uid":"homelab-argocd","version":1}
+    {"annotations":{"list":[]},"description":"Git convergence and application health without inventory-only totals.","panels":[{"datasource":{"type":"prometheus","uid":"prometheus"},"description":"Applications whose current health is not Healthy.","fieldConfig":{"defaults":{"noValue":"Unknown","thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":1},{"color":"red","value":3}]},"unit":"short"},"overrides":[]},"gridPos":{"h":5,"w":6,"x":0,"y":0},"id":1,"targets":[{"expr":"count(argocd_app_info{health_status!=\"Healthy\"}) or (0 * count(argocd_app_info))","instant":true,"refId":"A"}],"title":"Unhealthy applications","type":"stat"},{"datasource":{"type":"prometheus","uid":"prometheus"},"description":"Applications whose live state differs from Git.","fieldConfig":{"defaults":{"noValue":"Unknown","thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":1}]},"unit":"short"},"overrides":[]},"gridPos":{"h":5,"w":6,"x":6,"y":0},"id":2,"targets":[{"expr":"count(argocd_app_info{sync_status!=\"Synced\"}) or (0 * count(argocd_app_info))","instant":true,"refId":"A"}],"title":"Out-of-sync applications","type":"stat"},{"datasource":{"type":"prometheus","uid":"prometheus"},"description":"Application health distribution over the selected time range.","fieldConfig":{"defaults":{"unit":"short"},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":5},"id":3,"targets":[{"expr":"sum by (health_status) (argocd_app_info)","legendFormat":"{{health_status}}","refId":"A"}],"title":"Health distribution","type":"timeseries"},{"datasource":{"type":"prometheus","uid":"prometheus"},"description":"Application synchronization distribution over the selected time range.","fieldConfig":{"defaults":{"unit":"short"},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":5},"id":4,"targets":[{"expr":"sum by (sync_status) (argocd_app_info)","legendFormat":"{{sync_status}}","refId":"A"}],"title":"Synchronization distribution","type":"timeseries"}],"refresh":"30s","schemaVersion":42,"tags":["homelab","argocd","drilldown"],"time":{"from":"now-6h","to":"now"},"title":"Homelab / Argo CD","uid":"homelab-argocd","version":2}
   longhorn.json: |-
-    {"annotations":{"list":[]},"panels":[{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":0},"id":1,"targets":[{"expr":"count(longhorn_volume_state)","refId":"A"}],"title":"Volumes","type":"stat"},{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{"unit":"bytes"},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":0},"id":2,"targets":[{"expr":"sum(longhorn_volume_actual_size_bytes) by (volume)","legendFormat":"{{volume}}","refId":"A"}],"title":"Actual volume size","type":"timeseries"}],"refresh":"30s","schemaVersion":42,"tags":["homelab","longhorn"],"time":{"from":"now-6h","to":"now"},"title":"Homelab / Longhorn","uid":"homelab-longhorn","version":1}
+    {"annotations":{"list":[]},"description":"Storage health, pressure, and recovery signals from Longhorn 1.12 metrics.","panels":[{"datasource":{"type":"prometheus","uid":"prometheus"},"description":"Volumes whose robustness state is degraded or faulted.","fieldConfig":{"defaults":{"noValue":"Unknown","thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"red","value":1}]},"unit":"short"},"overrides":[]},"gridPos":{"h":5,"w":8,"x":0,"y":0},"id":1,"targets":[{"expr":"count(longhorn_volume_robustness{state=~\"degraded|faulted\"} == 1) or (0 * count(longhorn_volume_robustness{state=\"healthy\"}))","instant":true,"refId":"A"}],"title":"Degraded or faulted volumes","type":"stat"},{"datasource":{"type":"prometheus","uid":"prometheus"},"description":"Volumes that have become read-only.","fieldConfig":{"defaults":{"noValue":"Unknown","thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"red","value":1}]},"unit":"short"},"overrides":[]},"gridPos":{"h":5,"w":8,"x":8,"y":0},"id":2,"targets":[{"expr":"sum(longhorn_volume_file_system_read_only) or (0 * count(longhorn_volume_robustness{state=\"healthy\"}))","instant":true,"refId":"A"}],"title":"Read-only volumes","type":"stat"},{"datasource":{"type":"prometheus","uid":"prometheus"},"description":"Replicas in error or unknown runtime state.","fieldConfig":{"defaults":{"noValue":"Unknown","thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"red","value":1}]},"unit":"short"},"overrides":[]},"gridPos":{"h":5,"w":8,"x":16,"y":0},"id":3,"targets":[{"expr":"sum(longhorn_replica_state{state=~\"error|unknown\"} == 1) or (0 * count(longhorn_replica_state{state=\"running\"}))","instant":true,"refId":"A"}],"title":"Unhealthy replicas","type":"stat"},{"datasource":{"type":"prometheus","uid":"prometheus"},"description":"Used Longhorn storage as a percentage of node capacity.","fieldConfig":{"defaults":{"max":100,"min":0,"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":70},{"color":"red","value":85}]},"unit":"percent"},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":5},"id":4,"targets":[{"expr":"100 * longhorn_node_storage_usage_bytes / longhorn_node_storage_capacity_bytes","legendFormat":"{{node}}","refId":"A"}],"title":"Node storage used","type":"timeseries"},{"datasource":{"type":"prometheus","uid":"prometheus"},"description":"Age of the last successful Longhorn backup for each protected volume.","fieldConfig":{"defaults":{"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":25},{"color":"red","value":49}]},"unit":"h"},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":5},"id":5,"targets":[{"expr":"(time() - longhorn_volume_last_backup_at) / 3600","legendFormat":"{{pvc_namespace}} / {{pvc}}","refId":"A"}],"title":"Last successful backup age","type":"timeseries"}],"refresh":"30s","schemaVersion":42,"tags":["homelab","longhorn","drilldown"],"time":{"from":"now-6h","to":"now"},"title":"Homelab / Longhorn","uid":"homelab-longhorn","version":2}
   postgres.json: |-
-    {"annotations":{"list":[]},"panels":[{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":0},"id":1,"targets":[{"expr":"cnpg_collector_up","legendFormat":"{{namespace}}/{{pod}}","refId":"A"}],"title":"CNPG collector health","type":"timeseries"},{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{"unit":"bytes"},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":0},"id":2,"targets":[{"expr":"cnpg_pg_database_size_bytes","legendFormat":"{{datname}}","refId":"A"}],"title":"Database size","type":"timeseries"}],"refresh":"30s","schemaVersion":42,"tags":["homelab","postgres"],"time":{"from":"now-6h","to":"now"},"title":"Homelab / PostgreSQL","uid":"homelab-postgres","version":1}
+    {"annotations":{"list":[]},"description":"PostgreSQL availability, replication, and WAL recovery signals.","panels":[{"datasource":{"type":"prometheus","uid":"prometheus"},"description":"CloudNativePG collectors currently reporting unhealthy.","fieldConfig":{"defaults":{"noValue":"Unknown","thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"red","value":1}]},"unit":"short"},"overrides":[]},"gridPos":{"h":5,"w":8,"x":0,"y":0},"id":1,"targets":[{"expr":"count(cnpg_collector_up == 0) or (0 * count(cnpg_collector_up))","instant":true,"refId":"A"}],"title":"Unhealthy instances","type":"stat"},{"datasource":{"type":"prometheus","uid":"prometheus"},"description":"Maximum replication lag observed across PostgreSQL instances.","fieldConfig":{"defaults":{"noValue":"Unknown","thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":5},{"color":"red","value":30}]},"unit":"s"},"overrides":[]},"gridPos":{"h":5,"w":8,"x":8,"y":0},"id":2,"targets":[{"expr":"max(cnpg_pg_replication_lag)","instant":true,"refId":"A"}],"title":"Maximum replication lag","type":"stat"},{"datasource":{"type":"prometheus","uid":"prometheus"},"description":"Age of the most recent WAL archive on each primary.","fieldConfig":{"defaults":{"noValue":"Unknown","thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":900},{"color":"red","value":3600}]},"unit":"s"},"overrides":[]},"gridPos":{"h":5,"w":8,"x":16,"y":0},"id":3,"targets":[{"expr":"max((1 - cnpg_pg_replication_in_recovery) * (time() - timestamp(cnpg_pg_stat_archiver_seconds_since_last_archival) + cnpg_pg_stat_archiver_seconds_since_last_archival))","instant":true,"refId":"A"}],"title":"WAL archive age","type":"stat"},{"datasource":{"type":"prometheus","uid":"prometheus"},"description":"Replication lag by namespace and PostgreSQL instance.","fieldConfig":{"defaults":{"thresholds":{"mode":"absolute","steps":[{"color":"green","value":null},{"color":"orange","value":5},{"color":"red","value":30}]},"unit":"s"},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":5},"id":4,"targets":[{"expr":"cnpg_pg_replication_lag","legendFormat":"{{namespace}} / {{pod}}","refId":"A"}],"title":"Replication lag","type":"timeseries"},{"datasource":{"type":"prometheus","uid":"prometheus"},"description":"Streaming replicas connected to each primary.","fieldConfig":{"defaults":{"unit":"short"},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":5},"id":5,"targets":[{"expr":"cnpg_pg_replication_streaming_replicas","legendFormat":"{{namespace}} / {{pod}}","refId":"A"}],"title":"Streaming replicas","type":"timeseries"}],"refresh":"30s","schemaVersion":42,"tags":["homelab","postgres","drilldown"],"time":{"from":"now-6h","to":"now"},"title":"Homelab / PostgreSQL","uid":"homelab-postgres","version":2}
   etcd.json: |-
-    {"annotations":{"list":[]},"panels":[{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":0},"id":1,"targets":[{"expr":"sum(etcd_server_has_leader)","refId":"A"}],"title":"Members with leader","type":"stat"},{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":0},"id":2,"targets":[{"expr":"increase(etcd_server_leader_changes_seen_total[1h])","legendFormat":"{{instance}}","refId":"A"}],"title":"Leader changes","type":"timeseries"}],"refresh":"30s","schemaVersion":42,"tags":["homelab","etcd"],"time":{"from":"now-6h","to":"now"},"title":"Homelab / etcd","uid":"homelab-etcd","version":1}
+    {"annotations":{"list":[]},"panels":[{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":0,"y":0},"id":1,"targets":[{"expr":"sum(etcd_server_has_leader)","refId":"A"}],"title":"Members with leader","type":"stat"},{"datasource":{"type":"prometheus","uid":"prometheus"},"fieldConfig":{"defaults":{},"overrides":[]},"gridPos":{"h":8,"w":12,"x":12,"y":0},"id":2,"targets":[{"expr":"increase(etcd_server_leader_changes_seen_total[1h])","legendFormat":"{{instance}}","refId":"A"}],"title":"Leader changes","type":"timeseries"}],"refresh":"30s","schemaVersion":42,"tags":["homelab","etcd","drilldown"],"time":{"from":"now-6h","to":"now"},"title":"Homelab / etcd","uid":"homelab-etcd","version":1}

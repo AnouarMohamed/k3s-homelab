@@ -71,7 +71,7 @@ spec:
             summary: A backup or snapshot job failed
             runbook_url: ${CONFIG_GITLAB_REPOSITORY_URL}/-/blob/main/docs/runbooks/respond-to-platform-alerts.md#backup-failure
         - alert: LonghornVolumeDegraded
-          expr: longhorn_volume_robustness == 2
+          expr: longhorn_volume_robustness{state=~"degraded|faulted"} == 1
           for: 10m
           labels:
             severity: critical

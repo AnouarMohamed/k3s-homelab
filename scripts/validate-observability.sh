@@ -173,13 +173,37 @@ test "$(yq '.groups | length' "${validation_dir}/prometheus-rules.yaml")" -ge 1
 promtool check rules "${validation_dir}/prometheus-rules.yaml"
 
 dashboard_count=0
-while IFS= read -r dashboard; do
+overview_dashboard=''
+while IFS= read -r dashboard_key; do
+  dashboard="$(DASHBOARD_KEY="${dashboard_key}" yq eval-all --unwrapScalar \
+    'select(.kind == "ConfigMap" and .metadata.name == "homelab-platform-dashboards") | .data[strenv(DASHBOARD_KEY)]' \
+    "${validation_dir}/resources-first.yaml")"
   yq --input-format=json '.' <<<"${dashboard}" >/dev/null
+  yq --input-format=json --output-format=yaml \
+    '{"groups": [{"name": "dashboard.promql", "rules": ([.. | select(tag == "!!map" and has("expr")) | .expr] | to_entries | map({"record": ("dashboard_query_" + (.key | tostring)), "expr": .value}))}]}' \
+    <<<"${dashboard}" >"${validation_dir}/dashboard-rules.yaml"
+  promtool check rules "${validation_dir}/dashboard-rules.yaml" >/dev/null
+  if [[ "${dashboard_key}" == overview.json ]]; then
+    overview_dashboard="${dashboard}"
+  fi
   dashboard_count=$((dashboard_count + 1))
 done < <(yq eval-all --unwrapScalar \
-  'select(.kind == "ConfigMap" and .metadata.name == "homelab-platform-dashboards") | .data[]' \
+  'select(.kind == "ConfigMap" and .metadata.name == "homelab-platform-dashboards") | .data | keys | .[]' \
   "${validation_dir}/resources-first.yaml")
 test "${dashboard_count}" = 7
+test -n "${overview_dashboard}"
+test "$(yq --input-format=json '.uid' <<<"${overview_dashboard}")" = homelab-overview
+test "$(yq --input-format=json '[.. | select(tag == "!!map" and (.type == "stat" or .type == "timeseries"))] | length' \
+  <<<"${overview_dashboard}")" -ge 20
+test "$(yq --input-format=json '[.. | select(tag == "!!map" and .type == "stat" and .fieldConfig.defaults.noValue != "Unknown")] | length' \
+  <<<"${overview_dashboard}")" = 0
+test "$(yq --input-format=json '[.. | select(tag == "!!map" and (.type == "stat" or .type == "timeseries") and (.description == null or .description == ""))] | length' \
+  <<<"${overview_dashboard}")" = 0
+if grep -Eq 'Running pods|count\(longhorn_volume_state\)|cnpg_pg_database_size_bytes' \
+  <<<"${overview_dashboard}"; then
+  printf 'Overview dashboard contains a rejected inventory or vanity metric.\n' >&2
+  exit 1
+fi
 
 runbook="${repository_root}/docs/runbooks/respond-to-platform-alerts.md"
 sed -n 's/^## //p' "${runbook}" | \
