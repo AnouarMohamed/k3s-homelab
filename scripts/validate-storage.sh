@@ -123,6 +123,8 @@ test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace ==
   "${validation_dir}/cloudnative-pg-first.yaml")" = 2
 test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace == "velero")] | length' \
   "${validation_dir}/velero-first.yaml")" = 2
+test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace == "velero" and .metadata.name == "allow-backup-operation") | .spec.egress[].ports[]? | select(.protocol == "TCP" and .port == 6443)] | length' \
+  "${validation_dir}/velero-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace == "kube-system")] | length' \
   "${validation_dir}/snapshot-controller-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace == "longhorn-system")] | length' \

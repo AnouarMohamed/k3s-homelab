@@ -40,6 +40,9 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-14 | Argo reconciliation after commit `3ab2bd3` | The corrected Longhorn StorageClass was recreated and began binding the previously blocked volumes. Snapshot Controller's corrected image pulled. Cilium's canonical `enp3s0` and ARP-VIP settings could not run on AWS; self-heal was paused for the root and Cilium Applications and live-only overrides selected the observed `enp39s0` interface and each server's local API. All three agents then became Ready. |
 | 2026-10-14 | Docker Registry API plus `make validate-storage` | The registry returned `sha256:37396519f399536e5f01427d723565ae69294ec3fb5625cf1c87c09eaa9de16b` for the Velero `v1.18.2` multi-platform manifest. Storage validation then passed deterministic rendering, four Helm lints, kubeconform, and kube-linter with the repaired digest. |
 | 2026-10-14 | full Argo reconciliation | Argo CD's application controller was repeatedly OOM-killed at its 1 GiB limit while reconciling 44 Applications and rapidly changing Longhorn resources. Node memory use remained between 51% and 59%; the controller request and limit were increased to 768 MiB and 2 GiB respectively before reconciliation resumed. |
+| 2026-10-14 | rejected AWS node resize | A reviewed OpenTofu plan contained `0 to add, 3 to change, 0 to destroy` for an in-place resize from `m7i-flex.large` to `m7i-flex.xlarge`. AWS rejected all three modifications with `FreeTierRestrictionError`; no type changed. The stopped instances were restarted, all three nodes returned Ready, and the unsupported repository change was discarded. |
+| 2026-10-14 | temporary AWS evidence profile | The allowed 2-vCPU nodes reached 98–99% scheduled CPU requests. Automated Application reconciliation was paused and duplicate control-plane, monitoring, policy, and demo replicas were reduced in live state only. Etcd, all Cilium agents, and all Longhorn managers remained at three replicas; canonical Git manifests remain HA. |
+| 2026-10-14 | Velero rollout at commit `4be3162` | Argo synchronized the repaired `v1.18.2` digest and the image pulled successfully. Velero then timed out reaching the API because its egress policy allowed service port 443 but not Cilium's translated backend port 6443. Adding TCP/6443 made the Deployment Ready; the policy and validator were repaired from that observation. |
 
 ## Defects repaired during this work
 
@@ -82,6 +85,9 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 - Argo CD's application controller exhausted its original 1 GiB limit during the first
   full reconciliation. Its bounded memory request and limit now accommodate the
   observed 44-Application workload without removing the resource ceiling.
+- Velero's default-deny egress policy now permits the Kubernetes API backend port used
+  by Cilium kube-proxy replacement. Storage validation asserts the TCP/6443 rule so the
+  startup failure cannot silently return.
 - Argo CD now propagates child `Application` health so app-of-apps sync waves wait for
   dependencies instead of merely creating every child at once. Restricted projects now
   include only the additional destinations and resource kinds rendered by their pinned
@@ -92,7 +98,8 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 
 ## Not done
 
-- Argo CD and the remaining platform applications have not been bootstrapped in AWS.
+- The 44 Argo CD Applications exist in AWS, but the capacity-bounded evidence profile
+  and placeholder runtime credentials mean the full tree is not yet Healthy.
 - No dashboard has been opened against live telemetry.
 - No screenshot has been captured.
 - kube-vip ARP and Cilium L2 announcement behavior cannot be proven in AWS and remain
