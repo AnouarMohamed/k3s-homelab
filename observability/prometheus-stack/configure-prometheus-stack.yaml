@@ -130,6 +130,8 @@ alertmanager:
 
 grafana:
   replicas: 1
+  deploymentStrategy:
+    type: Recreate
   envFromSecret: grafana-admin
   admin:
     existingSecret: grafana-admin
