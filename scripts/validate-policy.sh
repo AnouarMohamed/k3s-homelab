@@ -141,8 +141,9 @@ test "$(yq eval-all '[select(.kind == "ValidatingPolicy" and .spec.matchConstrai
   "${validation_dir}/audit-first.yaml")" = 5
 test "$(yq eval-all '[select(.kind == "ValidatingPolicy" and .metadata.name == "restrict-image-registries" and .spec.matchConstraints.namespaceSelector.matchLabels."policy.homelab.dev/supply-chain" == "signed")] | length' \
   "${validation_dir}/audit-first.yaml")" = 1
-EXPECTED_SENTINEL_GLOB="registry.gitlab.com/$(yq --unwrapScalar \
-  '.spec.gitlab.projectPath' "${repository_root}/config/homelab.yaml")/homelab-sentinel-*"
+gitlab_project_path="$(yq --unwrapScalar \
+  '.spec.gitlab.projectPath' "${repository_root}/config/homelab.yaml")"
+EXPECTED_SENTINEL_GLOB="registry.gitlab.com/${gitlab_project_path,,}/homelab-sentinel-*"
 export EXPECTED_SENTINEL_GLOB
 test "$(yq eval-all '[select(.kind == "ImageValidatingPolicy" and .spec.attestors[0].cosign.keyless.identities[0].issuer == "https://gitlab.com" and .spec.matchImageReferences[0].glob == strenv(EXPECTED_SENTINEL_GLOB))] | length' \
   "${validation_dir}/audit-first.yaml")" = 1
