@@ -53,6 +53,8 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-15 | live Grafana restart | The dashboard sidecar reached the API and completed its initial sync after the TCP/6443 repair. The replacement pod then exposed a rollout deadlock: the default surge pod could not attach Grafana's single-writer Longhorn volume while the old pod remained. Grafana now uses the chart's verified `Recreate` strategy. |
 | 2026-10-15 | live Grafana sidecar probes | The sidecar logged that its health server listens on 8080 and successfully synchronized dashboards, but Kubernetes repeatedly restarted it because both probes targeted 8084. The probes now target the observed health port and rendering validation locks it in. |
 | 2026-10-15 | Grafana rollout after probe and strategy repairs | The Recreate rollout released and reattached the healthy Longhorn volume, the sidecar completed dashboard synchronization, and the replacement Grafana pod reached `2/2 Running` with zero restarts. |
+| 2026-10-15 | live Grafana datasource API | The overview loaded with 27 panels but Grafana reported zero datasources because `additionalDataSources` requires the disabled datasource sidecar. Native file provisioning now renders Prometheus, Loki, and Tempo definitions directly into Grafana's provisioning ConfigMap. |
+| 2026-10-15 | live datasource health and Prometheus query | Prometheus and Loki returned healthy datasource checks. Tempo initially timed out because its chart exposes the query API on TCP/3200 rather than TCP/3100; after correcting the URL all three checks passed, and Prometheus returned 3 Ready nodes. |
 
 ## Defects repaired during this work
 
@@ -121,13 +123,17 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
   the single-writer Longhorn volume before starting a replacement pod.
 - Grafana's dashboard sidecar readiness and liveness probes use its observed health
   server port 8080.
+- Grafana now provisions all three datasources without relying on a disabled sidecar,
+  and Tempo uses the query API port rendered by its pinned chart.
 
 ## Not done
 
 - The 44 Argo CD Applications exist in AWS, but the capacity-bounded evidence profile
   and placeholder runtime credentials mean the full tree is not yet Healthy.
-- No dashboard has been opened against live telemetry.
-- No screenshot has been captured.
+- The operations dashboard has been opened against live telemetry. Its first draft
+  capture honestly exposed missing Sentinel metrics and intentionally paused Argo CD
+  applications, so it is not accepted as final portfolio evidence.
+- No final screenshot has been committed.
 - kube-vip ARP and Cilium L2 announcement behavior cannot be proven in AWS and remain
   pending broadcast-capable hardware.
 - The seven-day telemetry storage-growth observation has not started.

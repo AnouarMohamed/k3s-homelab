@@ -209,32 +209,36 @@ grafana:
       allow_assign_grafana_admin: true
     users:
       allow_sign_up: false
-  additionalDataSources:
-    - name: Prometheus
-      uid: prometheus
-      type: prometheus
-      access: proxy
-      isDefault: true
-      url: http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090
-    - name: Loki
-      uid: loki
-      type: loki
-      access: proxy
-      url: http://loki.monitoring.svc:3100
-      jsonData:
-        derivedFields:
-          - name: TraceID
-            matcherRegex: 'trace_id=(\w+)'
-            datasourceUid: tempo
-            url: '$${__value.raw}'
-    - name: Tempo
-      uid: tempo
-      type: tempo
-      access: proxy
-      url: http://tempo.monitoring.svc:3100
-      jsonData:
-        tracesToLogsV2:
-          datasourceUid: Loki
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      prune: true
+      datasources:
+        - name: Prometheus
+          uid: prometheus
+          type: prometheus
+          access: proxy
+          isDefault: true
+          url: http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090
+        - name: Loki
+          uid: loki
+          type: loki
+          access: proxy
+          url: http://loki.monitoring.svc:3100
+          jsonData:
+            derivedFields:
+              - name: TraceID
+                matcherRegex: 'trace_id=(\w+)'
+                datasourceUid: tempo
+                url: '$${__value.raw}'
+        - name: Tempo
+          uid: tempo
+          type: tempo
+          access: proxy
+          url: http://tempo.monitoring.svc:3200
+          jsonData:
+            tracesToLogsV2:
+              datasourceUid: Loki
 
 kube-state-metrics:
   image:

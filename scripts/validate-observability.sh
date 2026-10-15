@@ -155,6 +155,20 @@ grafana_ini="$(yq eval-all --unwrapScalar \
   "${validation_dir}/prometheus-stack-first.yaml")"
 grep -Fxq 'preinstall_disabled = true' <<<"${grafana_ini}"
 grep -Fxq 'preinstall_auto_update = false' <<<"${grafana_ini}"
+grafana_datasources="$(yq eval-all --unwrapScalar \
+  'select(.kind == "ConfigMap" and .metadata.name == "monitoring-grafana") | .data["datasources.yaml"]' \
+  "${validation_dir}/prometheus-stack-first.yaml")"
+test "$(yq eval '.apiVersion' - <<<"${grafana_datasources}")" = 1
+test "$(yq eval '.prune' - <<<"${grafana_datasources}")" = true
+test "$(yq eval '.datasources | length' - <<<"${grafana_datasources}")" = 3
+test "$(yq eval '[.datasources[] | select(.uid == "prometheus")] | length' - <<<"${grafana_datasources}")" = 1
+test "$(yq eval '.datasources[] | select(.uid == "prometheus") | .isDefault' - <<<"${grafana_datasources}")" = true
+test "$(yq eval '.datasources[] | select(.uid == "prometheus") | .url' - <<<"${grafana_datasources}")" = \
+  'http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090'
+test "$(yq eval '.datasources[] | select(.uid == "loki") | .url' - <<<"${grafana_datasources}")" = \
+  'http://loki.monitoring.svc:3100'
+test "$(yq eval '.datasources[] | select(.uid == "tempo") | .url' - <<<"${grafana_datasources}")" = \
+  'http://tempo.monitoring.svc:3200'
 test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "monitoring-grafana" and .spec.strategy.type == "Recreate" and .spec.strategy.rollingUpdate == null)] | length' \
   "${validation_dir}/prometheus-stack-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "monitoring-grafana") | .spec.template.spec.containers[] | select(.name == "grafana-sc-dashboard" and .readinessProbe.httpGet.port == 8080 and .livenessProbe.httpGet.port == 8080)] | length' \
