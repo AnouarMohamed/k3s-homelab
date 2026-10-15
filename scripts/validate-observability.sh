@@ -146,6 +146,12 @@ test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace ==
   "${validation_dir}"/*-first.yaml)" -ge 2
 test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.name == "allow-observability") | .spec.egress[].ports[]? | select(.protocol == "TCP" and .port == 6443)] | length' \
   "${validation_dir}/resources-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.name == "allow-observability") | .spec.egress[].ports[]? | select(.protocol == "TCP" and .port == 9100)] | length' \
+  "${validation_dir}/resources-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.name == "allow-observability") | .spec.egress[].ports[]? | select(.protocol == "TCP" and .port == 10250)] | length' \
+  "${validation_dir}/resources-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "Probe" and .metadata.name == "platform-health") | .spec.targets.staticConfig.static[] | select(. == "http://tempo.monitoring.svc:3200/ready")] | length' \
+  "${validation_dir}/resources-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "Prometheus" and .spec.replicas == 2 and .spec.retention == "15d" and .spec.retentionSize == "18GB")] | length' \
   "${validation_dir}/prometheus-stack-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "Alertmanager" and .spec.replicas == 3)] | length' \
@@ -197,6 +203,8 @@ test "$(yq eval-all '[select(.kind == "ClusterRole" and .metadata.name == "sloth
   "${validation_dir}/sloth-first.yaml")" = 3
 test "$(yq eval-all '[select(.kind == "PrometheusRule" and .metadata.name == "homelab-platform-alerts") | .spec.groups[].rules[] | select(.alert == "Watchdog")] | length' \
   "${validation_dir}/resources-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "PrometheusRule" and .metadata.name == "homelab-platform-alerts") | .spec.groups[].rules[] | select(.alert == "BackupJobFailed" and (.expr | contains("kube_job_created < 3600")))] | length' \
+  "${validation_dir}/resources-first.yaml")" = 1
 
 yq eval-all --output-format=yaml \
   '[.] | {"groups": [.[] | select(.kind == "PrometheusRule") | .spec.groups[]]}' \
@@ -228,6 +236,8 @@ test -n "${overview_dashboard}"
 test "$(yq --input-format=json '.uid' <<<"${overview_dashboard}")" = homelab-overview
 test "$(yq --input-format=json '[.. | select(tag == "!!map" and (.type == "stat" or .type == "timeseries"))] | length' \
   <<<"${overview_dashboard}")" -ge 20
+test "$(yq --input-format=json '[.. | select(tag == "!!map" and .expr == "min((certmanager_certificate_expiration_timestamp_seconds > 0) - time()) / 86400")] | length' \
+  <<<"${overview_dashboard}")" = 1
 test "$(yq --input-format=json '[.. | select(tag == "!!map" and .type == "stat" and .fieldConfig.defaults.noValue != "Unknown")] | length' \
   <<<"${overview_dashboard}")" = 0
 test "$(yq --input-format=json '[.. | select(tag == "!!map" and (.type == "stat" or .type == "timeseries") and (.description == null or .description == ""))] | length' \

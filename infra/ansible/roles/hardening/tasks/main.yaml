@@ -46,7 +46,7 @@
     port: "{{ item.1 }}"
     proto: tcp
     comment: homelab cluster peer
-  loop: "{{ homelab_node_addresses | product(['2379', '2380', '4240', '4244', '6443', '10250']) | list }}"
+  loop: "{{ homelab_node_addresses | product(['2379', '2380', '4240', '4244', '6443', '9100', '10250']) | list }}"
   loop_control:
     label: "{{ item.0 }} -> tcp/{{ item.1 }}"
 

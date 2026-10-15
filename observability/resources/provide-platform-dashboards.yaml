@@ -217,7 +217,7 @@ data:
           "gridPos": {"h": 4, "w": 6, "x": 18, "y": 13},
           "id": 12,
           "options": {"colorMode": "value", "graphMode": "none", "justifyMode": "auto", "textMode": "auto"},
-          "targets": [{"expr": "min((certmanager_certificate_expiration_timestamp_seconds - time()) / 86400)", "instant": true, "refId": "A"}],
+          "targets": [{"expr": "min((certmanager_certificate_expiration_timestamp_seconds > 0) - time()) / 86400", "instant": true, "refId": "A"}],
           "title": "Shortest certificate lifetime",
           "type": "stat"
         },

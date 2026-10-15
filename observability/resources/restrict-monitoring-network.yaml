@@ -57,3 +57,7 @@ spec:
           port: 443
         - protocol: TCP
           port: 6443
+        - protocol: TCP
+          port: 9100
+        - protocol: TCP
+          port: 10250

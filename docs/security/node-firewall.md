@@ -11,6 +11,7 @@ addresses are read from the same file.
 | Administrator CIDR | TCP 6443 | Kubernetes API through LAN or WARP private route |
 | Cluster nodes | TCP 2379–2380 | Embedded etcd client and peer traffic |
 | Cluster nodes | TCP 6443 | Kubernetes API and server joins |
+| Cluster nodes | TCP 9100 | Prometheus node-exporter scrape traffic |
 | Cluster nodes | TCP 10250 | Kubelet API |
 | Cluster nodes | TCP 4240, 4244 | Cilium health and Hubble peer traffic |
 | Cluster nodes | UDP 8472 | Cilium VXLAN overlay |

@@ -161,4 +161,4 @@ spec:
       static:
         - http://monitoring-kube-prometheus-prometheus.monitoring.svc:9090/-/healthy
         - http://loki.monitoring.svc:3100/ready
-        - http://tempo.monitoring.svc:3100/ready
+        - http://tempo.monitoring.svc:3200/ready
