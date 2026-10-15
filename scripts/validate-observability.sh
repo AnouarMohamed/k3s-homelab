@@ -144,6 +144,8 @@ done
 
 test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace == "monitoring")] | length' \
   "${validation_dir}"/*-first.yaml)" -ge 2
+test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.name == "allow-observability") | .spec.egress[].ports[]? | select(.protocol == "TCP" and .port == 6443)] | length' \
+  "${validation_dir}/resources-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "Prometheus" and .spec.replicas == 2 and .spec.retention == "15d" and .spec.retentionSize == "18GB")] | length' \
   "${validation_dir}/prometheus-stack-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "Alertmanager" and .spec.replicas == 3)] | length' \
@@ -153,6 +155,14 @@ grafana_ini="$(yq eval-all --unwrapScalar \
   "${validation_dir}/prometheus-stack-first.yaml")"
 grep -Fxq 'preinstall_disabled = true' <<<"${grafana_ini}"
 grep -Fxq 'preinstall_auto_update = false' <<<"${grafana_ini}"
+test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "alloy") | .spec.template.spec.volumes[] | select(.name == "storage" and has("emptyDir"))] | length' \
+  "${validation_dir}/alloy-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "alloy") | .spec.template.spec.containers[] | select(.name == "alloy") | .volumeMounts[] | select(.name == "storage" and .mountPath == "/tmp/alloy")] | length' \
+  "${validation_dir}/alloy-first.yaml")" = 1
+if grep -Fq "\$\${env:" "${validation_dir}/otel-collector-first.yaml"; then
+  printf 'OpenTelemetry Collector contains an escaped, non-expandable environment reference.\n' >&2
+  exit 1
+fi
 test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "blackbox-prometheus-blackbox-exporter" and .spec.replicas == 2)] | length' \
   "${validation_dir}/blackbox-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "alloy" and .spec.replicas == 2)] | length' \

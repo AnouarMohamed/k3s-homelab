@@ -11,6 +11,11 @@ global:
     seccompProfile:
       type: RuntimeDefault
 alloy:
+  storagePath: /tmp/alloy
+  mounts:
+    extra:
+      - name: storage
+        mountPath: /tmp/alloy
   clustering:
     enabled: true
   configMap:
@@ -83,6 +88,10 @@ alloy:
 controller:
   type: deployment
   replicas: 2
+  volumes:
+    extra:
+      - name: storage
+        emptyDir: {}
   podDisruptionBudget:
     enabled: true
     minAvailable: 1

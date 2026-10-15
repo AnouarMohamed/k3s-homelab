@@ -10,14 +10,14 @@ command:
 config:
   extensions:
     health_check:
-      endpoint: $${env:MY_POD_IP}:13133
+      endpoint: ${env:MY_POD_IP}:13133
   receivers:
     otlp:
       protocols:
         grpc:
-          endpoint: $${env:MY_POD_IP}:4317
+          endpoint: ${env:MY_POD_IP}:4317
         http:
-          endpoint: $${env:MY_POD_IP}:4318
+          endpoint: ${env:MY_POD_IP}:4318
   processors:
     batch: {}
     memory_limiter:
@@ -53,7 +53,7 @@ config:
           - pull:
               exporter:
                 prometheus:
-                  host: $${env:MY_POD_IP}
+                  host: ${env:MY_POD_IP}
                   port: 8888
 ports:
   health:

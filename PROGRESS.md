@@ -47,6 +47,8 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-14 | `make aws-validation-apply` for storage expansion | The reviewed plan reported `0 to add, 3 to change, 0 to destroy` and expanded only the three encrypted gp3 root volumes from 100 GiB to 200 GiB. SSM `growpart` and `resize2fs` completed on all nodes; each root filesystem then reported 206,900,281,344 bytes and Longhorn detected about 192 GiB usable with 170–176 GiB available. |
 | 2026-10-15 | live Grafana startup logs | Grafana 13.2.3 downloaded its suggested plugins without explicit versions. The chart configuration now disables suggested-plugin preinstallation and automatic plugin updates; repository validation asserts both rendered settings. |
 | 2026-10-15 | GitLab pipeline `2950068242` | Image builds, Trivy gates, application tests, repository validation, and the deployment package passed. The SBOM job failed before its script because the pinned minimal Syft image contains no shell for GitLab Runner; the equally versioned and digest-pinned upstream debug variant supplies the required shell. |
+| 2026-10-15 | live observability pod logs | Monitoring API clients timed out against the API backend port, Alloy could not create `/tmp/alloy` on its read-only root, and OTel tried to resolve the literal host `${env:MY_POD_IP}`. The network policy, Alloy ephemeral storage, and OTel environment references were repaired from those observed failures. |
+| 2026-10-15 | Longhorn recovery after storage expansion | pc-3's instance manager was initially unschedulable at 94% requested CPU. Reapplying the live-only evidence profile freed capacity; the manager became Running and every attached Longhorn volume changed from degraded or unknown to healthy while retaining three configured replicas. |
 
 ## Defects repaired during this work
 
@@ -105,6 +107,10 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 - GitLab Runner could not start the shell-based SBOM job with Syft's minimal image.
   The job now uses the upstream `v1.54.0-debug` image at its verified multi-platform
   digest; the Syft application version remains unchanged.
+- The monitoring namespace now permits the Cilium-translated Kubernetes API backend
+  port. Alloy receives an ephemeral writable mount at its documented storage path, and
+  OTel's pod-IP environment references remain expandable in the rendered collector
+  configuration.
 
 ## Not done
 
