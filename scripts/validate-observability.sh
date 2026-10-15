@@ -148,6 +148,11 @@ test "$(yq eval-all '[select(.kind == "Prometheus" and .spec.replicas == 2 and .
   "${validation_dir}/prometheus-stack-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "Alertmanager" and .spec.replicas == 3)] | length' \
   "${validation_dir}/prometheus-stack-first.yaml")" = 1
+grafana_ini="$(yq eval-all --unwrapScalar \
+  'select(.kind == "ConfigMap" and .metadata.name == "monitoring-grafana") | .data["grafana.ini"]' \
+  "${validation_dir}/prometheus-stack-first.yaml")"
+grep -Fxq 'preinstall_disabled = true' <<<"${grafana_ini}"
+grep -Fxq 'preinstall_auto_update = false' <<<"${grafana_ini}"
 test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "blackbox-prometheus-blackbox-exporter" and .spec.replicas == 2)] | length' \
   "${validation_dir}/blackbox-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "alloy" and .spec.replicas == 2)] | length' \

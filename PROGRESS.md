@@ -45,6 +45,8 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-14 | Velero rollout at commit `4be3162` | Argo synchronized the repaired `v1.18.2` digest and the image pulled successfully. Velero then timed out reaching the API because its egress policy allowed service port 443 but not Cilium's translated backend port 6443. Adding TCP/6443 made the Deployment Ready; the policy and validator were repaired from that observation. |
 | 2026-10-14 | GitLab pipeline `2948227688` | Both Sentinel multi-architecture images compiled and were pushed to GitLab Container Registry. The build job then failed because its Buildx template emitted no valid digest, so downstream security, signing, promotion, and GHCR jobs were skipped. Digest extraction now parses Buildx's stable `Digest:` output, matching the repository's existing image verifier. |
 | 2026-10-14 | `make aws-validation-apply` for storage expansion | The reviewed plan reported `0 to add, 3 to change, 0 to destroy` and expanded only the three encrypted gp3 root volumes from 100 GiB to 200 GiB. SSM `growpart` and `resize2fs` completed on all nodes; each root filesystem then reported 206,900,281,344 bytes and Longhorn detected about 192 GiB usable with 170–176 GiB available. |
+| 2026-10-15 | live Grafana startup logs | Grafana 13.2.3 downloaded its suggested plugins without explicit versions. The chart configuration now disables suggested-plugin preinstallation and automatic plugin updates; repository validation asserts both rendered settings. |
+| 2026-10-15 | GitLab pipeline `2950068242` | Image builds, Trivy gates, application tests, repository validation, and the deployment package passed. The SBOM job failed before its script because the pinned minimal Syft image contains no shell for GitLab Runner; the equally versioned and digest-pinned upstream debug variant supplies the required shell. |
 
 ## Defects repaired during this work
 
@@ -97,6 +99,12 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 - Registry inspection replaced two image digests that did not exist upstream. The
   Longhorn recurring-job selector is now the JSON string required by the chart rather
   than a YAML list that Helm stringified as a Go map.
+- Grafana's default suggested-plugin installation introduced dependencies outside the
+  repository's pinning controls. Suggested preinstallation and automatic plugin updates
+  are now disabled in the rendered configuration and guarded by validation.
+- GitLab Runner could not start the shell-based SBOM job with Syft's minimal image.
+  The job now uses the upstream `v1.54.0-debug` image at its verified multi-platform
+  digest; the Syft application version remains unchanged.
 
 ## Not done
 

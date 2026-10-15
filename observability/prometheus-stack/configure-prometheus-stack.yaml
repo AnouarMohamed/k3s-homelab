@@ -185,6 +185,9 @@ grafana:
     analytics:
       reporting_enabled: false
       check_for_updates: false
+    plugins:
+      preinstall_disabled: true
+      preinstall_auto_update: false
     security:
       disable_gravatar: true
     server:
