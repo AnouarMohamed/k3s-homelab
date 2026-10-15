@@ -1,0 +1,17 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-controller-kubernetes-api
+  namespace: argo-rollouts
+  labels:
+    app.kubernetes.io/name: argo-rollouts
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: homelab-platform
+spec:
+  endpointSelector:
+    matchLabels:
+      app.kubernetes.io/name: argo-rollouts
+  egress:
+    - toEntities:
+        - kube-apiserver

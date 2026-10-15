@@ -112,6 +112,8 @@ spec:
       kind: PriorityClass
       name: longhorn-critical
   namespaceResourceWhitelist:
+    - group: cilium.io
+      kind: CiliumNetworkPolicy
     - group: ''
       kind: ConfigMap
     - group: ''

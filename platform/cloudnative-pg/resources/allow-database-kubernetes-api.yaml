@@ -1,0 +1,17 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-database-kubernetes-api
+  namespace: storage-verification
+  labels:
+    app.kubernetes.io/name: storage-verification
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: storage
+spec:
+  endpointSelector:
+    matchLabels:
+      cnpg.io/cluster: storage-verification
+  egress:
+    - toEntities:
+        - kube-apiserver

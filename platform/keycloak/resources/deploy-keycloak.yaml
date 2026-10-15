@@ -102,7 +102,9 @@ spec:
             capabilities:
               drop:
                 - ALL
-            readOnlyRootFilesystem: true
+            # The stock image performs Quarkus augmentation during `start` and writes
+            # under /opt/keycloak/lib; the remaining container controls stay enforced.
+            readOnlyRootFilesystem: false
             runAsNonRoot: true
             seccompProfile:
               type: RuntimeDefault

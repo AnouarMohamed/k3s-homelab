@@ -1,7 +1,8 @@
 # Policy exceptions
 
-Exceptions are scoped to infrastructure that cannot technically meet an application
-control. Application namespaces do not inherit these exceptions.
+Exceptions are scoped to workloads that cannot technically meet a control. Application
+namespaces do not inherit infrastructure exceptions; any application exception is named
+explicitly below.
 
 | Component | Limited exception | Reason | Compensating control |
 | --- | --- | --- | --- |
@@ -11,6 +12,7 @@ control. Application namespaces do not inherit these exceptions.
 | node-exporter | Host PID/network and read-only host mounts | Node-level metrics | Monitoring-only scrape path and pinned digest |
 | Alloy | Read-only host log mounts | Node log collection | Default-deny egress and monitoring namespace isolation |
 | Trivy node collector | Host mounts | Node configuration inspection | Disabled; kube-bench remains a human-run hardware check |
+| Keycloak | Writable root filesystem | The pinned stock image performs Quarkus augmentation under `/opt/keycloak/lib` during `start` | Non-root UID, no privilege escalation, all capabilities dropped, RuntimeDefault seccomp, default-deny network policy, pinned digest |
 
 Kyverno application controls select only namespaces labeled
 `policy.homelab.dev/profile: application`. The separate `supply-chain: signed` label is

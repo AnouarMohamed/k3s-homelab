@@ -18,3 +18,4 @@ resources:
   - measure-sentinel-slo.yaml
   - show-sentinel-dashboard.yaml
   - restrict-sentinel-network.yaml
+  - allow-database-kubernetes-api.yaml

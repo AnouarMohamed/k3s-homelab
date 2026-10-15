@@ -20,6 +20,8 @@ spec:
       kind: Namespace
       name: keycloak
   namespaceResourceWhitelist:
+    - group: cilium.io
+      kind: CiliumNetworkPolicy
     - group: ""
       kind: ConfigMap
     - group: ""

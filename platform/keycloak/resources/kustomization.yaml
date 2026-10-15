@@ -15,3 +15,4 @@ resources:
   - preserve-keycloak-availability.yaml
   - monitor-keycloak.yaml
   - restrict-keycloak-network.yaml
+  - allow-database-kubernetes-api.yaml

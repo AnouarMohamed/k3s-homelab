@@ -12,3 +12,4 @@ resources:
   - preserve-vaultwarden-availability.yaml
   - monitor-vaultwarden.yaml
   - restrict-vaultwarden-network.yaml
+  - allow-database-kubernetes-api.yaml

@@ -1,0 +1,16 @@
+---
+apiVersion: cilium.io/v2
+kind: CiliumNetworkPolicy
+metadata:
+  name: allow-database-kubernetes-api
+  labels:
+    app.kubernetes.io/name: sentinel-database
+    app.kubernetes.io/component: network-policy
+    app.kubernetes.io/part-of: homelab-sentinel
+spec:
+  endpointSelector:
+    matchLabels:
+      cnpg.io/cluster: sentinel-database
+  egress:
+    - toEntities:
+        - kube-apiserver

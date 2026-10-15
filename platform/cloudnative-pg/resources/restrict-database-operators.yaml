@@ -32,7 +32,17 @@ spec:
           port: 53
         - protocol: TCP
           port: 53
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: plugin-barman-cloud
+              app.kubernetes.io/instance: barman-cloud
+      ports:
+        - protocol: TCP
+          port: 9090
     - ports:
+        - protocol: TCP
+          port: 8000
         - protocol: TCP
           port: 443
         - protocol: TCP

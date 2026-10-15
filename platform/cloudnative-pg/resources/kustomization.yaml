@@ -7,3 +7,4 @@ resources:
   - schedule-database-backups.yaml
   - restrict-database-operators.yaml
   - restrict-database-network.yaml
+  - allow-database-kubernetes-api.yaml

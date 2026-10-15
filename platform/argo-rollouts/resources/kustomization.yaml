@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - create-argo-rollouts-namespace.yaml
   - restrict-argo-rollouts-network.yaml
+  - allow-controller-kubernetes-api.yaml

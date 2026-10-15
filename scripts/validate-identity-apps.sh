@@ -68,15 +68,19 @@ done
 for manifest in keycloak vaultwarden homepage uptime-kuma; do
   rendered="${validation_dir}/${manifest}-first.yaml"
   test "$(yq eval-all '[select(.kind == "Deployment") | .spec.template.spec.containers[] | select(.resources.requests == null or .resources.limits == null or .livenessProbe == null or .readinessProbe == null)] | length' "${rendered}")" = 0
-  test "$(yq eval-all '[select(.kind == "Deployment") | .spec.template.spec.containers[] | select(.securityContext.runAsNonRoot != true or .securityContext.allowPrivilegeEscalation != false or .securityContext.readOnlyRootFilesystem != true or (.securityContext.capabilities.drop | contains(["ALL"]) | not))] | length' "${rendered}")" = 0
+  test "$(yq eval-all '[select(.kind == "Deployment") | .spec.template.spec.containers[] | select(.securityContext.runAsNonRoot != true or .securityContext.allowPrivilegeEscalation != false or (.securityContext.capabilities.drop | contains(["ALL"]) | not))] | length' "${rendered}")" = 0
+  test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name != "keycloak") | .spec.template.spec.containers[] | select(.securityContext.readOnlyRootFilesystem != true)] | length' "${rendered}")" = 0
   test "$(yq eval-all '[select(.kind == "Deployment") | .spec.template.spec.containers[] | select(.image | test("@sha256:[a-f0-9]{64}$") | not)] | length' "${rendered}")" = 0
   test "$(yq eval-all '[select(.kind == "Deployment")] | length' "${rendered}")" -le "$(yq eval-all '[select(.kind == "NetworkPolicy")] | length' "${rendered}")"
   test "$(yq eval-all '[select(.kind == "HTTPRoute") | select(.spec.parentRefs[0].name != "internal")] | length' "${rendered}")" = 0
 done
 
 test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "keycloak" and .spec.replicas == 2)] | length' "${validation_dir}/keycloak-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "keycloak") | .spec.template.spec.containers[] | select(.securityContext.readOnlyRootFilesystem == false)] | length' "${validation_dir}/keycloak-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "Cluster" and .metadata.name == "keycloak-database" and .spec.instances == 3)] | length' "${validation_dir}/keycloak-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "Cluster" and .metadata.name == "vaultwarden-database" and .spec.instances == 3)] | length' "${validation_dir}/vaultwarden-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "CiliumNetworkPolicy" and .metadata.name == "allow-database-kubernetes-api") | .spec.egress[].toEntities[] | select(. == "kube-apiserver")] | length' "${validation_dir}/keycloak-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "CiliumNetworkPolicy" and .metadata.name == "allow-database-kubernetes-api") | .spec.egress[].toEntities[] | select(. == "kube-apiserver")] | length' "${validation_dir}/vaultwarden-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "PersistentVolumeClaim")] | length' "${validation_dir}/vaultwarden-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "PersistentVolumeClaim")] | length' "${validation_dir}/uptime-kuma-first.yaml")" = 1
 
@@ -92,6 +96,7 @@ for manifest in keycloak vaultwarden homepage uptime-kuma; do
 done
 
 kube-linter lint --exclude dangling-service --exclude minimum-three-replicas \
+  --exclude no-read-only-root-fs \
   "${validation_dir}/keycloak-first.yaml" "${validation_dir}/vaultwarden-first.yaml" \
   "${validation_dir}/homepage-first.yaml" "${validation_dir}/uptime-kuma-first.yaml"
 

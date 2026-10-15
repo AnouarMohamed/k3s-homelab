@@ -45,6 +45,9 @@ render_twice "${repository_root}/observability/sloth" sloth
 render_twice "${repository_root}/apps/sentinel/overlays/prod" sentinel-prod
 render_twice "${repository_root}/apps/sentinel/overlays/staging" sentinel-staging
 
+test "$(yq eval-all '[select(.kind == "CiliumNetworkPolicy" and .metadata.name == "allow-controller-kubernetes-api") | .spec.egress[].toEntities[] | select(. == "kube-apiserver")] | length' \
+  "${validation_dir}/argo-rollouts-first.yaml")" = 1
+
 helm lint "${repository_root}/.cache/sentinel/argo-rollouts" \
   --values "${repository_root}/platform/argo-rollouts/configure-argo-rollouts.yaml"
 
@@ -109,7 +112,9 @@ for environment in prod staging; do
   test "$(yq eval-all '[select(.kind == "Deployment" or .kind == "Rollout") | .spec.template.spec.containers[] | select(.resources.requests == null or .resources.limits == null or .livenessProbe == null or .readinessProbe == null)] | length' "${manifest}")" = 0
   test "$(yq eval-all '[select(.kind == "Deployment" or .kind == "Rollout") | .spec.template.spec.containers[] | select(.securityContext.allowPrivilegeEscalation != false or .securityContext.readOnlyRootFilesystem != true or (.securityContext.capabilities.drop | contains(["ALL"]) | not))] | length' "${manifest}")" = 0
   test "$(yq eval-all '[select(.kind == "Deployment" or .kind == "Rollout") | .spec.template.spec.containers[] | select(.image | test("@sha256:[a-f0-9]{64}$") | not)] | length' "${manifest}")" = 0
+  test "$(yq eval-all '[select(.kind == "Deployment" or .kind == "Rollout") | .spec.template.spec.containers[] | select(.image | test("[A-Z]"))] | length' "${manifest}")" = 0
   test "$(yq eval-all '[select(.kind == "NetworkPolicy")] | length' "${manifest}")" = 3
+  test "$(yq eval-all '[select(.kind == "CiliumNetworkPolicy" and .metadata.name == "allow-database-kubernetes-api") | .spec.egress[].toEntities[] | select(. == "kube-apiserver")] | length' "${manifest}")" = 1
   test "$(yq eval-all '[select(.kind == "HorizontalPodAutoscaler" and .metadata.name == "sentinel-api")] | length' "${manifest}")" = 1
   test "$(yq eval-all '[select(.kind == "PodDisruptionBudget" and .metadata.name == "sentinel-api")] | length' "${manifest}")" = 1
   test "$(yq eval-all '[select(.kind == "PrometheusServiceLevel" and .spec.service == "sentinel-api")] | length' "${manifest}")" = 1

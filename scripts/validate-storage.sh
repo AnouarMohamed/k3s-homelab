@@ -119,8 +119,14 @@ test "$(yq eval-all '[select(.kind == "Schedule")] | length' \
   "${validation_dir}/velero-first.yaml")" = 2
 test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace == "cnpg-system")] | length' \
   "${validation_dir}/cloudnative-pg-first.yaml")" = 2
+test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.name == "restrict-cloudnative-pg-operator") | .spec.egress[] | select(.to[].podSelector.matchLabels."app.kubernetes.io/name" == "plugin-barman-cloud") | .ports[] | select(.protocol == "TCP" and .port == 9090)] | length' \
+  "${validation_dir}/cloudnative-pg-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.name == "restrict-cloudnative-pg-operator") | .spec.egress[].ports[]? | select(.protocol == "TCP" and .port == 8000)] | length' \
+  "${validation_dir}/cloudnative-pg-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace == "storage-verification")] | length' \
   "${validation_dir}/cloudnative-pg-first.yaml")" = 2
+test "$(yq eval-all '[select(.kind == "CiliumNetworkPolicy" and .metadata.name == "allow-database-kubernetes-api" and .metadata.namespace == "storage-verification") | .spec.egress[].toEntities[] | select(. == "kube-apiserver")] | length' \
+  "${validation_dir}/cloudnative-pg-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace == "velero")] | length' \
   "${validation_dir}/velero-first.yaml")" = 2
 test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace == "velero" and .metadata.name == "allow-backup-operation") | .spec.egress[].ports[]? | select(.protocol == "TCP" and .port == 6443)] | length' \
