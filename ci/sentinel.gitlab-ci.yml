@@ -9,6 +9,18 @@
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
+.cosign-shell:
+  image: golang:1.26.9-bookworm@sha256:d9c68c2c51161e12fd77e4c6320687c9cd86e1af1e3ad6e6cd63ff970641453c
+  before_script:
+    - source ci/dependencies.env
+    - cosign_url="https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-amd64"
+    - >-
+      curl --fail --location --silent --show-error --retry 5 --retry-all-errors
+      --output /tmp/cosign "$cosign_url"
+    - printf '%s  %s\n' "$COSIGN_BINARY_SHA256" /tmp/cosign | sha256sum --check --strict
+    - install --mode 0755 /tmp/cosign /usr/local/bin/cosign
+    - cosign version
+
 lint:sentinel:
   extends: .sentinel-rules
   stage: lint
@@ -148,11 +160,8 @@ security:trivy-sentinel:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
 sign:sentinel-gitlab:
+  extends: .cosign-shell
   stage: sign
-  image:
-    name: ghcr.io/sigstore/cosign/cosign:v3.0.5@sha256:be924970ba7438c22e18067dec5637946d6566eac711f5bedd1584e7137008fb
-    entrypoint:
-      - ""
   needs:
     - job: build:sentinel-images
       artifacts: true
@@ -162,9 +171,8 @@ sign:sentinel-gitlab:
   id_tokens:
     SIGSTORE_ID_TOKEN:
       aud: sigstore
-  before_script:
-    - cosign login --username "$CI_REGISTRY_USER" --password "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
   script:
+    - cosign login --username "$CI_REGISTRY_USER" --password "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
     - api_ref="${CI_REGISTRY_IMAGE}/homelab-sentinel-api@$(cat sentinel-api.digest)"
     - worker_ref="${CI_REGISTRY_IMAGE}/homelab-sentinel-worker@$(cat sentinel-worker.digest)"
     - cosign sign --yes --identity-token "$SIGSTORE_ID_TOKEN" "$api_ref"
@@ -281,20 +289,16 @@ mirror:sentinel-ghcr:
     - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
 
 sign:sentinel-ghcr:
+  extends: .cosign-shell
   stage: mirror
-  image:
-    name: ghcr.io/sigstore/cosign/cosign:v3.0.5@sha256:be924970ba7438c22e18067dec5637946d6566eac711f5bedd1584e7137008fb
-    entrypoint:
-      - ""
   needs:
     - job: mirror:sentinel-ghcr
       artifacts: true
   id_tokens:
     SIGSTORE_ID_TOKEN:
       aud: sigstore
-  before_script:
-    - cosign login --username "$GHCR_USERNAME" --password "$GHCR_TOKEN" ghcr.io
   script:
+    - cosign login --username "$GHCR_USERNAME" --password "$GHCR_TOKEN" ghcr.io
     - cosign sign --yes --identity-token "$SIGSTORE_ID_TOKEN" "$(cat ghcr-api.ref)"
     - cosign sign --yes --identity-token "$SIGSTORE_ID_TOKEN" "$(cat ghcr-worker.ref)"
     - cosign sign --yes --identity-token "$SIGSTORE_ID_TOKEN" "$(cat ghcr-deploy.ref)"

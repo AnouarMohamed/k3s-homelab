@@ -539,6 +539,17 @@
         "/^ci/dependencies\\.env$/"
       ],
       "matchStrings": [
+        "COSIGN_VERSION=(?<currentValue>[^\\s]+)"
+      ],
+      "depNameTemplate": "sigstore/cosign",
+      "datasourceTemplate": "github-releases"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/^ci/dependencies\\.env$/"
+      ],
+      "matchStrings": [
         "[A-Z0-9_]+_IMAGE=(?<depName>(?:docker\\.io|gcr\\.io|mirror\\.gcr\\.io|quay\\.io|ghcr\\.io)/[^:\\s]+):(?<currentValue>[^@\\s]+)@(?<currentDigest>sha256:[a-f0-9]{64})"
       ],
       "datasourceTemplate": "docker"

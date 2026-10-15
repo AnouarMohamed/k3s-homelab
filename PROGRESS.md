@@ -55,6 +55,7 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-15 | Grafana rollout after probe and strategy repairs | The Recreate rollout released and reattached the healthy Longhorn volume, the sidecar completed dashboard synchronization, and the replacement Grafana pod reached `2/2 Running` with zero restarts. |
 | 2026-10-15 | live Grafana datasource API | The overview loaded with 27 panels but Grafana reported zero datasources because `additionalDataSources` requires the disabled datasource sidecar. Native file provisioning now renders Prometheus, Loki, and Tempo definitions directly into Grafana's provisioning ConfigMap. |
 | 2026-10-15 | live datasource health and Prometheus query | Prometheus and Loki returned healthy datasource checks. Tempo initially timed out because its chart exposes the query API on TCP/3200 rather than TCP/3100; after correcting the URL all three checks passed, and Prometheus returned 3 Ready nodes. |
+| 2026-10-15 | GitLab pipeline `2950648563` | Every lint, validation, test, image build, package, SBOM, Trivy, and gitleaks job passed. Signing alone failed before its script because the minimal Cosign image has no shell. The replacement job downloads the pinned `v3.0.5` Linux binary in a shell-capable pinned image; its release SHA-256 and reported version were verified locally. |
 
 ## Defects repaired during this work
 
@@ -125,6 +126,9 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
   server port 8080.
 - Grafana now provisions all three datasources without relying on a disabled sidecar,
   and Tempo uses the query API port rendered by its pinned chart.
+- GitLab signing jobs install the checksum-verified Cosign release binary in a pinned,
+  shell-capable image because GitLab Runner cannot execute scripts in Cosign's minimal
+  release container.
 
 ## Not done
 
