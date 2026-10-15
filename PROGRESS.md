@@ -56,6 +56,11 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-15 | live Grafana datasource API | The overview loaded with 27 panels but Grafana reported zero datasources because `additionalDataSources` requires the disabled datasource sidecar. Native file provisioning now renders Prometheus, Loki, and Tempo definitions directly into Grafana's provisioning ConfigMap. |
 | 2026-10-15 | live datasource health and Prometheus query | Prometheus and Loki returned healthy datasource checks. Tempo initially timed out because its chart exposes the query API on TCP/3200 rather than TCP/3100; after correcting the URL all three checks passed, and Prometheus returned 3 Ready nodes. |
 | 2026-10-15 | GitLab pipeline `2950648563` | Every lint, validation, test, image build, package, SBOM, Trivy, and gitleaks job passed. Signing alone failed before its script because the minimal Cosign image has no shell. The replacement job downloads the pinned `v3.0.5` Linux binary in a shell-capable pinned image; its release SHA-256 and reported version were verified locally. |
+| 2026-10-15 | GitLab pipeline `2951442910` | The checksum-verified Cosign 3.0.5 binary signed the Sentinel API image successfully. Its SPDX JSON attestation then failed because the job declared the JSON document as the `spdx` predicate type; Cosign's installed help identifies `spdxjson` as the matching type. |
+| 2026-10-15 | live CNPG recovery | The operator timed out first against the Barman plugin on TCP/9090, then database bootstrap jobs timed out against the reserved Kubernetes API identity. The repaired policies allowed both paths; the storage verification cluster reached 3/3 Ready before its live-only evidence profile was reduced, and Sentinel staging reached a healthy primary. |
+| 2026-10-15 | live Sentinel staging rollout | The lowercase GitLab registry path and current pipeline digests pulled successfully. Argo Rollouts reported the API `Healthy`; one API pod, one probe worker, and the database primary were Ready, and Prometheus scraped all three targets. |
+| 2026-10-15 | live Keycloak startup | The pinned stock image failed Quarkus augmentation on a read-only root filesystem at `/opt/keycloak/lib/quarkus/transformed-bytecode.jar`. With the exact documented writable-root exception, Keycloak completed augmentation, initialized its database, and became Ready. |
+| 2026-10-15 | live Prometheus queries | All three node-exporter targets and all three nodes reported up/Ready, the shortest positive certificate lifetime was about 89 days, and no critical alerts remained after the stale backup-job rule was bounded to failures created within the last hour. |
 
 ## Defects repaired during this work
 
@@ -129,14 +134,26 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 - GitLab signing jobs install the checksum-verified Cosign release binary in a pinned,
   shell-capable image because GitLab Runner cannot execute scripts in Cosign's minimal
   release container.
+- CNPG's operator can reach the Barman plugin and instance-manager port, while database
+  pods use Cilium's `kube-apiserver` entity for bootstrap API access under default deny.
+- Argo Rollouts uses the same explicit Kubernetes API entity instead of relying on
+  ambiguous service translation through a standard IP block.
+- GitLab registry repository names are rendered in lowercase without changing the
+  case-preserving GitLab repository URL or project path.
+- Keycloak's stock image has an exact writable-root exception because its `start`
+  command performs Quarkus augmentation; non-root execution, dropped capabilities,
+  RuntimeDefault seccomp, pinned image, and network isolation remain enforced.
+- Backup job alerts consider only failures created within the last hour, preventing a
+  retained failed Job from masking later successful recurring snapshots indefinitely.
 
 ## Not done
 
 - The 44 Argo CD Applications exist in AWS, but the capacity-bounded evidence profile
   and placeholder runtime credentials mean the full tree is not yet Healthy.
 - The operations dashboard has been opened against live telemetry. Its first draft
-  capture honestly exposed missing Sentinel metrics and intentionally paused Argo CD
-  applications, so it is not accepted as final portfolio evidence.
+  capture exposed missing Sentinel metrics; the repaired capture now has live Sentinel
+  metrics but still shows the intentionally paused Argo CD applications and unreachable
+  public whoami target, so it is not accepted as final portfolio evidence.
 - No final screenshot has been committed.
 - kube-vip ARP and Cilium L2 announcement behavior cannot be proven in AWS and remain
   pending broadcast-capable hardware.
