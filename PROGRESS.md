@@ -49,6 +49,7 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-15 | GitLab pipeline `2950068242` | Image builds, Trivy gates, application tests, repository validation, and the deployment package passed. The SBOM job failed before its script because the pinned minimal Syft image contains no shell for GitLab Runner; the equally versioned and digest-pinned upstream debug variant supplies the required shell. |
 | 2026-10-15 | live observability pod logs | Monitoring API clients timed out against the API backend port, Alloy could not create `/tmp/alloy` on its read-only root, and OTel tried to resolve the literal host `${env:MY_POD_IP}`. The network policy, Alloy ephemeral storage, and OTel environment references were repaired from those observed failures. |
 | 2026-10-15 | Longhorn recovery after storage expansion | pc-3's instance manager was initially unschedulable at 94% requested CPU. Reapplying the live-only evidence profile freed capacity; the manager became Running and every attached Longhorn volume changed from degraded or unknown to healthy while retaining three configured replicas. |
+| 2026-10-15 | GitLab pipeline `2950298571` | The debug Syft image supplied the shell GitLab Runner requires, then the job proved its binary is installed at `/syft` rather than on BusyBox's PATH. The SBOM commands now use that explicit upstream path. |
 
 ## Defects repaired during this work
 
@@ -111,6 +112,8 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
   port. Alloy receives an ephemeral writable mount at its documented storage path, and
   OTel's pod-IP environment references remain expandable in the rendered collector
   configuration.
+- The SBOM job invokes `/syft` explicitly because the upstream debug image keeps the
+  scanner outside BusyBox's default PATH.
 
 ## Not done
 

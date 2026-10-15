@@ -117,8 +117,8 @@ security:sbom-sentinel:
   script:
     - api_ref="${CI_REGISTRY_IMAGE}/homelab-sentinel-api@$(cat sentinel-api.digest)"
     - worker_ref="${CI_REGISTRY_IMAGE}/homelab-sentinel-worker@$(cat sentinel-worker.digest)"
-    - syft "$api_ref" --output spdx-json=sentinel-api-sbom.spdx.json
-    - syft "$worker_ref" --output spdx-json=sentinel-worker-sbom.spdx.json
+    - /syft "$api_ref" --output spdx-json=sentinel-api-sbom.spdx.json
+    - /syft "$worker_ref" --output spdx-json=sentinel-worker-sbom.spdx.json
   artifacts:
     paths:
       - sentinel-api-sbom.spdx.json
