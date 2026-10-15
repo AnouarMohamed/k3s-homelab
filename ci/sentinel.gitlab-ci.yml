@@ -178,11 +178,11 @@ sign:sentinel-gitlab:
     - cosign sign --yes --identity-token "$SIGSTORE_ID_TOKEN" "$api_ref"
     - >-
       cosign attest --yes --identity-token "$SIGSTORE_ID_TOKEN"
-      --predicate sentinel-api-sbom.spdx.json --type spdx "$api_ref"
+      --predicate sentinel-api-sbom.spdx.json --type spdxjson "$api_ref"
     - cosign sign --yes --identity-token "$SIGSTORE_ID_TOKEN" "$worker_ref"
     - >-
       cosign attest --yes --identity-token "$SIGSTORE_ID_TOKEN"
-      --predicate sentinel-worker-sbom.spdx.json --type spdx "$worker_ref"
+      --predicate sentinel-worker-sbom.spdx.json --type spdxjson "$worker_ref"
     - >-
       cosign verify
       --certificate-identity
