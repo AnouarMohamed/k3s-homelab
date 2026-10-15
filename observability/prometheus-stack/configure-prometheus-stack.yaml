@@ -159,13 +159,13 @@ grafana:
     readinessProbe:
       httpGet:
         path: /healthz
-        port: 8084
+        port: 8080
       initialDelaySeconds: 5
       periodSeconds: 10
     livenessProbe:
       httpGet:
         path: /healthz
-        port: 8084
+        port: 8080
       initialDelaySeconds: 10
       periodSeconds: 20
   testFramework:

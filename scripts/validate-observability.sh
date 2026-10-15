@@ -157,6 +157,8 @@ grep -Fxq 'preinstall_disabled = true' <<<"${grafana_ini}"
 grep -Fxq 'preinstall_auto_update = false' <<<"${grafana_ini}"
 test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "monitoring-grafana" and .spec.strategy.type == "Recreate" and .spec.strategy.rollingUpdate == null)] | length' \
   "${validation_dir}/prometheus-stack-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "monitoring-grafana") | .spec.template.spec.containers[] | select(.name == "grafana-sc-dashboard" and .readinessProbe.httpGet.port == 8080 and .livenessProbe.httpGet.port == 8080)] | length' \
+  "${validation_dir}/prometheus-stack-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "alloy") | .spec.template.spec.volumes[] | select(.name == "storage" and has("emptyDir"))] | length' \
   "${validation_dir}/alloy-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.name == "alloy") | .spec.template.spec.containers[] | select(.name == "alloy") | .volumeMounts[] | select(.name == "storage" and .mountPath == "/tmp/alloy")] | length' \

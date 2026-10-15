@@ -51,6 +51,8 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-15 | Longhorn recovery after storage expansion | pc-3's instance manager was initially unschedulable at 94% requested CPU. Reapplying the live-only evidence profile freed capacity; the manager became Running and every attached Longhorn volume changed from degraded or unknown to healthy while retaining three configured replicas. |
 | 2026-10-15 | GitLab pipeline `2950298571` | The debug Syft image supplied the shell GitLab Runner requires, then the job proved its binary is installed at `/syft` rather than on BusyBox's PATH. The SBOM commands now use that explicit upstream path. |
 | 2026-10-15 | live Grafana restart | The dashboard sidecar reached the API and completed its initial sync after the TCP/6443 repair. The replacement pod then exposed a rollout deadlock: the default surge pod could not attach Grafana's single-writer Longhorn volume while the old pod remained. Grafana now uses the chart's verified `Recreate` strategy. |
+| 2026-10-15 | live Grafana sidecar probes | The sidecar logged that its health server listens on 8080 and successfully synchronized dashboards, but Kubernetes repeatedly restarted it because both probes targeted 8084. The probes now target the observed health port and rendering validation locks it in. |
+| 2026-10-15 | Grafana rollout after probe and strategy repairs | The Recreate rollout released and reattached the healthy Longhorn volume, the sidecar completed dashboard synchronization, and the replacement Grafana pod reached `2/2 Running` with zero restarts. |
 
 ## Defects repaired during this work
 
@@ -117,6 +119,8 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
   scanner outside BusyBox's default PATH.
 - Grafana uses `Recreate` deployment semantics so its one-replica Deployment releases
   the single-writer Longhorn volume before starting a replacement pod.
+- Grafana's dashboard sidecar readiness and liveness probes use its observed health
+  server port 8080.
 
 ## Not done
 

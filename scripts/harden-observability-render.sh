@@ -12,7 +12,7 @@ yq eval '
       if .name == "grafana-sc-dashboard" then
         .ports = ((.ports // []) + [{
           "name": "sidecar-health",
-          "containerPort": 8084,
+          "containerPort": 8080,
           "protocol": "TCP"
         }])
       else
