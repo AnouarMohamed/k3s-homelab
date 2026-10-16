@@ -234,13 +234,13 @@ data:
         },
         {
           "datasource": {"type": "prometheus", "uid": "prometheus"},
-          "description": "Top workloads by recent restarts. A single noisy workload should not hide behind a cluster total.",
+          "description": "Top workloads by restart events in each rolling fifteen-minute window. Zero-event workloads are omitted.",
           "fieldConfig": {"defaults": {"custom": {"drawStyle": "bars", "fillOpacity": 30, "lineWidth": 1, "showPoints": "never"}, "unit": "short"}, "overrides": []},
           "gridPos": {"h": 7, "w": 12, "x": 12, "y": 17},
           "id": 14,
-          "options": {"legend": {"calcs": ["sum"], "displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
-          "targets": [{"expr": "topk(8, sum by (namespace, pod) (increase(kube_pod_container_status_restarts_total[1h])))", "legendFormat": "{{namespace}} / {{pod}}", "refId": "A"}],
-          "title": "Workload restart concentration",
+          "options": {"legend": {"calcs": ["lastNotNull", "max"], "displayMode": "table", "placement": "bottom"}, "tooltip": {"mode": "multi", "sort": "desc"}},
+          "targets": [{"expr": "topk(8, sum by (namespace, pod) (increase(kube_pod_container_status_restarts_total[15m])) > 0)", "legendFormat": "{{namespace}} / {{pod}}", "refId": "A"}],
+          "title": "Recent workload restarts",
           "type": "timeseries"
         },
         {
