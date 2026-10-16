@@ -61,6 +61,10 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-15 | live Sentinel staging rollout | The lowercase GitLab registry path and current pipeline digests pulled successfully. Argo Rollouts reported the API `Healthy`; one API pod, one probe worker, and the database primary were Ready, and Prometheus scraped all three targets. |
 | 2026-10-15 | live Keycloak startup | The pinned stock image failed Quarkus augmentation on a read-only root filesystem at `/opt/keycloak/lib/quarkus/transformed-bytecode.jar`. With the exact documented writable-root exception, Keycloak completed augmentation, initialized its database, and became Ready. |
 | 2026-10-15 | live Prometheus queries | All three node-exporter targets and all three nodes reported up/Ready, the shortest positive certificate lifetime was about 89 days, and no critical alerts remained after the stale backup-job rule was bounded to failures created within the last hour. |
+| 2026-10-15 | GitHub Actions run `38795313954` | All six matrix jobs published and keylessly signed the Homepage, Keycloak, Sentinel, Uptime Kuma, Vaultwarden, and whoami deployment packages. Anonymous Registry API requests returned HTTP 200 for every package's `main` manifest. |
+| 2026-10-15 | GitLab pipeline `2952579612` | Repository validation, unit and integration tests, multi-architecture builds, deployment packaging, SBOM generation, Trivy, gitleaks, GitLab Cosign signing and SPDX JSON attestations all passed. After the missing CI credentials were installed, staging and manually approved production digest promotions passed; the GHCR mirror and all three GHCR signing operations also passed. |
+| 2026-10-15 | `scripts/validate-observability.sh` | The refined restart panel passed deterministic rendering, seven Helm lints, kubeconform, ten promtool-checked rules, PromQL parsing, and eight KubeLinter checks. |
+| 2026-10-16 | Cosign `v3.0.5` verification | Independent verification of the GHCR Sentinel API, worker, and deployment-package artifacts at commit `389d17a` validated each GitLab OIDC identity claim, signing certificate, and offline Rekor transparency-log entry. |
 
 ## Defects repaired during this work
 
@@ -140,11 +144,17 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
   ambiguous service translation through a standard IP block.
 - GitLab registry repository names are rendered in lowercase without changing the
   case-preserving GitLab repository URL or project path.
+- The policy validator now derives its expected Sentinel registry glob from that same
+  lowercase path; its earlier mixed-case expectation failed the GitLab repository gate
+  even though the rendered policy was correct.
 - Keycloak's stock image has an exact writable-root exception because its `start`
   command performs Quarkus augmentation; non-root execution, dropped capabilities,
   RuntimeDefault seccomp, pinned image, and network isolation remain enforced.
 - Backup job alerts consider only failures created within the last hour, preventing a
   retained failed Job from masking later successful recurring snapshots indefinitely.
+- The restart-concentration panel now reports a rolling fifteen-minute increase and
+  uses the latest/maximum values instead of summing overlapping range samples, which
+  previously exaggerated historical crash-loop counts.
 
 ## Not done
 
