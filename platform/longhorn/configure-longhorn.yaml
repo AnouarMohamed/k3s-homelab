@@ -36,7 +36,7 @@ defaultSettings:
   defaultReplicaCount: '{"v1":"3","v2":"3"}'
   replicaAutoBalance: best-effort
   storageMinimalAvailablePercentage: 25
-  storageOverProvisioningPercentage: 100
+  storageOverProvisioningPercentage: 125
   upgradeChecker: false
   allowCollectingLonghornUsageMetrics: false
   backupCompressionMethod: lz4

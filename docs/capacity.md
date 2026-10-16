@@ -5,8 +5,8 @@ These are Kubernetes limits, not observed consumption. Hardware utilization rema
 
 | Component | Replicas | CPU requests | Memory requests | Persistent data |
 | --- | ---: | ---: | ---: | ---: |
-| Keycloak | 2 | 500m | 1.5 GiB | CNPG: 36 GiB requested |
-| Vaultwarden | 1 | 100m | 128 MiB | 5 GiB + CNPG: 36 GiB requested |
+| Keycloak | 2 | 500m | 1.5 GiB | CNPG: 45 GiB requested |
+| Vaultwarden | 1 | 100m | 128 MiB | 5 GiB + CNPG: 45 GiB requested |
 | Homepage | 2 | 100m | 256 MiB | None |
 | Uptime Kuma | 1 | 100m | 192 MiB | 5 GiB |
 
@@ -14,3 +14,7 @@ The two CNPG clusters request six database pods at 100m CPU and 256 MiB each. Be
 enable an optional app, I will record 30 days of node CPU, memory, and Longhorn capacity
 and keep at least one node's requested capacity free. Optional apps remain choices in
 `setup.md`, not planned deployments.
+
+Each database instance requests 10 GiB for data and 5 GiB for WAL. Longhorn permits
+logical reservations up to 125% of usable capacity but keeps its 25% physical-free-space
+guard; dashboards and alerts track actual bytes separately from scheduled bytes.

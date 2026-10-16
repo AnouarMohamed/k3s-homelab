@@ -29,7 +29,7 @@ spec:
     size: 5Gi
     storageClass: longhorn-database
   walStorage:
-    size: 2Gi
+    size: 5Gi
     storageClass: longhorn-database
   affinity:
     enablePodAntiAffinity: true
