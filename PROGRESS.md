@@ -66,6 +66,7 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-15 | `scripts/validate-observability.sh` | The refined restart panel passed deterministic rendering, seven Helm lints, kubeconform, ten promtool-checked rules, PromQL parsing, and eight KubeLinter checks. |
 | 2026-10-16 | Cosign `v3.0.5` verification | Independent verification of the GHCR Sentinel API, worker, and deployment-package artifacts at commit `389d17a` validated each GitLab OIDC identity claim, signing certificate, and offline Rekor transparency-log entry. |
 | 2026-10-16 | GitLab pipeline `2954412602` | Lint, full repository validation, unit and integration tests, multi-architecture builds, deployment packaging, SBOM, Trivy, gitleaks, and GitLab signing passed. Staging promotion exposed an expired personal promotion token, and the GHCR mirror exposed a transient worker-index finalization failure; both are recorded as defects rather than a successful pipeline. |
+| 2026-10-16 | GitLab pipeline `2954641982` | A temporary locked project runner completed the pipeline after the free-namespace compute quota blocked shared runners. Lint, repository validation, tests, multi-architecture builds with pinned BuildKit, deployment packaging, SBOM, Trivy, full-history gitleaks, GitLab signing, job-token staging and production promotions, GHCR mirroring, and GHCR signing passed. The temporary runner, GitLab runner record, and credential volume were removed afterward. |
 
 ## Defects repaired during this work
 
