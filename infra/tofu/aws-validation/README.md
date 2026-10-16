@@ -8,6 +8,9 @@ outputs or committed.
 
 K3s v1.36.5+k3s1 obtains S3 credentials from its MinIO provider chain, so the nodes
 use their narrowly scoped EC2 instance role instead of persistent access keys.
+CNPG, Longhorn, and Velero receive a separate temporary IAM user's credentials through
+OpenBao. That user can access only the validation bucket, its key is held only in the
+ignored local OpenTofu state and OpenBao, and destroying this module removes the user.
 
 This is an evidence environment for the canonical three-PC platform, not a replacement
 architecture. AWS VPC networking cannot validate kube-vip ARP ownership or Cilium L2

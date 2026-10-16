@@ -203,6 +203,46 @@ resource "aws_s3_bucket_versioning" "validation" {
   }
 }
 
+data "aws_iam_policy_document" "workload_backups" {
+  statement {
+    actions = ["s3:ListBucket"]
+    effect  = "Allow"
+    resources = [
+      aws_s3_bucket.validation.arn,
+    ]
+  }
+
+  statement {
+    actions = [
+      "s3:AbortMultipartUpload",
+      "s3:DeleteObject",
+      "s3:GetObject",
+      "s3:ListMultipartUploadParts",
+      "s3:PutObject",
+    ]
+    effect    = "Allow"
+    resources = ["${aws_s3_bucket.validation.arn}/*"]
+  }
+}
+
+resource "aws_iam_user" "workload_backups" {
+  name = "k3s-homelab-validation-workload-backups"
+
+  tags = {
+    Name = "k3s-homelab-validation-workload-backups"
+  }
+}
+
+resource "aws_iam_user_policy" "workload_backups" {
+  name   = "validation-bucket-only"
+  policy = data.aws_iam_policy_document.workload_backups.json
+  user   = aws_iam_user.workload_backups.name
+}
+
+resource "aws_iam_access_key" "workload_backups" {
+  user = aws_iam_user.workload_backups.name
+}
+
 resource "aws_instance" "nodes" {
   for_each = local.nodes
 

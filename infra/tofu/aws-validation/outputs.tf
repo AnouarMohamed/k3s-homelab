@@ -22,3 +22,15 @@ output "backup_endpoint" {
   description = "Regional S3 endpoint used by the temporary environment."
   value       = "https://s3.${var.aws_region}.amazonaws.com"
 }
+
+output "workload_backup_access_key_id" {
+  description = "Temporary workload backup access-key ID; consume from local state only."
+  sensitive   = true
+  value       = aws_iam_access_key.workload_backups.id
+}
+
+output "workload_backup_secret_access_key" {
+  description = "Temporary workload backup secret; consume from local state only."
+  sensitive   = true
+  value       = aws_iam_access_key.workload_backups.secret
+}
