@@ -129,8 +129,7 @@ validate: ansible-syntax ansible-templates validate-cni validate-gitops validate
 	@scripts/validate-manifests.sh
 
 security: ## Scan the complete Git history for secrets
-	@gitleaks dir --redact --verbose .
-	@gitleaks git --redact --verbose --log-opts=--all
+	@scripts/scan-secrets.sh
 
 bootstrap: bootstrap-nodes bootstrap-cni bootstrap-gitops bootstrap-platform ## Run the documented bootstrap sequence
 
