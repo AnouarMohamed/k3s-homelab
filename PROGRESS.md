@@ -159,6 +159,9 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 - Sentinel promotion uses GitLab's short-lived, same-project `CI_JOB_TOKEN` push
   permission instead of a stored personal token. GHCR recursive copies retry four
   times with bounded delays before failing a genuine registry error.
+- Sentinel's Buildx builder now uses a release-and-digest-pinned BuildKit image and a
+  bounded bootstrap retry. A cold temporary runner exposed the former implicit
+  `buildx-stable-1` pull when Docker Hub reset that unpinned download.
 
 ## Not done
 

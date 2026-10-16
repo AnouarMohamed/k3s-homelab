@@ -65,9 +65,22 @@ build:sentinel-images:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
   before_script:
+    - source ci/dependencies.env
     - printf '%s' "$CI_REGISTRY_PASSWORD" | docker login --username "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
-    - docker buildx create --driver docker-container --use --name sentinel-builder
-    - docker buildx inspect --bootstrap
+    - >-
+      docker buildx create --driver docker-container --use --name sentinel-builder
+      --driver-opt "image=${BUILDKIT_IMAGE}"
+    - |-
+      for attempt in 1 2 3 4; do
+        if docker buildx inspect --bootstrap; then
+          break
+        fi
+        if [ "$attempt" -eq 4 ]; then
+          printf 'BuildKit bootstrap failed after %s attempts.\n' "$attempt" >&2
+          exit 1
+        fi
+        sleep $((attempt * 5))
+      done
   script:
     - api_ref="${CI_REGISTRY_IMAGE}/homelab-sentinel-api:${CI_COMMIT_SHA}"
     - worker_ref="${CI_REGISTRY_IMAGE}/homelab-sentinel-worker:${CI_COMMIT_SHA}"
