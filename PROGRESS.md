@@ -75,6 +75,9 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-16 | Longhorn and Velero validation backups | Longhorn reported its S3 target available, created a ready snapshot of the storage-verification volume, and completed a full backup at 100%. Velero reported its BackupStorageLocation available and completed the namespace backup with zero errors and zero warnings. |
 | 2026-10-16 | `make lint validate security` | Lint and the complete offline repository validation suite passed. The first directory secret scan correctly found the ignored live AWS credentials in local state; the scanner was repaired to inspect tracked and non-ignored files plus all Git history, then reported zero findings across repository-visible content and 85 commits. |
 | 2026-10-16 | GitLab pipeline `2955865113` | GitLab rejected every job before execution because the namespace compute quota was exhausted. This is recorded as an external CI-capacity failure, not a test result; the same commit passed the complete local gate above. |
+| 2026-10-16 | live Sentinel metrics and rollout status | `min(sentinel_probe_up)` returned 1 and the OpenTelemetry collector accepted spans at about 0.233 per second over five minutes. Rollout revision `688c469997` reached `Healthy` at step 7; both revision-4 AnalysisRuns were `Successful`. The retained revision-3 AnalysisRun remains visible as an earlier error. |
+| 2026-10-16 | `make validate-sentinel validate-observability` | Sentinel tests, deterministic rendering, Helm lint, kubeconform, KubeLinter, promtool, and all seven observability chart lints passed after correcting the OTLP trace path and allowing Argo Rollouts to query Prometheus on TCP/9090. |
+| 2026-10-16 | live AWS evidence capture | Five 1920-by-1080 screenshots were captured from the running cluster and visually checked for credentials and identifying addresses. SHA-256: Argo CD `d9aa563f29a8f442936f3ad36cc1f74d86de811359a47ae7a2a8cc3b4b05becf`; Argo Rollouts `41b425ef5cd95c9f3de1bdfff4c2966ad3b2f3fae974c357e7c2c0eb68334459`; Grafana `b61f813714387f2c3de032735db4edf215ab5d926b3a1553c1bd5f4ed3346882`; Hubble `c386b830d55d7f286b3ea81d62302bedf51df1ff702f0f864df3334d9cb14b1c`; Sentinel `547e2911b7939030a56ad5b249f60579d42790dc79112a5f3cdb9a473d16ef66`. The frames preserve observed degraded and out-of-sync states rather than presenting them as healthy. |
 
 ## Defects repaired during this work
 
@@ -188,11 +191,10 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 
 - The 44 Argo CD Applications exist in AWS, but the capacity-bounded evidence profile
   and placeholder runtime credentials mean the full tree is not yet Healthy.
-- The operations dashboard has been opened against live telemetry. Its first draft
-  capture exposed missing Sentinel metrics; the repaired capture now has live Sentinel
-  metrics but still shows the intentionally paused Argo CD applications and unreachable
-  public whoami target, so it is not accepted as final portfolio evidence.
-- No final screenshot has been committed.
+- Five live AWS screenshots cover the Argo CD tree, operations dashboard, Hubble flow
+  map, Sentinel status page, and successful canary. They intentionally retain the
+  evidence profile's Argo drift and unavailable placeholder public edge. The DR restore
+  screenshot remains pending the human-run destructive recovery drill.
 - kube-vip ARP and Cilium L2 announcement behavior cannot be proven in AWS and remain
   pending broadcast-capable hardware.
 - The seven-day telemetry storage-growth observation has not started.

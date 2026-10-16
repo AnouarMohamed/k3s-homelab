@@ -7,12 +7,12 @@ public addresses, tokens, usernames, and notification destinations before commit
 
 | File | Required view | Status |
 | --- | --- | --- |
-| `argocd-application-tree.png` | Root application tree with health and sync state | PENDING AWS |
-| `grafana-operations-overview.png` | Current impact and change/delivery sections | PENDING AWS |
-| `hubble-service-map.png` | Selected application traffic and policy verdicts | PENDING AWS |
-| `sentinel-status-page.png` | Public-safe selected service status | PENDING AWS |
-| `argo-rollouts-canary.png` | Canary steps, analysis, and stable revision | PENDING AWS |
-| `dr-restore-result.png` | Completed restore object plus source evidence | PENDING AWS |
+| `argocd-application-tree.png` | Root application tree with health and sync state | CAPTURED AWS 2026-10-16 |
+| `grafana-operations-overview.png` | Current impact and change/delivery sections | CAPTURED AWS 2026-10-16 |
+| `hubble-service-map.png` | Selected application traffic and policy verdicts | CAPTURED AWS 2026-10-16 |
+| `sentinel-status-page.png` | Public-safe selected service status | CAPTURED AWS 2026-10-16 |
+| `argo-rollouts-canary.png` | Canary steps, analysis, and stable revision | CAPTURED AWS 2026-10-16 |
+| `dr-restore-result.png` | Completed restore object plus source evidence | PENDING HUMAN DR DRILL |
 
 Before committing an image:
 
