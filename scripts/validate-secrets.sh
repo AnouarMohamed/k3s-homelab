@@ -59,9 +59,10 @@ extract_schema() {
 extract_schema Certificate v1 "${validation_dir}/cert-manager.yaml"
 extract_schema Issuer v1 "${validation_dir}/cert-manager.yaml"
 extract_schema ClusterSecretStore v1 "${validation_dir}/external-secrets-first.yaml"
+extract_schema ClusterExternalSecret v1 "${validation_dir}/external-secrets-first.yaml"
 
 yq eval-all \
-  'select(.kind == "Certificate" or .kind == "Issuer" or .kind == "ClusterSecretStore")' \
+  'select(.kind == "Certificate" or .kind == "Issuer" or .kind == "ClusterSecretStore" or .kind == "ClusterExternalSecret")' \
   "${validation_dir}/prerequisites-first.yaml" \
   "${validation_dir}/runtime-secrets-first.yaml" >"${validation_dir}/custom-resources.yaml"
 kubeconform -strict -summary \
@@ -87,6 +88,10 @@ test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace ==
 test "$(yq eval-all '[select(.kind == "Deployment" and .metadata.namespace == "external-secrets" and .spec.replicas == 2)] | length' \
   "${validation_dir}/external-secrets-first.yaml")" = 3
 test "$(yq eval-all '[select(.kind == "ClusterSecretStore" and .metadata.name == "openbao" and .spec.provider.vault.auth.kubernetes.serviceAccountRef.audiences[0] == "openbao")] | length' \
+  "${validation_dir}/runtime-secrets-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "ClusterSecretStore" and .metadata.name == "openbao-ca-source" and .spec.provider.kubernetes.remoteNamespace == "openbao")] | length' \
+  "${validation_dir}/runtime-secrets-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "ClusterExternalSecret" and .metadata.name == "replicate-openbao-ca" and .spec.externalSecretSpec.data[0].remoteRef.property == "ca.crt")] | length' \
   "${validation_dir}/runtime-secrets-first.yaml")" = 1
 test "$(yq '.spec.clusterResourceWhitelist[] | select(has("name"))' \
   "${repository_root}/clusters/homelab/projects/restrict-runtime-secrets-project.yaml")" = ""

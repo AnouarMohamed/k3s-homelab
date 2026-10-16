@@ -7,6 +7,7 @@ metadata:
     app.kubernetes.io/name: vaultwarden
     app.kubernetes.io/component: application
     app.kubernetes.io/part-of: homelab-applications
+    runtime-secrets.homelab.dev/openbao-ca: "true"
     policy.homelab.dev/profile: application
     pod-security.kubernetes.io/enforce: restricted
     pod-security.kubernetes.io/enforce-version: v1.36

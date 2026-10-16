@@ -7,6 +7,7 @@ metadata:
     app.kubernetes.io/name: sentinel
     app.kubernetes.io/component: application
     app.kubernetes.io/part-of: homelab-sentinel
+    runtime-secrets.homelab.dev/openbao-ca: "true"
     policy.homelab.dev/profile: application
     policy.homelab.dev/supply-chain: signed
     pod-security.kubernetes.io/enforce: restricted

@@ -7,6 +7,7 @@ metadata:
     app.kubernetes.io/name: monitoring
     app.kubernetes.io/component: observability
     app.kubernetes.io/part-of: homelab
+    runtime-secrets.homelab.dev/openbao-ca: "true"
     pod-security.kubernetes.io/enforce: privileged
     pod-security.kubernetes.io/enforce-version: v1.36
     pod-security.kubernetes.io/audit: restricted

@@ -34,7 +34,8 @@ source "${repository_root}/platform/argocd/dependencies.env"
 set +a
 "${repository_root}/scripts/fetch-argocd-dependencies.sh"
 
-kubectl create namespace argocd --dry-run=client --output=yaml | kubectl apply -f -
+kubectl apply -f \
+  "${repository_root}/clusters/homelab/bootstrap/argocd/create-argocd-namespace.yaml"
 kubectl create secret generic sops-age \
   --namespace argocd \
   --from-file="keys.txt=${SOPS_AGE_KEY_FILE}" \

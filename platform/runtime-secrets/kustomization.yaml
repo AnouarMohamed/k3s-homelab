@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - authorize-openbao-authentication.yaml
   - connect-external-secrets-to-openbao.yaml
+  - replicate-openbao-ca.yaml

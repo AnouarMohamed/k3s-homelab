@@ -60,8 +60,7 @@ spec:
       version: v2
       caProvider:
         type: Secret
-        namespace: openbao
-        name: openbao-server-tls
+        name: openbao-ca
         key: ca.crt
       auth:
         kubernetes:
