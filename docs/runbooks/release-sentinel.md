@@ -3,8 +3,8 @@
 ## Preconditions
 
 - The default branch is protected and the GitLab runner supports privileged BuildKit.
-- `GITLAB_PROMOTION_TOKEN`, `GHCR_USERNAME`, `GHCR_TOKEN`, and `GHCR_NAMESPACE` are
-  protected and masked CI variables.
+- Same-project CI job-token repository pushes are enabled; `GHCR_USERNAME`,
+  `GHCR_TOKEN`, and `GHCR_NAMESPACE` are protected and masked CI variables.
 - The pipeline's test, integration, build, SBOM, Trivy, and GitLab signing jobs passed.
 
 ## Staging

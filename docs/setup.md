@@ -18,15 +18,16 @@ I work through this list before I touch the three PCs or any external account.
 - [ ] Re-encrypt every bootstrap placeholder with that recipient.
 - [ ] Create a GitLab deploy token with `read_repository` only. Encrypt its username
   and token in the repository-credential SOPS file.
-- [ ] Add protected and masked CI variables: `GITLAB_PROMOTION_TOKEN` with repository
-  write scope, `GHCR_USERNAME`, a GitHub classic PAT in `GHCR_TOKEN` with only
-  `write:packages`, and the lowercase owner in `GHCR_NAMESPACE`.
+- [ ] Enable **Settings > CI/CD > Job token permissions > Allow Git push requests to
+  the repository**. Promotion jobs authenticate with their short-lived `CI_JOB_TOKEN`.
+- [ ] Add protected and masked CI variables: `GHCR_USERNAME`, a GitHub classic PAT in
+  `GHCR_TOKEN` with only `write:packages`, and the lowercase owner in `GHCR_NAMESPACE`.
 - [ ] Use a protected GitLab runner that permits the pinned Docker-in-Docker service.
   Do not expose it to untrusted forks.
 - [ ] Limit the manual production promotion job to my GitLab account.
 - [ ] Protect the `main` branch and require merge requests for normal changes.
-- [ ] Disable direct pushes to `main` for users. Allow only the promotion bot token to
-  push digest updates.
+- [ ] Disable direct pushes to `main` for normal users. The same-project CI job token
+  may push only the digest-lock commits produced by the protected promotion jobs.
 
 ## Cloudflare and S3
 

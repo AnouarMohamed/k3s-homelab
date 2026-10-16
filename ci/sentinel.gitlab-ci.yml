@@ -203,10 +203,9 @@ sign:sentinel-gitlab:
       artifacts: true
     - job: sign:sentinel-gitlab
   before_script:
-    - test -n "$GITLAB_PROMOTION_TOKEN"
     - git config user.name "Sentinel promotion bot"
     - git config user.email "sentinel-promotion@users.noreply.gitlab.com"
-    - git remote set-url origin "https://oauth2:${GITLAB_PROMOTION_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
+    - git remote set-url origin "https://gitlab-ci-token:${CI_JOB_TOKEN}@${CI_SERVER_HOST}/${CI_PROJECT_PATH}.git"
     - git fetch origin "$CI_DEFAULT_BRANCH"
     - git checkout -B "$CI_DEFAULT_BRANCH" "origin/$CI_DEFAULT_BRANCH"
   script:
@@ -269,8 +268,22 @@ mirror:sentinel-ghcr:
     - api_target="ghcr.io/${GHCR_NAMESPACE}/homelab-sentinel-api:${CI_COMMIT_SHA}"
     - worker_target="ghcr.io/${GHCR_NAMESPACE}/homelab-sentinel-worker:${CI_COMMIT_SHA}"
     - deploy_target="ghcr.io/${GHCR_NAMESPACE}/homelab-sentinel-deploy:${CI_COMMIT_SHA}"
-    - oras copy --recursive "$api_source" "$api_target"
-    - oras copy --recursive "$worker_source" "$worker_target"
+    - |-
+      copy_with_retry() {
+        source_ref="$1"
+        target_ref="$2"
+        attempt=1
+        until oras copy --recursive "$source_ref" "$target_ref"; do
+          if [ "$attempt" -ge 4 ]; then
+            printf 'OCI copy failed after %s attempts: %s\n' "$attempt" "$target_ref" >&2
+            return 1
+          fi
+          attempt=$((attempt + 1))
+          sleep $((attempt * 5))
+        done
+      }
+      copy_with_retry "$api_source" "$api_target"
+      copy_with_retry "$worker_source" "$worker_target"
     - >-
       oras push "$deploy_target"
       --artifact-type application/vnd.anouar.homelab.sentinel.deployment.v1+tar

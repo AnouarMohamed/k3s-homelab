@@ -65,6 +65,7 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-15 | GitLab pipeline `2952579612` | Repository validation, unit and integration tests, multi-architecture builds, deployment packaging, SBOM generation, Trivy, gitleaks, GitLab Cosign signing and SPDX JSON attestations all passed. After the missing CI credentials were installed, staging and manually approved production digest promotions passed; the GHCR mirror and all three GHCR signing operations also passed. |
 | 2026-10-15 | `scripts/validate-observability.sh` | The refined restart panel passed deterministic rendering, seven Helm lints, kubeconform, ten promtool-checked rules, PromQL parsing, and eight KubeLinter checks. |
 | 2026-10-16 | Cosign `v3.0.5` verification | Independent verification of the GHCR Sentinel API, worker, and deployment-package artifacts at commit `389d17a` validated each GitLab OIDC identity claim, signing certificate, and offline Rekor transparency-log entry. |
+| 2026-10-16 | GitLab pipeline `2954412602` | Lint, full repository validation, unit and integration tests, multi-architecture builds, deployment packaging, SBOM, Trivy, gitleaks, and GitLab signing passed. Staging promotion exposed an expired personal promotion token, and the GHCR mirror exposed a transient worker-index finalization failure; both are recorded as defects rather than a successful pipeline. |
 
 ## Defects repaired during this work
 
@@ -155,6 +156,9 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 - The restart-concentration panel now reports a rolling fifteen-minute increase and
   uses the latest/maximum values instead of summing overlapping range samples, which
   previously exaggerated historical crash-loop counts.
+- Sentinel promotion uses GitLab's short-lived, same-project `CI_JOB_TOKEN` push
+  permission instead of a stored personal token. GHCR recursive copies retry four
+  times with bounded delays before failing a genuine registry error.
 
 ## Not done
 
