@@ -47,6 +47,8 @@ render_twice "${repository_root}/apps/sentinel/overlays/staging" sentinel-stagin
 
 test "$(yq eval-all '[select(.kind == "CiliumNetworkPolicy" and .metadata.name == "allow-controller-kubernetes-api") | .spec.egress[].toEntities[] | select(. == "kube-apiserver")] | length' \
   "${validation_dir}/argo-rollouts-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.name == "argo-rollouts-controller") | .spec.egress[] | select(.to[].namespaceSelector.matchLabels."kubernetes.io/metadata.name" == "monitoring") | .ports[] | select(.protocol == "TCP" and .port == 9090)] | length' \
+  "${validation_dir}/argo-rollouts-first.yaml")" = 1
 
 helm lint "${repository_root}/.cache/sentinel/argo-rollouts" \
   --values "${repository_root}/platform/argo-rollouts/configure-argo-rollouts.yaml"
@@ -113,6 +115,7 @@ for environment in prod staging; do
   test "$(yq eval-all '[select(.kind == "Deployment" or .kind == "Rollout") | .spec.template.spec.containers[] | select(.securityContext.allowPrivilegeEscalation != false or .securityContext.readOnlyRootFilesystem != true or (.securityContext.capabilities.drop | contains(["ALL"]) | not))] | length' "${manifest}")" = 0
   test "$(yq eval-all '[select(.kind == "Deployment" or .kind == "Rollout") | .spec.template.spec.containers[] | select(.image | test("@sha256:[a-f0-9]{64}$") | not)] | length' "${manifest}")" = 0
   test "$(yq eval-all '[select(.kind == "Deployment" or .kind == "Rollout") | .spec.template.spec.containers[] | select(.image | test("[A-Z]"))] | length' "${manifest}")" = 0
+  test "$(yq eval-all '[select(.kind == "Deployment" or .kind == "Rollout") | .spec.template.spec.containers[].env[]? | select(.name == "OTEL_EXPORTER_OTLP_ENDPOINT" and .value == "http://otel-collector-opentelemetry-collector.monitoring.svc:4318/v1/traces")] | length' "${manifest}")" = 2
   test "$(yq eval-all '[select(.kind == "NetworkPolicy")] | length' "${manifest}")" = 3
   test "$(yq eval-all '[select(.kind == "CiliumNetworkPolicy" and .metadata.name == "allow-database-kubernetes-api") | .spec.egress[].toEntities[] | select(. == "kube-apiserver")] | length' "${manifest}")" = 1
   test "$(yq eval-all '[select(.kind == "HorizontalPodAutoscaler" and .metadata.name == "sentinel-api")] | length' "${manifest}")" = 1

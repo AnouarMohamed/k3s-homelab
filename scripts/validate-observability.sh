@@ -144,6 +144,8 @@ done
 
 test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace == "monitoring")] | length' \
   "${validation_dir}"/*-first.yaml)" -ge 2
+test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.name == "allow-observability") | .spec.ingress[] | select(.from[].namespaceSelector.matchLabels."kubernetes.io/metadata.name" == "argo-rollouts") | .ports[] | select(.protocol == "TCP" and .port == 9090)] | length' \
+  "${validation_dir}/resources-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.name == "allow-observability") | .spec.egress[].ports[]? | select(.protocol == "TCP" and .port == 6443)] | length' \
   "${validation_dir}/resources-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.name == "allow-observability") | .spec.egress[].ports[]? | select(.protocol == "TCP" and .port == 9100)] | length' \

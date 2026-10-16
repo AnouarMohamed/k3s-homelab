@@ -40,6 +40,13 @@ spec:
           port: 4317
         - protocol: TCP
           port: 4318
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: argo-rollouts
+      ports:
+        - protocol: TCP
+          port: 9090
   egress:
     - to:
         - namespaceSelector:
