@@ -5,6 +5,7 @@ IFS= read -r BAO_TOKEN
 export BAO_TOKEN
 export BAO_ADDR=https://127.0.0.1:8200
 export BAO_CACERT=/openbao/tls/ca.crt
+export BAO_TLS_SERVER_NAME=openbao.openbao.svc
 
 if ! bao secrets list -format=json | grep -q '"secret/"'; then
   bao secrets enable -path=secret -version=2 kv

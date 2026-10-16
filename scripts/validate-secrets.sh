@@ -81,6 +81,8 @@ done
 
 test "$(yq eval-all '[select(.kind == "StatefulSet" and .metadata.name == "openbao" and .spec.replicas == 3 and (.spec.volumeClaimTemplates | length) == 2)] | length' \
   "${validation_dir}/openbao-first.yaml")" = 1
+test "$(yq eval-all '[select(.kind == "StatefulSet" and .metadata.name == "openbao") | .spec.template.spec.containers[] | select(.name == "openbao" and .securityContext.readOnlyRootFilesystem == true and (.volumeMounts[] | select(.name == "tmp" and .mountPath == "/tmp")))] | length' \
+  "${validation_dir}/openbao-first.yaml")" = 1
 test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.name == "openbao")] | length' \
   "${validation_dir}/openbao-first.yaml")" -ge 1
 test "$(yq eval-all '[select(.kind == "NetworkPolicy" and .metadata.namespace == "external-secrets")] | length' \

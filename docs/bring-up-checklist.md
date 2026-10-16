@@ -126,6 +126,7 @@ kubectl -n openbao get pods,pvc -o wide
 kubectl -n openbao get certificate openbao-server
 kubectl exec -n openbao openbao-0 -- \
   env BAO_ADDR=https://127.0.0.1:8200 BAO_CACERT=/openbao/tls/ca.crt \
+  BAO_TLS_SERVER_NAME=openbao.openbao.svc \
   bao status
 kubectl get clustersecretstore openbao
 kubectl -n external-secrets get deploy,pod -o wide

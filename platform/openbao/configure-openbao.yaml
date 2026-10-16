@@ -50,6 +50,9 @@ server:
     whenDeleted: Retain
     whenScaled: Retain
   volumes:
+    - name: tmp
+      emptyDir:
+        sizeLimit: 64Mi
     - name: tls
       secret:
         secretName: openbao-server-tls
@@ -58,6 +61,8 @@ server:
         name: openbao-runtime-configuration
         defaultMode: 360
   volumeMounts:
+    - name: tmp
+      mountPath: /tmp
     - name: tls
       mountPath: /openbao/tls
       readOnly: true
@@ -133,7 +138,6 @@ server:
       setNodeId: true
       config: |
         ui = true
-        disable_mlock = true
 
         listener "tcp" {
           address = "[::]:8200"

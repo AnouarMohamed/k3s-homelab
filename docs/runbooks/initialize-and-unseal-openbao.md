@@ -16,11 +16,13 @@ First confirm that the service is not already initialized. Exit if `Initialized`
 ```bash
 kubectl exec -n openbao openbao-0 -- \
   env BAO_ADDR=https://127.0.0.1:8200 BAO_CACERT=/openbao/tls/ca.crt \
+  BAO_TLS_SERVER_NAME=openbao.openbao.svc \
   bao status
 install -m 0700 -d /secure/openbao
 umask 077
 kubectl exec -n openbao openbao-0 -- \
   env BAO_ADDR=https://127.0.0.1:8200 BAO_CACERT=/openbao/tls/ca.crt \
+  BAO_TLS_SERVER_NAME=openbao.openbao.svc \
   bao operator init -key-shares=5 -key-threshold=3 -format=json \
   > /secure/openbao/initialization.json
 ```
@@ -37,12 +39,15 @@ prompt. The share is not placed in shell history.
 ```bash
 kubectl exec -it -n openbao openbao-0 -- \
   env BAO_ADDR=https://127.0.0.1:8200 BAO_CACERT=/openbao/tls/ca.crt \
+  BAO_TLS_SERVER_NAME=openbao.openbao.svc \
   bao operator unseal
 kubectl exec -it -n openbao openbao-1 -- \
   env BAO_ADDR=https://127.0.0.1:8200 BAO_CACERT=/openbao/tls/ca.crt \
+  BAO_TLS_SERVER_NAME=openbao.openbao.svc \
   bao operator unseal
 kubectl exec -it -n openbao openbao-2 -- \
   env BAO_ADDR=https://127.0.0.1:8200 BAO_CACERT=/openbao/tls/ca.crt \
+  BAO_TLS_SERVER_NAME=openbao.openbao.svc \
   bao operator unseal
 ```
 
@@ -67,6 +72,7 @@ eight-hour operator token; do not use the root token for secret writes.
 ```bash
 kubectl exec -n openbao openbao-0 -- \
   env BAO_ADDR=https://127.0.0.1:8200 BAO_CACERT=/openbao/tls/ca.crt \
+  BAO_TLS_SERVER_NAME=openbao.openbao.svc \
   bao status
 kubectl -n openbao get pods,pvc
 kubectl get clustersecretstore openbao

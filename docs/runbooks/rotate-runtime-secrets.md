@@ -14,6 +14,7 @@ printf '\n'
 printf '%s\n' "${BAO_ROOT_TOKEN}" | kubectl exec -i -n openbao openbao-0 -- sh -c '
   IFS= read -r BAO_TOKEN
   export BAO_TOKEN BAO_ADDR=https://127.0.0.1:8200
+  export BAO_TLS_SERVER_NAME=openbao.openbao.svc
   export BAO_CACERT=/openbao/tls/ca.crt
   bao token create -policy=runtime-secret-operator -ttl=8h \
     -renewable=false -orphan -format=json
@@ -42,6 +43,7 @@ printf '%s\n%s\n' "${BAO_OPERATOR_TOKEN}" "${BAO_ROTATED_VALUE}" | \
     IFS= read -r BAO_TOKEN
     IFS= read -r BAO_ROTATED_VALUE
     export BAO_TOKEN BAO_ADDR=https://127.0.0.1:8200
+    export BAO_TLS_SERVER_NAME=openbao.openbao.svc
     export BAO_CACERT=/openbao/tls/ca.crt
     printf "%s" "${BAO_ROTATED_VALUE}" | \
       bao kv put -mount=secret "${BAO_SECRET_PATH}" value=-
