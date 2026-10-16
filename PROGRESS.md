@@ -72,6 +72,9 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-16 | scoped workload S3 smoke test | A temporary bucket-only IAM identity put, inspected, and deleted one object under `validation/`. The credential remained in mode-0600 local OpenTofu state and OpenBao and was not printed. |
 | 2026-10-16 | five CNPG validation backups | Fresh plugin backups for production and staging Sentinel, Vaultwarden, Keycloak, and storage verification all reached `completed`. Every cluster also reported `ContinuousArchiving=True` and `LastBackupSucceeded=True`; earlier failed scheduled Backup objects remain as historical evidence. |
 | 2026-10-16 | `make validate-secrets validate-aws-validation` | OpenBao and External Secrets rendered deterministically, both pinned charts linted, kubeconform and KubeLinter passed, and OpenTofu validated with AWS provider 6.68.0. ShellCheck and markdownlint also passed for the changed scripts and runbooks. |
+| 2026-10-16 | Longhorn and Velero validation backups | Longhorn reported its S3 target available, created a ready snapshot of the storage-verification volume, and completed a full backup at 100%. Velero reported its BackupStorageLocation available and completed the namespace backup with zero errors and zero warnings. |
+| 2026-10-16 | `make lint validate security` | Lint and the complete offline repository validation suite passed. The first directory secret scan correctly found the ignored live AWS credentials in local state; the scanner was repaired to inspect tracked and non-ignored files plus all Git history, then reported zero findings across repository-visible content and 85 commits. |
+| 2026-10-16 | GitLab pipeline `2955865113` | GitLab rejected every job before execution because the namespace compute quota was exhausted. This is recorded as an external CI-capacity failure, not a test result; the same commit passed the complete local gate above. |
 
 ## Defects repaired during this work
 
