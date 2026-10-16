@@ -67,6 +67,11 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 | 2026-10-16 | Cosign `v3.0.5` verification | Independent verification of the GHCR Sentinel API, worker, and deployment-package artifacts at commit `389d17a` validated each GitLab OIDC identity claim, signing certificate, and offline Rekor transparency-log entry. |
 | 2026-10-16 | GitLab pipeline `2954412602` | Lint, full repository validation, unit and integration tests, multi-architecture builds, deployment packaging, SBOM, Trivy, gitleaks, and GitLab signing passed. Staging promotion exposed an expired personal promotion token, and the GHCR mirror exposed a transient worker-index finalization failure; both are recorded as defects rather than a successful pipeline. |
 | 2026-10-16 | GitLab pipeline `2954641982` | A temporary locked project runner completed the pipeline after the free-namespace compute quota blocked shared runners. Lint, repository validation, tests, multi-architecture builds with pinned BuildKit, deployment packaging, SBOM, Trivy, full-history gitleaks, GitLab signing, job-token staging and production promotions, GHCR mirroring, and GHCR signing passed. The temporary runner, GitLab runner record, and credential volume were removed afterward. |
+| 2026-10-16 | OpenBao live initialization and configuration | OpenBao 2.7.1 initialized with five recovery shares and threshold three, unsealed, enabled KV v2 and Kubernetes authentication, and accepted the declared policies and roles. The ignored initialization document is mode 0600; no recovery share or token was printed or committed. |
+| 2026-10-16 | External Secrets reconciliation | The OpenBao cluster store and six namespace-local stores reported `Valid`; the CA replication and database, application, OIDC, Grafana, and four S3 ExternalSecrets reported `SecretSynced`. The two optional notification webhook secrets remain absent and are not presented as successful. |
+| 2026-10-16 | scoped workload S3 smoke test | A temporary bucket-only IAM identity put, inspected, and deleted one object under `validation/`. The credential remained in mode-0600 local OpenTofu state and OpenBao and was not printed. |
+| 2026-10-16 | five CNPG validation backups | Fresh plugin backups for production and staging Sentinel, Vaultwarden, Keycloak, and storage verification all reached `completed`. Every cluster also reported `ContinuousArchiving=True` and `LastBackupSucceeded=True`; earlier failed scheduled Backup objects remain as historical evidence. |
+| 2026-10-16 | `make validate-secrets validate-aws-validation` | OpenBao and External Secrets rendered deterministically, both pinned charts linted, kubeconform and KubeLinter passed, and OpenTofu validated with AWS provider 6.68.0. ShellCheck and markdownlint also passed for the changed scripts and runbooks. |
 
 ## Defects repaired during this work
 
@@ -163,6 +168,18 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 - Sentinel's Buildx builder now uses a release-and-digest-pinned BuildKit image and a
   bounded bootstrap retry. A cold temporary runner exposed the former implicit
   `buildx-stable-1` pull when Docker Hub reset that unpinned download.
+- OpenBao's read-only root prevented its chart entrypoint from writing the generated
+  storage configuration under `/tmp`. A size-limited ephemeral mount now provides
+  only that writable path, and in-pod CLI operations set the certificate's service
+  name explicitly while continuing to connect over loopback.
+- Namespace-scoped SecretStores cannot reference a CA Secret in another namespace.
+  A narrowly authorized Kubernetes-provider ClusterSecretStore now replicates only
+  the public OpenBao CA into labeled consumer namespaces; each local store reads its
+  namespace-local copy.
+- Database WAL volumes exhausted their original 2 GiB allocation while the placeholder
+  S3 endpoint prevented archiving. WAL claims are now declared at 5 GiB, Longhorn
+  permits bounded 125% logical allocation while retaining its 25% free-space floor,
+  and the AWS evidence environment proved continuous archiving plus five new backups.
 
 ## Not done
 
@@ -176,3 +193,7 @@ substitute for tests that do not depend on LAN ARP or L2 broadcast behavior.
 - kube-vip ARP and Cilium L2 announcement behavior cannot be proven in AWS and remain
   pending broadcast-capable hardware.
 - The seven-day telemetry storage-growth observation has not started.
+- Three application database clusters retain operator-owned PVCs from failed replica
+  creation during the WAL outage. Active primaries are serving and all five fresh
+  backups completed, but deleting those PVCs is intentionally left to the documented
+  human storage-recovery boundary.
